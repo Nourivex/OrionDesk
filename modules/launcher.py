@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import subprocess
 
 
 @dataclass
@@ -20,7 +21,12 @@ class Launcher:
             return f"Aplikasi '{alias}' belum terdaftar pada alias map."
 
         resolved_name = self.alias_map[clean_alias]
+        try:
+            process = subprocess.Popen(resolved_name, shell=True)
+        except OSError as error:
+            return f"Gagal membuka '{clean_alias}': {error}"
+
         return (
-            f"[PHASE 0] Perintah open diterima untuk '{clean_alias}' "
-            f"({resolved_name}). Implementasi launch real akan ditambahkan di PHASE 2."
+            f"Membuka '{clean_alias}' menggunakan '{resolved_name}'. "
+            f"PID: {process.pid}."
         )

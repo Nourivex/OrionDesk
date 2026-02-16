@@ -30,7 +30,8 @@ Tanpa:
   - Skeleton project, GUI awal, struktur modular, dan test dasar sudah tersedia.
 - PHASE 1: **Done**
   - Core command router keyword-based selesai dengan parser + dispatcher headless-compatible.
-- PHASE 2: **Planned**
+- PHASE 2: **Done**
+  - Launcher (`subprocess`), File Search (`pathlib`), dan System Tools (`psutil`) sudah terimplementasi.
 - PHASE 3: **Planned**
 - PHASE 4: **Planned**
 - PHASE 5: **Planned**
