@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLineEdit,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QTextEdit,
     QVBoxLayout,
@@ -47,11 +48,34 @@ class MainWindow(QMainWindow):
 
     def _handle_execute(self) -> None:
         command = self.command_input.text()
-        response = self.router.route(command)
-        styled_response = self.persona_engine.format_output(response)
+        result = self.router.execute(command)
 
         if command.strip():
             self.output_panel.append(f"> {command}")
-        self.output_panel.append(styled_response)
+
+        if result.requires_confirmation:
+            warning = self.persona_engine.format_warning(
+                result.message,
+                detail=f"Command: {result.pending_command}",
+            )
+            self.output_panel.append(warning)
+            approved = self._show_confirmation(result.pending_command or command)
+            response = self.router.confirm_pending(approved)
+            styled_response = self.persona_engine.format_output(response.message)
+            self.output_panel.append(styled_response)
+        else:
+            styled_response = self.persona_engine.format_output(result.message)
+            self.output_panel.append(styled_response)
+
         self.output_panel.append("")
         self.command_input.clear()
+
+    def _show_confirmation(self, command: str) -> bool:
+        reply = QMessageBox.question(
+            self,
+            "Konfirmasi Safe Mode",
+            f"Command berisiko terdeteksi:\n{command}\n\nLanjutkan aksi ini?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return reply == QMessageBox.StandardButton.Yes

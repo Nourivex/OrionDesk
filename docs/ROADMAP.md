@@ -34,7 +34,8 @@ Tanpa:
   - Launcher (`subprocess`), File Search (`pathlib`), dan System Tools (`psutil`) sudah terimplementasi.
 - PHASE 3: **Done**
   - Persona layer sudah memengaruhi output style, warning verbosity, dan risk tolerance.
-- PHASE 4: **Planned**
+- PHASE 4: **Done**
+  - Safe mode default aktif untuk command berisiko dengan konfirmasi manual di GUI.
 - PHASE 5: **Planned**
 
 ### Catatan Perubahan Arah

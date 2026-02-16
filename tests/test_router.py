@@ -86,3 +86,39 @@ def test_route_keyword_case_insensitive() -> None:
     router = build_router()
     result = router.route("OPEN VSCode")
     assert result == "open:VSCode"
+
+
+def test_safe_mode_requires_confirmation_for_dangerous_command() -> None:
+    router = build_router()
+    result = router.execute("shutdown")
+
+    assert result.requires_confirmation is True
+    assert result.pending_command == "shutdown"
+    assert router.pending_confirmation is not None
+
+
+def test_safe_mode_reject_confirmation() -> None:
+    router = build_router()
+    router.execute("delete C:/temp/file.txt")
+    response = router.confirm_pending(False)
+
+    assert "dibatalkan" in response.message
+    assert router.pending_confirmation is None
+
+
+def test_safe_mode_approve_confirmation() -> None:
+    router = build_router()
+    router.execute("kill 1234")
+    response = router.confirm_pending(True)
+
+    assert "Simulasi kill process" in response.message
+    assert router.pending_confirmation is None
+
+
+def test_dangerous_command_executes_when_safe_mode_disabled() -> None:
+    router = build_router()
+    router.safe_mode = False
+
+    result = router.execute("shutdown")
+    assert result.requires_confirmation is False
+    assert "Simulasi shutdown" in result.message
