@@ -25,6 +25,12 @@ Test baru menjalankan alur otomatis berikut:
 5. Bandingkan dengan baseline PNG jika baseline sudah ada.
 6. Jika baseline belum ada, baseline dibuat otomatis.
 
+## Peningkatan Keterbacaan Snapshot
+
+- Snapshot offscreen kini distabilkan dengan skala DPI tetap (`QT_SCALE_FACTOR=1`).
+- Font komponen utama diperbesar saat capture agar teks terbaca jelas.
+- Konten contoh ditulis ke output panel sebelum screenshot untuk validasi visual yang lebih informatif.
+
 ## File Diubah
 
 - Diubah: `ui/main_window.py`
