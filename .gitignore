@@ -21,3 +21,6 @@ dist/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# UI snapshot artifacts
+tests/artifacts/

@@ -36,7 +36,8 @@ Tanpa:
   - Persona layer sudah memengaruhi output style, warning verbosity, dan risk tolerance.
 - PHASE 4: **Done**
   - Safe mode default aktif untuk command berisiko dengan konfirmasi manual di GUI.
-- PHASE 5: **Planned**
+- PHASE 5: **Done**
+  - UI polished (dark mode, rounded controls, Segoe UI, persona selector) dan snapshot test PNG otomatis.
 
 ### Catatan Perubahan Arah
 
