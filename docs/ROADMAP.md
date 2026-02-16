@@ -1,4 +1,4 @@
-Target kita:  
+Target kita (Roadmap v1.2):  
 **OrionDesk – Windows 11 Personal OS Agent (Local, Safe, Modular)**
 
 ---
@@ -23,6 +23,18 @@ Tanpa:
 ---
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
+
+## 🚀 ROADMAP 2 (v1.2+)
+
+- Command Contract Hardening
+- Command History & Session Layer
+- Plugin Architecture (auto-register module ke router agar extensible)
+- Security Hardening:
+  - Command whitelist
+  - Path restriction enforcement
+  - Process permission guard
+  - Safe mode policy object
+- Windows 11 Native Feel Upgrade
 
 ## 📌 Status Fase
 

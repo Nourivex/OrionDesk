@@ -62,7 +62,7 @@ def test_window_snapshot_compare_or_archive() -> None:
     _configure_snapshot_platform()
 
     root = Path(__file__).resolve().parents[1]
-    baseline_dir = root / "tests" / "baseline"
+    baseline_dir = root / "docs" / "assets" / "v1"
     artifacts_dir = root / "tests" / "artifacts"
     archive_dir = artifacts_dir / "archive"
 
