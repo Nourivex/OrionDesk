@@ -27,7 +27,8 @@ Test baru menjalankan alur otomatis berikut:
 
 ## Peningkatan Keterbacaan Snapshot
 
-- Snapshot offscreen kini distabilkan dengan skala DPI tetap (`QT_SCALE_FACTOR=1`).
+- Snapshot kini memprioritaskan platform native Windows untuk hasil font yang lebih jelas, dengan fallback ke offscreen di non-Windows.
+- Rendering distabilkan dengan skala DPI tetap (`QT_SCALE_FACTOR=1`).
 - Font komponen utama diperbesar saat capture agar teks terbaca jelas.
 - Konten contoh ditulis ke output panel sebelum screenshot untuk validasi visual yang lebih informatif.
 
