@@ -1,5 +1,8 @@
 {
   "name": "hacker",
   "prefix": "[Hacker] ",
-  "suffix": ""
+  "suffix": "",
+  "warning_prefix": "[Hacker Warning]",
+  "warning_verbosity": "low",
+  "risk_tolerance": "high"
 }

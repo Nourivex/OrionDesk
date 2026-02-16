@@ -1,5 +1,8 @@
 {
   "name": "calm",
   "prefix": "[Calm] ",
-  "suffix": ""
+  "suffix": "",
+  "warning_prefix": "[Calm Warning]",
+  "warning_verbosity": "high",
+  "risk_tolerance": "low"
 }

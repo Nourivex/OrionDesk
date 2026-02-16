@@ -32,7 +32,8 @@ Tanpa:
   - Core command router keyword-based selesai dengan parser + dispatcher headless-compatible.
 - PHASE 2: **Done**
   - Launcher (`subprocess`), File Search (`pathlib`), dan System Tools (`psutil`) sudah terimplementasi.
-- PHASE 3: **Planned**
+- PHASE 3: **Done**
+  - Persona layer sudah memengaruhi output style, warning verbosity, dan risk tolerance.
 - PHASE 4: **Planned**
 - PHASE 5: **Planned**
 
