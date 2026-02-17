@@ -56,6 +56,92 @@ Tanpa:
 - Nama root project diseragamkan menjadi `OrionDesk/` (bukan `CuaOS/`).
 - PHASE 1 dipertahankan tanpa NLP, fokus pada kontrak command stabil untuk fondasi PHASE 2.
 
+## 🧩 Spesifikasi v2 (PHASE 6-10)
+
+## 🔹 PHASE 6 — Command Contract Hardening
+
+Tujuan: Kontrak command lebih ketat dan seragam.
+
+Cakupan:
+
+- Command whitelist terpusat
+- Usage/format validation per command
+- Argument min/max validation
+- Subcommand validation (`search file`, `sys info`)
+- Batas panjang input command
+
+Output fase:
+
+- Parser dan validator command stabil untuk pengembangan lanjutan.
+
+---
+
+## 🔹 PHASE 7 — Command History & Session Layer
+
+Tujuan: Menyediakan histori command per sesi secara headless.
+
+Cakupan:
+
+- Session layer terpisah dari GUI
+- Record command, result message, dan status
+- Recent history retrieval
+- Session export ke JSON
+
+Output fase:
+
+- Riwayat command siap dipakai untuk fitur history UI dan audit ringan.
+
+---
+
+## 🔹 PHASE 8 — Plugin Architecture
+
+Tujuan: Modul dapat auto-register tanpa edit router utama.
+
+Cakupan:
+
+- Interface plugin command handler
+- Registry plugin terpusat
+- Auto-discovery/auto-register plugin lokal
+- Router membaca command dari registry
+
+Output fase:
+
+- Ekosistem modul lebih extensible dan scalable.
+
+---
+
+## 🔹 PHASE 9 — Security Hardening
+
+Tujuan: Menguatkan keamanan OrionDesk sebagai local safe agent.
+
+Cakupan:
+
+- Command whitelist enforcement
+- Path restriction enforcement
+- Process permission guard
+- Safe mode policy object
+
+Output fase:
+
+- Command berisiko lebih terkendali dan policy-driven.
+
+---
+
+## 🔹 PHASE 10 — Windows 11 Native Feel Upgrade
+
+Tujuan: Meningkatkan pengalaman visual dan interaksi agar lebih native.
+
+Cakupan:
+
+- Penyelarasan spacing/typography
+- Native-like control behavior
+- Polishing visual state (hover/focus/active)
+- Stabilitas snapshot visual regression
+
+Output fase:
+
+- UI lebih konsisten, modern, dan siap iterasi lanjutan.
+
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 
 ## 🔹 PHASE 0 — Setup Project (Hari Ini)
