@@ -1,4 +1,4 @@
-Target kita (Roadmap v1.2):  
+Target kita (Roadmap v2):  
 **OrionDesk – Windows 11 Personal OS Agent (Local, Safe, Modular)**
 
 ---
@@ -24,37 +24,39 @@ Tanpa:
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
 
-## 🚀 ROADMAP 2 (v1.2+)
+## 🚀 ROADMAP v2 (Active)
 
-- Command Contract Hardening
-- Command History & Session Layer
-- Plugin Architecture (auto-register module ke router agar extensible)
-- Security Hardening:
+- PHASE 6 — Command Contract Hardening
+- PHASE 7 — Command History & Session Layer
+- PHASE 8 — Plugin Architecture (auto-register module ke router)
+- PHASE 9 — Security Hardening
   - Command whitelist
   - Path restriction enforcement
   - Process permission guard
   - Safe mode policy object
-- Windows 11 Native Feel Upgrade
+- PHASE 10 — Windows 11 Native Feel Upgrade
 
 ## 📌 Status Fase
 
-- PHASE 0: **Done**
-  - Skeleton project, GUI awal, struktur modular, dan test dasar sudah tersedia.
-- PHASE 1: **Done**
-  - Core command router keyword-based selesai dengan parser + dispatcher headless-compatible.
-- PHASE 2: **Done**
-  - Launcher (`subprocess`), File Search (`pathlib`), dan System Tools (`psutil`) sudah terimplementasi.
-- PHASE 3: **Done**
-  - Persona layer sudah memengaruhi output style, warning verbosity, dan risk tolerance.
-- PHASE 4: **Done**
-  - Safe mode default aktif untuk command berisiko dengan konfirmasi manual di GUI.
-- PHASE 5: **Done**
-  - UI polished (dark mode, rounded controls, Segoe UI, persona selector) dan snapshot test PNG otomatis.
+### Roadmap v1 (Arsip)
+
+- PHASE 0–5: **Done**
+- Detail dipindahkan ke: `docs/FINISHED.md`
+
+### Roadmap v2 (Aktif)
+
+- PHASE 6: **Planned** — Command Contract Hardening
+- PHASE 7: **Planned** — Command History & Session Layer
+- PHASE 8: **Planned** — Plugin Architecture
+- PHASE 9: **Planned** — Security Hardening
+- PHASE 10: **Planned** — Windows 11 Native Feel Upgrade
 
 ### Catatan Perubahan Arah
 
 - Nama root project diseragamkan menjadi `OrionDesk/` (bukan `CuaOS/`).
 - PHASE 1 dipertahankan tanpa NLP, fokus pada kontrak command stabil untuk fondasi PHASE 2.
+
+## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 
 ## 🔹 PHASE 0 — Setup Project (Hari Ini)
 
