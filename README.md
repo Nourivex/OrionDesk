@@ -31,8 +31,9 @@ pytest -q
 - Roadmap: `docs/ROADMAP.md`
 - Finish notes: `docs/finish/`
 - Baseline tampilan v1: `docs/assets/v1/oriondesk-baseline.png`
+- Baseline tampilan v2: `docs/assets/v2/oriondesk-baseline.png`
 
 ## Status Fase
 
-- PHASE 0–5: Done
+- PHASE 0–10: Done
 - ROADMAP v1.2+: Planned (contract hardening, session layer, plugin architecture, security hardening, native feel upgrade)

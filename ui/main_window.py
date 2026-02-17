@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QComboBox,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -13,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtGui import QFont
+from PySide6.QtCore import Qt
 
 from core.router import CommandRouter
 from persona.persona_engine import PersonaEngine
@@ -33,6 +35,25 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         main_layout = QVBoxLayout(root)
+        main_layout.setContentsMargins(16, 14, 16, 16)
+        main_layout.setSpacing(10)
+
+        title_bar = QHBoxLayout()
+        title_bar.setSpacing(8)
+        self.title_label = QLabel("OrionDesk", self)
+        self.title_label.setObjectName("titleLabel")
+        self.subtitle_label = QLabel("Windows 11 Personal OS Agent", self)
+        self.subtitle_label.setObjectName("subtitleLabel")
+        title_bar.addWidget(self.title_label)
+        title_bar.addWidget(self.subtitle_label)
+        title_bar.addStretch()
+
+        top_card = QFrame(self)
+        top_card.setObjectName("topCard")
+        top_layout = QVBoxLayout(top_card)
+        top_layout.setContentsMargins(12, 10, 12, 10)
+        top_layout.setSpacing(10)
+
         persona_layout = QHBoxLayout()
         command_layout = QHBoxLayout()
 
@@ -49,13 +70,18 @@ class MainWindow(QMainWindow):
         self.command_input.setPlaceholderText("Masukkan command, contoh: open vscode")
 
         self.execute_button = QPushButton("Execute", self)
+        self.execute_button.setMinimumWidth(120)
         self.output_panel = QTextEdit(self)
         self.output_panel.setReadOnly(True)
+        self.output_panel.setObjectName("outputPanel")
 
-        main_layout.addLayout(persona_layout)
+        top_layout.addLayout(persona_layout)
         command_layout.addWidget(self.command_input)
         command_layout.addWidget(self.execute_button)
-        main_layout.addLayout(command_layout)
+        top_layout.addLayout(command_layout)
+
+        main_layout.addLayout(title_bar)
+        main_layout.addWidget(top_card)
         main_layout.addWidget(self.output_panel)
 
         self.execute_button.clicked.connect(self._handle_execute)
@@ -93,27 +119,53 @@ class MainWindow(QMainWindow):
 
     def _apply_windows11_style(self) -> None:
         self.setFont(QFont("Segoe UI", 10))
+        self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
         self.setStyleSheet(
             """
-            QMainWindow { background-color: #1f2128; }
-            QLabel { color: #e4e7ef; font-weight: 600; }
+            QMainWindow { 
+                background-color: #1b1f2a;
+                color: #f1f4fb;
+            }
+            QLabel { color: #e7eaf2; font-weight: 600; }
+            QLabel#titleLabel {
+                font-size: 18px;
+                font-weight: 700;
+                color: #ffffff;
+            }
+            QLabel#subtitleLabel {
+                font-size: 11px;
+                color: #9ea7be;
+                font-weight: 500;
+            }
+            QFrame#topCard {
+                background-color: #202636;
+                border: 1px solid #313a52;
+                border-radius: 14px;
+            }
             QLineEdit, QTextEdit, QComboBox {
-                background-color: #2a2d37;
+                background-color: #272e42;
                 color: #f4f6fc;
-                border: 1px solid #3a3f4d;
-                border-radius: 10px;
+                border: 1px solid #39425d;
+                border-radius: 11px;
                 padding: 8px;
             }
+            QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
+                border: 1px solid #5a8bff;
+            }
             QPushButton {
-                background-color: #3f8cff;
+                background-color: #4f8dfd;
                 color: white;
                 border: none;
-                border-radius: 12px;
+                border-radius: 11px;
                 padding: 8px 16px;
                 font-weight: 600;
             }
-            QPushButton:hover { background-color: #5298ff; }
-            QPushButton:pressed { background-color: #2f76e7; }
+            QPushButton:hover { background-color: #669cff; }
+            QPushButton:pressed { background-color: #3f7de7; }
+            QTextEdit#outputPanel {
+                border-radius: 14px;
+                padding: 10px;
+            }
             """
         )
 
