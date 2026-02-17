@@ -5,6 +5,7 @@ from typing import Callable
 
 from core.intent_engine import LocalIntentEngine
 from core.memory_engine import MemoryEngine
+from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManager, StructuredLogger
 from core.plugin_registry import PluginRegistry
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -52,6 +53,10 @@ class CommandRouter:
     security_guard: SecurityGuard | None = None
     intent_engine: LocalIntentEngine | None = None
     memory_engine: MemoryEngine | None = None
+    logger: StructuredLogger | None = None
+    recovery_manager: RecoveryManager | None = None
+    health_monitor: HealthMonitor | None = None
+    diagnostic_reporter: DiagnosticReporter | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -71,6 +76,14 @@ class CommandRouter:
             self.intent_engine = LocalIntentEngine()
         if self.memory_engine is None:
             self.memory_engine = MemoryEngine()
+        if self.logger is None:
+            self.logger = StructuredLogger()
+        if self.recovery_manager is None:
+            self.recovery_manager = RecoveryManager()
+        if self.health_monitor is None:
+            self.health_monitor = HealthMonitor()
+        if self.diagnostic_reporter is None:
+            self.diagnostic_reporter = DiagnosticReporter()
         self._register_plugins()
         if self.security_guard is None:
             self.security_guard = SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -224,6 +237,9 @@ class CommandRouter:
         self.session_layer.record(command=command, message=message, status=status)
         if self.memory_engine is not None:
             self.memory_engine.record_command(command=command, status=status)
+        if self.logger is not None:
+            level = "error" if status in {"invalid", "blocked", "failed"} else "info"
+            self.logger.log(level=level, event="command", message=message, metadata={"command": command, "status": status})
 
     def memory_summary(self) -> dict:
         if self.memory_engine is None:
@@ -232,6 +248,19 @@ class CommandRouter:
             "top_commands": self.memory_engine.top_commands(limit=5),
             "persona": self.memory_engine.get_preference("persona", None),
         }
+
+    def save_recovery_snapshot(self):
+        if self.recovery_manager is None or self.session_layer is None:
+            return None
+        entries = [item.__dict__ for item in self.session_layer.entries]
+        return self.recovery_manager.save_snapshot("router-session", entries)
+
+    def create_diagnostic_report(self):
+        if self.health_monitor is None or self.diagnostic_reporter is None or self.logger is None:
+            return None
+        checks = self.health_monitor.run(self)
+        recent_logs = self.logger.tail(limit=30)
+        return self.diagnostic_reporter.generate(checks, recent_logs)
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

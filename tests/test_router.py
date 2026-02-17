@@ -247,3 +247,14 @@ def test_router_memory_summary_tracks_commands() -> None:
     summary = router.memory_summary()
     counts = dict(summary["top_commands"])
     assert counts.get("open vscode", 0) >= 2
+
+
+def test_router_recovery_snapshot_and_diagnostic() -> None:
+    router = build_router()
+    router.execute("open vscode")
+
+    snapshot = router.save_recovery_snapshot()
+    report = router.create_diagnostic_report()
+
+    assert snapshot is not None
+    assert report is not None
