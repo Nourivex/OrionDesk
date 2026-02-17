@@ -26,3 +26,7 @@ Menetapkan roadmap v4 dengan prioritas UI-first agar OrionDesk siap berkembang m
 2. Implement About + Diagnostics panels.
 3. Lanjut command assist untuk UX.
 4. Tutup dengan theme/token refactor + snapshot refresh.
+
+## Progress
+
+- PHASE 17 selesai diimplementasikan.

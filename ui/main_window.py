@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStyle,
     QSystemTrayIcon,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -70,11 +71,60 @@ class MainWindow(QMainWindow):
         self.title_label.setObjectName("titleLabel")
         self.subtitle_label = QLabel("Windows 11 Personal OS Agent", self)
         self.subtitle_label.setObjectName("subtitleLabel")
+        self.active_tab_label = QLabel("Tab: Command", self)
+        self.active_tab_label.setObjectName("activeTabLabel")
         title_bar.addWidget(self.title_label)
         title_bar.addWidget(self.subtitle_label)
         title_bar.addStretch()
+        title_bar.addWidget(self.active_tab_label)
 
-        top_card = QFrame(self)
+        self.tab_widget = QTabWidget(self)
+        self.tab_widget.setObjectName("mainTabs")
+        self.tab_widget.setDocumentMode(True)
+
+        command_tab = self._build_command_tab()
+        about_tab = self._build_placeholder_tab(
+            title="About",
+            text="Informasi aplikasi akan ditampilkan di PHASE 18.",
+        )
+        settings_tab = self._build_placeholder_tab(
+            title="Settings",
+            text="Konfigurasi user akan ditampilkan pada fase berikutnya.",
+        )
+        memory_tab = self._build_placeholder_tab(
+            title="Memory",
+            text="Panel memory lokal akan ditampilkan pada fase berikutnya.",
+        )
+        diagnostics_tab = self._build_placeholder_tab(
+            title="Diagnostics",
+            text="Panel health/log diagnostics akan ditampilkan di PHASE 18.",
+        )
+
+        self.tab_widget.addTab(command_tab, "Command")
+        self.tab_widget.addTab(about_tab, "About")
+        self.tab_widget.addTab(settings_tab, "Settings")
+        self.tab_widget.addTab(memory_tab, "Memory")
+        self.tab_widget.addTab(diagnostics_tab, "Diagnostics")
+        self.tab_widget.currentChanged.connect(self._handle_tab_changed)
+        main_layout.addLayout(title_bar)
+        main_layout.addWidget(self.tab_widget)
+
+        self.execute_button.clicked.connect(self._handle_execute)
+        self.command_input.returnPressed.connect(self._handle_execute)
+        self.persona_selector.currentTextChanged.connect(self._handle_persona_change)
+        self._setup_shortcuts()
+
+        self.setTabOrder(self.persona_selector, self.command_input)
+        self.setTabOrder(self.command_input, self.execute_button)
+        self.setTabOrder(self.execute_button, self.output_panel)
+
+    def _build_command_tab(self) -> QWidget:
+        page = QWidget(self)
+        page_layout = QVBoxLayout(page)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setSpacing(10)
+
+        top_card = QFrame(page)
         top_card.setObjectName("topCard")
         top_layout = QVBoxLayout(top_card)
         top_layout.setContentsMargins(12, 10, 12, 10)
@@ -83,8 +133,8 @@ class MainWindow(QMainWindow):
         persona_layout = QHBoxLayout()
         command_layout = QHBoxLayout()
 
-        self.persona_label = QLabel("Persona:", self)
-        self.persona_selector = QComboBox(self)
+        self.persona_label = QLabel("Persona:", page)
+        self.persona_selector = QComboBox(page)
         self.persona_selector.addItems(["calm", "hacker"])
         self.persona_selector.setCurrentText(self.persona_engine.persona_name)
 
@@ -92,12 +142,12 @@ class MainWindow(QMainWindow):
         persona_layout.addWidget(self.persona_selector)
         persona_layout.addStretch()
 
-        self.command_input = QLineEdit(self)
+        self.command_input = QLineEdit(page)
         self.command_input.setPlaceholderText("Masukkan command, contoh: open vscode")
 
-        self.execute_button = QPushButton("Execute", self)
+        self.execute_button = QPushButton("Execute", page)
         self.execute_button.setMinimumWidth(120)
-        self.output_panel = QTextEdit(self)
+        self.output_panel = QTextEdit(page)
         self.output_panel.setReadOnly(True)
         self.output_panel.setObjectName("outputPanel")
         self.highlighter = OutputHighlighter(self.output_panel.document())
@@ -112,18 +162,27 @@ class MainWindow(QMainWindow):
         command_layout.addWidget(self.execute_button)
         top_layout.addLayout(command_layout)
 
-        main_layout.addLayout(title_bar)
-        main_layout.addWidget(top_card)
-        main_layout.addWidget(self.output_panel)
+        page_layout.addWidget(top_card)
+        page_layout.addWidget(self.output_panel)
+        return page
 
-        self.execute_button.clicked.connect(self._handle_execute)
-        self.command_input.returnPressed.connect(self._handle_execute)
-        self.persona_selector.currentTextChanged.connect(self._handle_persona_change)
-        self._setup_shortcuts()
+    def _build_placeholder_tab(self, title: str, text: str) -> QWidget:
+        page = QWidget(self)
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 12, 12, 12)
+        heading = QLabel(title, page)
+        heading.setObjectName("placeholderTitle")
+        body = QLabel(text, page)
+        body.setWordWrap(True)
+        body.setObjectName("placeholderText")
+        layout.addWidget(heading)
+        layout.addWidget(body)
+        layout.addStretch()
+        return page
 
-        self.setTabOrder(self.persona_selector, self.command_input)
-        self.setTabOrder(self.command_input, self.execute_button)
-        self.setTabOrder(self.execute_button, self.output_panel)
+    def _handle_tab_changed(self, index: int) -> None:
+        name = self.tab_widget.tabText(index)
+        self.active_tab_label.setText(f"Tab: {name}")
 
     def _handle_execute(self) -> None:
         command = self.command_input.text()
@@ -166,11 +225,31 @@ class MainWindow(QMainWindow):
             QLabel {{ color: #e7eaf2; font-weight: 600; }}
             QLabel#titleLabel {{ font-size: 18px; font-weight: 700; color: #ffffff; }}
             QLabel#subtitleLabel {{ font-size: 11px; color: #9ea7be; font-weight: 500; }}
+            QLabel#activeTabLabel {{ font-size: 10px; color: #8bb4ff; font-weight: 600; }}
             QFrame#topCard {{
                 background-color: #202636;
                 border: 1px solid #313a52;
                 border-radius: 8px;
             }}
+            QTabWidget#mainTabs::pane {{
+                border: 1px solid #313a52;
+                border-radius: 8px;
+                background-color: #1e2434;
+            }}
+            QTabBar::tab {{
+                background: #222a3d;
+                color: #b9c2db;
+                padding: 8px 12px;
+                margin-right: 4px;
+                border-top-left-radius: 6px;
+                border-top-right-radius: 6px;
+            }}
+            QTabBar::tab:selected {{
+                background: #2d3853;
+                color: #ffffff;
+            }}
+            QLabel#placeholderTitle {{ font-size: 15px; color: #ffffff; font-weight: 700; }}
+            QLabel#placeholderText {{ font-size: 11px; color: #b3bbd4; }}
             QLineEdit, QComboBox {{
                 background-color: #272e42;
                 color: #f4f6fc;
