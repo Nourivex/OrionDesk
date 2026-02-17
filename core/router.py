@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from core.session import SessionLayer
 from modules.file_manager import FileManager
 from modules.launcher import Launcher
 from modules.system_tools import SystemTools
@@ -40,6 +41,7 @@ class CommandRouter:
     contracts: dict[str, CommandContract] | None = None
     safe_mode: bool = True
     pending_confirmation: ParsedCommand | None = None
+    session_layer: SessionLayer | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -53,6 +55,8 @@ class CommandRouter:
             "search": self._handle_search,
             "sys": self._handle_sys,
         }
+        if self.session_layer is None:
+            self.session_layer = SessionLayer(session_name="router-session")
         self.contracts = {
             "open": CommandContract(
                 keyword="open",
@@ -96,39 +100,58 @@ class CommandRouter:
     def execute(self, command: str) -> CommandResult:
         parsed = self.parse(command)
         if parsed is None:
-            return CommandResult("Perintah kosong. Silakan isi command terlebih dahulu.")
+            result = CommandResult("Perintah kosong. Silakan isi command terlebih dahulu.")
+            self._record_session(command, result.message, "invalid")
+            return result
 
         if len(parsed.raw) > 300:
-            return CommandResult("Perintah terlalu panjang. Batas maksimal 300 karakter.")
+            result = CommandResult("Perintah terlalu panjang. Batas maksimal 300 karakter.")
+            self._record_session(parsed.raw, result.message, "invalid")
+            return result
 
         validation = self._validate_contract(parsed)
         if validation is not None:
+            self._record_session(parsed.raw, validation.message, "invalid")
             return validation
 
         if self._is_dangerous(parsed.keyword):
             if self.safe_mode:
                 self.pending_confirmation = parsed
-                return CommandResult(
+                result = CommandResult(
                     "Safe Mode aktif. Aksi ini membutuhkan konfirmasi manual.",
                     requires_confirmation=True,
                     pending_command=parsed.raw,
                 )
-            return self._execute_dangerous(parsed)
+                self._record_session(parsed.raw, result.message, "pending_confirmation")
+                return result
+            result = self._execute_dangerous(parsed)
+            self._record_session(parsed.raw, result.message, "success")
+            return result
 
         handler = self.handlers.get(parsed.keyword)
         if handler is None:
-            return CommandResult("Perintah tidak dikenali. Gunakan: open, search file, atau sys info.")
-        return CommandResult(handler(parsed))
+            result = CommandResult("Perintah tidak dikenali. Gunakan: open, search file, atau sys info.")
+            self._record_session(parsed.raw, result.message, "invalid")
+            return result
+        result = CommandResult(handler(parsed))
+        self._record_session(parsed.raw, result.message, "success")
+        return result
 
     def confirm_pending(self, approved: bool) -> CommandResult:
         if self.pending_confirmation is None:
-            return CommandResult("Tidak ada aksi yang menunggu konfirmasi.")
+            result = CommandResult("Tidak ada aksi yang menunggu konfirmasi.")
+            self._record_session("<confirm>", result.message, "invalid")
+            return result
 
         command = self.pending_confirmation
         self.pending_confirmation = None
         if not approved:
-            return CommandResult("Aksi dibatalkan oleh pengguna.")
-        return self._execute_dangerous(command)
+            result = CommandResult("Aksi dibatalkan oleh pengguna.")
+            self._record_session(command.raw, result.message, "cancelled")
+            return result
+        result = self._execute_dangerous(command)
+        self._record_session(command.raw, result.message, "success")
+        return result
 
     def parse(self, command: str) -> ParsedCommand | None:
         clean_command = command.strip()
@@ -191,3 +214,8 @@ class CommandRouter:
         if first_arg != contract.first_arg_equals:
             return CommandResult(f"Format salah. Contoh: {contract.usage}")
         return None
+
+    def _record_session(self, command: str, message: str, status: str) -> None:
+        if self.session_layer is None:
+            return
+        self.session_layer.record(command=command, message=message, status=status)

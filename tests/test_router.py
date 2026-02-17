@@ -157,3 +157,23 @@ def test_contract_rejects_kill_without_target() -> None:
     result = router.execute("kill")
     assert "Format salah" in result.message
     assert "kill <process_name_or_pid>" in result.message
+
+
+def test_router_records_session_for_success_command() -> None:
+    router = build_router()
+    router.execute("open vscode")
+    latest = router.session_layer.recent(limit=1)[0]
+
+    assert latest.command == "open vscode"
+    assert latest.status == "success"
+
+
+def test_router_records_session_for_pending_and_cancelled() -> None:
+    router = build_router()
+    router.execute("shutdown")
+    pending = router.session_layer.recent(limit=1)[0]
+    assert pending.status == "pending_confirmation"
+
+    router.confirm_pending(False)
+    cancelled = router.session_layer.recent(limit=1)[0]
+    assert cancelled.status == "cancelled"
