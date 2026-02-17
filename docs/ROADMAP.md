@@ -1,3 +1,16 @@
+<div align="center">
+  <h1>OrionDesk Roadmap</h1>
+  <p>Versioned execution plan for product, platform, and engineering quality.</p>
+</div>
+
+<table>
+  <tr>
+    <td><strong>Current Planning</strong><br/>v6 / v1.6</td>
+    <td><strong>Last Completed</strong><br/>v5 / v1.5</td>
+    <td><strong>Current Focus</strong><br/>Performance, Automation, Utility</td>
+  </tr>
+</table>
+
 Target kita (Roadmap v4 / Update v1.4):  
 **OrionDesk – Windows 11 Personal OS Agent (Local, Safe, Modular)**
 
@@ -24,7 +37,15 @@ Tanpa:
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
 
-## 🚀 ROADMAP v5 (Active / v1.5)
+## 🚀 ROADMAP v6 (Active / v1.6)
+
+- PHASE 27 — Storage Engine Migration (JSON to SQLite)
+- PHASE 28 — Trigger-Action Automation Engine (Watcher + Scheduler)
+- PHASE 29 — Utility & Developer Modules Expansion
+- PHASE 30 — Global Hotkey UX + Fast Command Surface
+- PHASE 31 — Reliability, Profiling, and Release Hardening
+
+## 🚀 ROADMAP v5 (Completed / v1.5)
 
 - PHASE 22 — Command Engine Stabilization + Unified Executor
 - PHASE 23 — System Capability Layer
@@ -81,6 +102,14 @@ Tanpa:
 - PHASE 24.5: **Done** — Real Action Execution + Themed Guard Notifications
 - PHASE 25: **Done** — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26: **Done** — Modern UI Icon Language + Reliability Matrix Validation
+
+### Roadmap v6 (Aktif / v1.6)
+
+- PHASE 27: **Planned** — Storage Engine Migration (JSON to SQLite)
+- PHASE 28: **Planned** — Trigger-Action Automation Engine (Watcher + Scheduler)
+- PHASE 29: **Planned** — Utility & Developer Modules Expansion
+- PHASE 30: **Planned** — Global Hotkey UX + Fast Command Surface
+- PHASE 31: **Planned** — Reliability, Profiling, and Release Hardening
 
 ### Catatan Perubahan Arah
 
@@ -455,6 +484,98 @@ Cakupan:
 Output fase:
 
 - UX OrionDesk lebih modern, tetap ringan, dan kualitas command tervalidasi untuk rilis v1.5.
+
+---
+
+## 🧩 Spesifikasi v6 (PHASE 27-31)
+
+## 🔹 PHASE 27 — Storage Engine Migration (JSON to SQLite)
+
+Tujuan: Meningkatkan performa, queryability, dan reliability data layer untuk skenario production jangka panjang.
+
+Cakupan:
+
+- Migrasi storage utama dari JSON ke SQLite
+- Repository layer untuk command history, memory, preference, dan session logs
+- Skema awal + migration scripts versi database
+- Adapter compatibility agar modul lama tetap berjalan selama transisi
+
+Keputusan teknis:
+
+- Main storage menggunakan SQLite sebagai default
+- ORM/query layer direkomendasikan SQLModel
+
+Output fase:
+
+- Data layer lebih cepat, aman terhadap concurrency, dan siap query analitik.
+
+---
+
+## 🔹 PHASE 28 — Trigger-Action Automation Engine (Watcher + Scheduler)
+
+Tujuan: Mengubah OrionDesk dari command runner menjadi automation hub berbasis rule lokal.
+
+Cakupan:
+
+- File watcher engine (event file create/modify)
+- Scheduler engine (cron-like task runner)
+- Trigger-Action registry (rule JSON/YAML)
+- Approval hooks untuk action berisiko
+
+Output fase:
+
+- Otomasi harian berjalan otomatis, aman, dan dapat diaudit.
+
+---
+
+## 🔹 PHASE 29 — Utility & Developer Modules Expansion
+
+Tujuan: Menambahkan modul utility yang berdampak langsung pada workflow power user dan developer.
+
+Cakupan:
+
+- Project Manager module (`open proj <name>`)
+- Clipboard Manager (history ring buffer)
+- Focus/Game mode module (resource guardrails)
+- Network diagnostics module (public IP, ping profile, DNS actions)
+
+Output fase:
+
+- OrionDesk menjadi utility hub praktis untuk produktivitas harian.
+
+---
+
+## 🔹 PHASE 30 — Global Hotkey UX + Fast Command Surface
+
+Tujuan: Membuat interaksi OrionDesk instan dari mana saja tanpa menggangu flow kerja utama.
+
+Cakupan:
+
+- Global hotkey configurable (`Alt+Space`/`Ctrl+Shift+O`)
+- Quick toggle shell show/hide dengan state restore
+- Fast command input mode (focus-first execution)
+- Conflict detection untuk hotkey OS/global lain
+
+Output fase:
+
+- UX OrionDesk lebih cepat, ringan, dan launcher-like.
+
+---
+
+## 🔹 PHASE 31 — Reliability, Profiling, and Release Hardening
+
+Tujuan: Menutup roadmap v6 dengan quality gate production untuk performa, stabilitas, dan maintainability.
+
+Cakupan:
+
+- Performance profiling baseline (startup, command latency, storage I/O)
+- Reliability matrix lintas module + automation scenarios
+- Failure recovery drills dan stress tests
+- Release checklist v1.6 + rollback strategy
+
+Output fase:
+
+- OrionDesk v1.6 siap rilis dengan standar engineering yang terukur.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 

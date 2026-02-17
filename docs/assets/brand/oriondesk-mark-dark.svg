@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="120" viewBox="0 0 420 120" role="img" aria-label="OrionDesk Dark Logo">
+  <rect width="420" height="120" rx="18" fill="#111827"/>
+  <circle cx="56" cy="60" r="28" fill="#79A5FF"/>
+  <path d="M44 60h24M56 48v24" stroke="#0F172A" stroke-width="5" stroke-linecap="round"/>
+  <text x="100" y="56" font-size="30" font-family="Segoe UI, Arial, sans-serif" fill="#E5EDFF" font-weight="700">OrionDesk</text>
+  <text x="100" y="84" font-size="16" font-family="Segoe UI, Arial, sans-serif" fill="#9EB3E1">Windows Personal OS Agent</text>
+</svg>
