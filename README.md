@@ -16,6 +16,8 @@ OrionDesk adalah personal OS agent lokal untuk Windows 11 yang fokus pada keaman
 - Workflow automation engine dengan recipe JSON + retry + approval hook
 - Knowledge & memory engine local-first (preferences, notes, command memory)
 - Observability & recovery (structured logs, health checks, diagnostics, snapshots)
+- Deployment/upgrade managers (release channel, config migration, profile backup-restore)
+- UI accessibility polish (shortcuts, tab order, multi-size snapshot matrix)
 
 ## Menjalankan Aplikasi
 
@@ -36,8 +38,9 @@ pytest -q
 - Finish notes: `docs/finish/`
 - Baseline tampilan v1: `docs/assets/v1/oriondesk-baseline.png`
 - Baseline tampilan v2: `docs/assets/v2/oriondesk-baseline.png`
+- Baseline tampilan v3 matrix: `docs/assets/v3/`
 
 ## Status Fase
 
-- PHASE 0–14: Done
+- PHASE 0–16: Done
 - ROADMAP v3 / v1.3: Active Planning (PHASE 11–15)

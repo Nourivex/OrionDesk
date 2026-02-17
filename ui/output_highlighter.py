@@ -17,6 +17,9 @@ class OutputHighlighter(QSyntaxHighlighter):
         self.rules = [
             HighlightRule(token="[Calm]", color="#9BE7A7"),
             HighlightRule(token="[Hacker]", color="#7CFF8E"),
+            HighlightRule(token="[SUCCESS]", color="#9BE7A7"),
+            HighlightRule(token="[INVALID]", color="#FFCC8E"),
+            HighlightRule(token="[BLOCKED]", color="#FF9DA3"),
             HighlightRule(token="Error", color="#FF9DA3"),
             HighlightRule(token="Blocked", color="#FF9DA3"),
             HighlightRule(token="ditolak", color="#FF9DA3"),

@@ -54,8 +54,8 @@ Tanpa:
 - PHASE 12: **Done** — Workflow Automation & Task Recipes
 - PHASE 13: **Done** — Knowledge & Memory Engine (Local-first)
 - PHASE 14: **Done** — Observability, Reliability, and Recovery
-- PHASE 15: **Planned** — Deployment, Distribution, and Upgrade Manager
-- PHASE 16: **Planned** — UI Excellence & Accessibility Polish
+- PHASE 15: **Done** — Deployment, Distribution, and Upgrade Manager
+- PHASE 16: **Done** — UI Excellence & Accessibility Polish
 
 ### Catatan Perubahan Arah
 

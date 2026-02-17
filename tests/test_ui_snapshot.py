@@ -62,36 +62,42 @@ def test_window_snapshot_compare_or_archive() -> None:
     _configure_snapshot_platform()
 
     root = Path(__file__).resolve().parents[1]
-    baseline_dir = root / "docs" / "assets" / "v2"
+    baseline_dir = root / "docs" / "assets" / "v3"
     artifacts_dir = root / "tests" / "artifacts"
     archive_dir = artifacts_dir / "archive"
 
     baseline_dir.mkdir(parents=True, exist_ok=True)
     archive_dir.mkdir(parents=True, exist_ok=True)
 
-    baseline_file = baseline_dir / "oriondesk-baseline.png"
-    current_file = artifacts_dir / "oriondesk-current.png"
-    archive_file = archive_dir / f"oriondesk-{datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
-
     app = _app()
-    window = MainWindow(router=CommandRouter())
-    window.show()
-    QTest.qWait(120)
-    _prepare_readable_snapshot(window, app)
+    sizes = [(1280, 760), (1024, 640)]
 
-    captured = window.grab()
-    if captured.isNull():
-        raise RuntimeError("Gagal mengambil snapshot (QPixmap is null).")
-    
-    success = captured.save(str(current_file), "PNG")
-    if not success:
-        raise RuntimeError(f"Gagal menyimpan file ke {current_file}")
+    for width, height in sizes:
+        suffix = f"{width}x{height}"
+        baseline_file = baseline_dir / f"oriondesk-baseline-{suffix}.png"
+        current_file = artifacts_dir / f"oriondesk-current-{suffix}.png"
+        archive_file = archive_dir / f"oriondesk-{suffix}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.png"
 
-    shutil.copyfile(current_file, archive_file)
+        window = MainWindow(router=CommandRouter())
+        window.show()
+        QTest.qWait(120)
+        _prepare_readable_snapshot(window, app)
+        window.resize(width, height)
+        app.processEvents()
+        QTest.qWait(80)
 
-    if not baseline_file.exists():
-        shutil.copyfile(current_file, baseline_file)
-    else:
-        assert _images_equal(current_file, baseline_file) is True
+        captured = window.grab()
+        if captured.isNull():
+            raise RuntimeError("Gagal mengambil snapshot (QPixmap is null).")
 
-    window.close()
+        success = captured.save(str(current_file), "PNG")
+        if not success:
+            raise RuntimeError(f"Gagal menyimpan file ke {current_file}")
+
+        shutil.copyfile(current_file, archive_file)
+        if not baseline_file.exists():
+            shutil.copyfile(current_file, baseline_file)
+        else:
+            assert _images_equal(current_file, baseline_file) is True
+
+        window.close()

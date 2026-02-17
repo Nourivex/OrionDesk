@@ -4,7 +4,7 @@ import ctypes
 import ctypes.wintypes
 
 from PySide6.QtCore import QEasingCurve, QEvent, Qt, QVariantAnimation
-from PySide6.QtGui import QAction, QColor, QFont
+from PySide6.QtGui import QAction, QColor, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QComboBox,
     QFrame,
@@ -102,6 +102,11 @@ class MainWindow(QMainWindow):
         self.output_panel.setObjectName("outputPanel")
         self.highlighter = OutputHighlighter(self.output_panel.document())
 
+        self.command_input.setAccessibleName("command-input")
+        self.persona_selector.setAccessibleName("persona-selector")
+        self.execute_button.setAccessibleName("execute-button")
+        self.output_panel.setAccessibleName("output-panel")
+
         top_layout.addLayout(persona_layout)
         command_layout.addWidget(self.command_input)
         command_layout.addWidget(self.execute_button)
@@ -114,6 +119,11 @@ class MainWindow(QMainWindow):
         self.execute_button.clicked.connect(self._handle_execute)
         self.command_input.returnPressed.connect(self._handle_execute)
         self.persona_selector.currentTextChanged.connect(self._handle_persona_change)
+        self._setup_shortcuts()
+
+        self.setTabOrder(self.persona_selector, self.command_input)
+        self.setTabOrder(self.command_input, self.execute_button)
+        self.setTabOrder(self.execute_button, self.output_panel)
 
     def _handle_execute(self) -> None:
         command = self.command_input.text()
@@ -127,14 +137,14 @@ class MainWindow(QMainWindow):
                 result.message,
                 detail=f"Command: {result.pending_command}",
             )
-            self.output_panel.append(warning)
+            self.output_panel.append(self._with_status_badge(warning))
             approved = self._show_confirmation(result.pending_command or command)
             response = self.router.confirm_pending(approved)
             styled_response = self.persona_engine.format_output(response.message)
-            self.output_panel.append(styled_response)
+            self.output_panel.append(self._with_status_badge(styled_response))
         else:
             styled_response = self.persona_engine.format_output(result.message)
-            self.output_panel.append(styled_response)
+            self.output_panel.append(self._with_status_badge(styled_response))
 
         self.output_panel.append("")
         self.command_input.clear()
@@ -197,6 +207,21 @@ class MainWindow(QMainWindow):
         self.focus_animation = QVariantAnimation(self)
         self.focus_animation.setDuration(180)
         self.focus_animation.valueChanged.connect(self._on_focus_color_changed)
+
+    def _setup_shortcuts(self) -> None:
+        self.shortcut_execute = QShortcut(QKeySequence("Ctrl+Return"), self)
+        self.shortcut_execute.activated.connect(self._handle_execute)
+
+        self.shortcut_clear = QShortcut(QKeySequence("Ctrl+L"), self)
+        self.shortcut_clear.activated.connect(self.output_panel.clear)
+
+    def _with_status_badge(self, message: str) -> str:
+        lowered = message.lower()
+        if "ditolak" in lowered or "blocked" in lowered or "error" in lowered:
+            return f"[BLOCKED] {message}"
+        if "format salah" in lowered or "invalid" in lowered:
+            return f"[INVALID] {message}"
+        return f"[SUCCESS] {message}"
 
     def _setup_output_animation(self) -> None:
         self.output_effect = QGraphicsOpacityEffect(self.output_panel)

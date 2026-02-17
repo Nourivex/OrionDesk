@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
 from core.intent_engine import LocalIntentEngine
 from core.memory_engine import MemoryEngine
 from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManager, StructuredLogger
@@ -57,6 +58,9 @@ class CommandRouter:
     recovery_manager: RecoveryManager | None = None
     health_monitor: HealthMonitor | None = None
     diagnostic_reporter: DiagnosticReporter | None = None
+    release_channel_manager: ReleaseChannelManager | None = None
+    migration_manager: ConfigMigrationManager | None = None
+    backup_manager: ProfileBackupManager | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -84,6 +88,12 @@ class CommandRouter:
             self.health_monitor = HealthMonitor()
         if self.diagnostic_reporter is None:
             self.diagnostic_reporter = DiagnosticReporter()
+        if self.release_channel_manager is None:
+            self.release_channel_manager = ReleaseChannelManager()
+        if self.migration_manager is None:
+            self.migration_manager = ConfigMigrationManager()
+        if self.backup_manager is None:
+            self.backup_manager = ProfileBackupManager()
         self._register_plugins()
         if self.security_guard is None:
             self.security_guard = SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -261,6 +271,16 @@ class CommandRouter:
         checks = self.health_monitor.run(self)
         recent_logs = self.logger.tail(limit=30)
         return self.diagnostic_reporter.generate(checks, recent_logs)
+
+    def get_release_channel(self) -> str:
+        if self.release_channel_manager is None:
+            return "stable"
+        return self.release_channel_manager.get_channel()
+
+    def set_release_channel(self, channel: str) -> str:
+        if self.release_channel_manager is None:
+            return channel
+        return self.release_channel_manager.set_channel(channel)
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

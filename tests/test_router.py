@@ -258,3 +258,10 @@ def test_router_recovery_snapshot_and_diagnostic() -> None:
 
     assert snapshot is not None
     assert report is not None
+
+
+def test_router_release_channel_api() -> None:
+    router = build_router()
+    channel = router.set_release_channel("beta")
+    assert channel == "beta"
+    assert router.get_release_channel() == "beta"
