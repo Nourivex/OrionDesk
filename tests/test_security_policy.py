@@ -19,6 +19,11 @@ def test_security_guard_path_restriction(tmp_path) -> None:
     assert guard.is_path_allowed(str(outside)) is False
 
 
+def test_security_guard_default_allows_current_working_directory() -> None:
+    guard = SecurityGuard(command_whitelist={"delete"})
+    assert guard.is_path_allowed(".") is True
+
+
 def test_security_guard_process_guard() -> None:
     guard = SecurityGuard(command_whitelist={"kill"})
     assert guard.is_process_target_allowed("1234") is True

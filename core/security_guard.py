@@ -7,7 +7,7 @@ from pathlib import Path
 @dataclass
 class SecurityGuard:
     command_whitelist: set[str] = field(default_factory=set)
-    allowed_delete_roots: list[Path] = field(default_factory=lambda: [Path.home()])
+    allowed_delete_roots: list[Path] = field(default_factory=lambda: [Path.home(), Path.cwd()])
     protected_process_names: set[str] = field(
         default_factory=lambda: {
             "system",

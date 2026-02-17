@@ -3,7 +3,7 @@ from __future__ import annotations
 import ctypes
 import ctypes.wintypes
 
-from PySide6.QtCore import QEasingCurve, QEvent, Qt, QVariantAnimation
+from PySide6.QtCore import QEasingCurve, QEvent, QObject, QThread, Qt, Signal, QVariantAnimation
 from PySide6.QtGui import QAction, QColor, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -41,6 +41,19 @@ HOTKEY_ID = 1
 KEY_O = 0x4F
 
 
+class CommandWorker(QObject):
+    finished = Signal(str, object)
+
+    def __init__(self, router: CommandRouter, command: str) -> None:
+        super().__init__()
+        self.router = router
+        self.command = command
+
+    def run(self) -> None:
+        result = self.router.execute(self.command)
+        self.finished.emit(self.command, result)
+
+
 class MainWindow(QMainWindow):
     def __init__(self, router: CommandRouter, persona_engine: PersonaEngine | None = None) -> None:
         super().__init__()
@@ -52,6 +65,8 @@ class MainWindow(QMainWindow):
         self.minimize_to_tray = False
         self._hotkey_registered = False
         self.tray_icon: QSystemTrayIcon | None = None
+        self._active_thread: QThread | None = None
+        self._active_worker: CommandWorker | None = None
 
         self.setWindowTitle("OrionDesk")
         self.resize(800, 480)
@@ -179,10 +194,14 @@ class MainWindow(QMainWindow):
         self.intent_hint_label = QLabel(page)
         self.intent_hint_label.setObjectName("intentHint")
         self.intent_hint_label.setWordWrap(True)
+        self.loading_label = QLabel("", page)
+        self.loading_label.setObjectName("loadingHint")
+        self.loading_label.setWordWrap(True)
 
         top_layout.addWidget(self.command_suggestions)
         top_layout.addWidget(self.command_hint_label)
         top_layout.addWidget(self.intent_hint_label)
+        top_layout.addWidget(self.loading_label)
         self._refresh_command_assist("")
 
         page_layout.addWidget(top_card)
@@ -420,7 +439,49 @@ class MainWindow(QMainWindow):
 
     def _handle_execute(self) -> None:
         command = self.command_input.text()
+        if self._should_run_async(command):
+            self._run_async_command(command)
+            return
+
         result = self.router.execute(command)
+        self._render_execution_result(command, result)
+
+    def _should_run_async(self, command: str) -> bool:
+        return command.strip().lower().startswith("search ")
+
+    def _run_async_command(self, command: str) -> None:
+        if self._active_thread is not None:
+            self.loading_label.setText("Search sedang berjalan. Tunggu proses selesai.")
+            return
+
+        self.loading_label.setText("Loading search...")
+        self.execute_button.setEnabled(False)
+        self.command_input.setEnabled(False)
+
+        worker = CommandWorker(self.router, command)
+        thread = QThread(self)
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        worker.finished.connect(self._handle_async_result)
+        worker.finished.connect(thread.quit)
+        worker.finished.connect(worker.deleteLater)
+        thread.finished.connect(thread.deleteLater)
+        thread.finished.connect(self._clear_async_state)
+        self._active_thread = thread
+        self._active_worker = worker
+        thread.start()
+
+    def _handle_async_result(self, command: str, result) -> None:
+        self._render_execution_result(command, result)
+
+    def _clear_async_state(self) -> None:
+        self._active_thread = None
+        self._active_worker = None
+        self.execute_button.setEnabled(True)
+        self.command_input.setEnabled(True)
+        self.loading_label.setText("")
+
+    def _render_execution_result(self, command: str, result) -> None:
 
         if command.strip():
             self.output_panel.append(f"> {command}")
@@ -473,6 +534,8 @@ class MainWindow(QMainWindow):
 
     def _with_status_badge(self, message: str) -> str:
         lowered = message.lower()
+        if "warning" in lowered or "konfirmasi manual" in lowered:
+            return f"[WARNING] {message}"
         if "ditolak" in lowered or "blocked" in lowered or "error" in lowered:
             return f"[BLOCKED] {message}"
         if "format salah" in lowered or "invalid" in lowered:
@@ -592,11 +655,25 @@ class MainWindow(QMainWindow):
         return super().closeEvent(event)
 
     def _show_confirmation(self, command: str) -> bool:
-        reply = QMessageBox.question(
-            self,
-            "Konfirmasi Safe Mode",
-            f"Command berisiko terdeteksi:\n{command}\n\nLanjutkan aksi ini?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Konfirmasi Safe Mode")
+        dialog.setText(f"Command berisiko terdeteksi:\n{command}\n\nLanjutkan aksi ini?")
+        dialog.setIcon(QMessageBox.Icon.Warning)
+        dialog.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        dialog.setDefaultButton(QMessageBox.StandardButton.No)
+        dialog.setStyleSheet(
+            f"""
+            QMessageBox {{ background-color: {self.theme.window_bg}; color: {self.theme.text_primary}; }}
+            QLabel {{ color: {self.theme.text_primary}; }}
+            QPushButton {{
+                background-color: {self.theme.button_bg};
+                color: {self.theme.button_text};
+                border-radius: {self.theme.radius_md}px;
+                padding: {self.theme.spacing_sm}px {self.theme.spacing_md}px;
+            }}
+            QPushButton:hover {{ background-color: {self.theme.button_hover}; }}
+            QPushButton:pressed {{ background-color: {self.theme.button_pressed}; }}
+            """
         )
-        return reply == QMessageBox.StandardButton.Yes
+        reply = dialog.exec()
+        return reply == int(QMessageBox.StandardButton.Yes)

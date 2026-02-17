@@ -4,12 +4,15 @@ from modules.launcher import Launcher
 
 
 def test_open_app_known_alias() -> None:
-    calls: list[tuple[str, bool]] = []
+    calls: list[tuple[list[str], bool]] = []
 
     class DummyProcess:
         pid = 1234
 
-    def fake_popen(command: str, shell: bool) -> DummyProcess:
+        def poll(self):
+            return None
+
+    def fake_popen(command: list[str], shell: bool) -> DummyProcess:
         calls.append((command, shell))
         return DummyProcess()
 
@@ -22,7 +25,7 @@ def test_open_app_known_alias() -> None:
     finally:
         subprocess.Popen = original
 
-    assert calls == [("code", True)]
+    assert calls == [(["code"], False)]
     assert "Membuka 'vscode'" in message
     assert "PID: 1234" in message
 
@@ -34,7 +37,7 @@ def test_open_app_unknown_alias() -> None:
 
 
 def test_open_app_process_error() -> None:
-    def fake_popen(command: str, shell: bool) -> None:
+    def fake_popen(command: list[str], shell: bool) -> None:
         raise OSError("not found")
 
     original = subprocess.Popen

@@ -88,6 +88,17 @@ def test_phase24_command_assist_argument_hints() -> None:
     window.close()
 
 
+def test_search_command_runs_in_async_mode() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    assert window._should_run_async("search report.pdf") is True
+    assert window._should_run_async("open notepad") is False
+
+    window.close()
+
+
 def test_main_window_default_close_does_not_minimize_to_tray() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())

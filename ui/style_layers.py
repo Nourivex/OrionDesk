@@ -15,6 +15,7 @@ def build_main_window_stylesheet(tokens: ThemeTokens, focus_color: str) -> str:
         QLabel#commandSuggestions {{ font-size: 10px; color: {tokens.suggestion_text}; }}
         QLabel#commandHint {{ font-size: 10px; color: {tokens.hint_text}; }}
         QLabel#intentHint {{ font-size: 10px; color: {tokens.intent_text}; }}
+        QLabel#loadingHint {{ font-size: 10px; color: {tokens.hint_text}; font-weight: 600; }}
         QFrame#topCard {{
             background-color: {tokens.card_bg};
             border: 1px solid {tokens.panel_border};

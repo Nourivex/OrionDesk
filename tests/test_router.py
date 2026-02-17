@@ -26,11 +26,23 @@ class DummySystemTools:
         return "sys:ok"
 
 
+class DummySystemActions:
+    def shutdown_now(self) -> str:
+        return "Shutdown command dikirim ke sistem operasi."
+
+    def terminate_process(self, target: str) -> str:
+        return f"Process '{target}' berhasil dihentikan (1 instance)."
+
+    def delete_path(self, target: str) -> str:
+        return f"File dihapus: {target}"
+
+
 def build_router() -> CommandRouter:
     return CommandRouter(
         launcher=DummyLauncher(),
         file_manager=DummyFileManager(),
         system_tools=DummySystemTools(),
+        system_actions=DummySystemActions(),
     )
 
 
@@ -45,6 +57,14 @@ def test_route_open_command() -> None:
 def test_route_search_file_command() -> None:
     router = build_router()
     result = router.route("search file report.pdf")
+
+    assert result == "search:report.pdf"
+    assert router.file_manager.last_query == "report.pdf"
+
+
+def test_route_search_shortcut_without_file_keyword() -> None:
+    router = build_router()
+    result = router.route("search report.pdf")
 
     assert result == "search:report.pdf"
     assert router.file_manager.last_query == "report.pdf"
@@ -67,7 +87,7 @@ def test_route_unknown_command() -> None:
 
 def test_route_invalid_search_format() -> None:
     router = build_router()
-    assert "Format salah" in router.route("search docs")
+    assert router.route("search docs") == "search:docs"
 
 
 def test_parse_command_success() -> None:
@@ -113,7 +133,7 @@ def test_safe_mode_approve_confirmation() -> None:
     router.execute("kill 1234")
     response = router.confirm_pending(True)
 
-    assert "Simulasi kill process" in response.message
+    assert "berhasil dihentikan" in response.message
     assert router.pending_confirmation is None
 
 
@@ -123,7 +143,7 @@ def test_dangerous_command_executes_when_safe_mode_disabled() -> None:
 
     result = router.execute("shutdown")
     assert result.requires_confirmation is False
-    assert "Simulasi shutdown" in result.message
+    assert "Shutdown command" in result.message
 
 
 def test_contract_rejects_invalid_sys_args() -> None:

@@ -22,6 +22,7 @@ from core.smart_assist import SmartAssistEngine
 from core.system_intent_mapper import SystemIntentMapper
 from modules.file_manager import FileManager
 from modules.launcher import Launcher
+from modules.system_actions import SystemActions
 from modules.system_tools import SystemTools
 
 
@@ -77,6 +78,7 @@ class CommandRouter:
     capability_guardrail: CapabilityGuardrail | None = None
     system_intent_mapper: SystemIntentMapper | None = None
     smart_assist: SmartAssistEngine | None = None
+    system_actions: SystemActions | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -101,6 +103,7 @@ class CommandRouter:
         self.capability_guardrail = self.capability_guardrail or CapabilityGuardrail(permission_tier="basic")
         self.system_intent_mapper = self.system_intent_mapper or SystemIntentMapper()
         self.smart_assist = self.smart_assist or SmartAssistEngine()
+        self.system_actions = self.system_actions or SystemActions()
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -117,6 +120,7 @@ class CommandRouter:
             return CommandResult(message)
 
         normalized = self._resolve_intent(command)
+        normalized = self._normalize_shortcuts(normalized)
         correction = self._resolve_autocorrect(normalized, allow_autocorrect)
         if correction is not None:
             if correction.requires_confirmation:
@@ -207,17 +211,17 @@ class CommandRouter:
         if self.safe_mode_policy.is_blocked(command.keyword):
             return CommandResult("Aksi ditolak oleh safe mode policy.")
         if command.keyword == "shutdown":
-            return CommandResult("Simulasi shutdown dijalankan.")
+            return CommandResult(self.system_actions.shutdown_now())
         if command.keyword == "kill":
             target = " ".join(command.args)
             if not self.security_guard.is_process_target_allowed(target):
                 return CommandResult("Kill process ditolak oleh process permission guard.")
-            return CommandResult(f"Simulasi kill process untuk '{target}' dijalankan.")
+            return CommandResult(self.system_actions.terminate_process(target))
         if command.keyword == "delete":
             target = " ".join(command.args)
             if not self.security_guard.is_path_allowed(target):
                 return CommandResult("Delete ditolak oleh path restriction policy.")
-            return CommandResult(f"Simulasi delete untuk '{target}' dijalankan.")
+            return CommandResult(self.system_actions.delete_path(target))
         return CommandResult("Aksi berbahaya tidak dikenali.")
 
     def _record_session(self, command: str, message: str, status: str, context: ExecutionContext | None = None) -> None:
@@ -260,6 +264,15 @@ class CommandRouter:
         if value.startswith("~/"):
             return str(Path.home() / value[2:])
         return os.path.expandvars(value)
+
+    def _normalize_shortcuts(self, normalized: str) -> str:
+        parsed = self.parse(normalized)
+        if parsed is None:
+            return normalized
+        if parsed.keyword == "search" and parsed.args and parsed.args[0].lower() != "file":
+            query = " ".join(parsed.args).strip()
+            return f"search file {query}"
+        return normalized
 
     def memory_summary(self) -> dict:
         return {
