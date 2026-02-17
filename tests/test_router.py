@@ -189,6 +189,20 @@ def test_router_auto_registers_plugin_commands() -> None:
     assert {"delete", "kill", "shutdown"}.issubset(router.dangerous_keywords)
 
 
+def test_router_semantic_intent_open() -> None:
+    router = build_router()
+    result = router.execute("tolong bukakan notepad")
+
+    assert result.message == "open:notepad"
+
+
+def test_router_semantic_intent_search() -> None:
+    router = build_router()
+    result = router.execute("tolong cari file report.pdf")
+
+    assert result.message == "search:report.pdf"
+
+
 def test_delete_restricted_by_path_policy_when_safe_mode_off(tmp_path) -> None:
     allowed_root = tmp_path / "allowed"
     allowed_root.mkdir()

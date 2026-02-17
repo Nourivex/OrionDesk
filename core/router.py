@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from core.intent_engine import LocalIntentEngine
 from core.plugin_registry import PluginRegistry
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -48,6 +49,7 @@ class CommandRouter:
     session_layer: SessionLayer | None = None
     safe_mode_policy: SafeModePolicy | None = None
     security_guard: SecurityGuard | None = None
+    intent_engine: LocalIntentEngine | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -63,6 +65,8 @@ class CommandRouter:
             self.session_layer = SessionLayer(session_name="router-session")
         if self.safe_mode_policy is None:
             self.safe_mode_policy = SafeModePolicy()
+        if self.intent_engine is None:
+            self.intent_engine = LocalIntentEngine()
         self._register_plugins()
         if self.security_guard is None:
             self.security_guard = SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -71,7 +75,8 @@ class CommandRouter:
         return self.execute(command).message
 
     def execute(self, command: str) -> CommandResult:
-        parsed = self.parse(command)
+        normalized = self._resolve_intent(command)
+        parsed = self.parse(normalized)
         if parsed is None:
             result = CommandResult("Perintah kosong. Silakan isi command terlebih dahulu.")
             self._record_session(command, result.message, "invalid")
@@ -231,3 +236,17 @@ class CommandRouter:
 
             handler = getattr(self, item.handler_name)
             self.handlers[item.keyword] = handler
+
+    def _resolve_intent(self, raw_command: str) -> str:
+        if self.intent_engine is None:
+            return raw_command
+
+        allowed = set(self.contracts.keys())
+        resolution = self.intent_engine.resolve(raw_command, allowed_keywords=allowed)
+        if resolution.reason.startswith("semantic"):
+            self._record_session(
+                raw_command,
+                f"Intent resolved -> {resolution.resolved} (confidence={resolution.confidence:.2f})",
+                "intent_resolved",
+            )
+        return resolution.resolved

@@ -11,7 +11,7 @@ Menyusun roadmap v3 yang fokus pada kebutuhan utama Personal OS Agent setelah PH
 
 - Roadmap aktif bergeser ke v3 (v1.3).
 - Roadmap v2 dipertahankan sebagai arsip spesifikasi.
-- Fase v3 ditetapkan sebagai PHASE 11–15.
+- Fase v3 ditetapkan sebagai PHASE 11–16.
 
 ## Fase v3
 
@@ -20,6 +20,7 @@ Menyusun roadmap v3 yang fokus pada kebutuhan utama Personal OS Agent setelah PH
 - PHASE 13 — Knowledge & Memory Engine (Local-first)
 - PHASE 14 — Observability, Reliability, and Recovery
 - PHASE 15 — Deployment, Distribution, and Upgrade Manager
+- PHASE 16 — UI Excellence & Accessibility Polish
 
 ## Alasan Prioritas
 

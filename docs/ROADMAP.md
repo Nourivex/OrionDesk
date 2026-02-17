@@ -31,6 +31,7 @@ Tanpa:
 - PHASE 13 — Knowledge & Memory Engine (Local-first)
 - PHASE 14 — Observability, Reliability, and Recovery
 - PHASE 15 — Deployment, Distribution, and Upgrade Manager
+- PHASE 16 — UI Excellence & Accessibility Polish
 
 ## 📌 Status Fase
 
@@ -49,11 +50,12 @@ Tanpa:
 
 ### Roadmap v3 (Aktif / v1.3)
 
-- PHASE 11: **Planned** — Local Intent Intelligence Layer
+- PHASE 11: **Done** — Local Intent Intelligence Layer
 - PHASE 12: **Planned** — Workflow Automation & Task Recipes
 - PHASE 13: **Planned** — Knowledge & Memory Engine (Local-first)
 - PHASE 14: **Planned** — Observability, Reliability, and Recovery
 - PHASE 15: **Planned** — Deployment, Distribution, and Upgrade Manager
+- PHASE 16: **Planned** — UI Excellence & Accessibility Polish
 
 ### Catatan Perubahan Arah
 
@@ -146,7 +148,7 @@ Output fase:
 
 - UI lebih konsisten, modern, dan siap iterasi lanjutan.
 
-## 🧩 Spesifikasi v3 (PHASE 11-15)
+## 🧩 Spesifikasi v3 (PHASE 11-16)
 
 ## 🔹 PHASE 11 — Local Intent Intelligence Layer
 
@@ -230,6 +232,23 @@ Cakupan:
 Output fase:
 
 - OrionDesk siap dipakai sebagai aplikasi personal OS agent yang matang.
+
+---
+
+## 🔹 PHASE 16 — UI Excellence & Accessibility Polish
+
+Tujuan: Menyempurnakan pengalaman visual dan aksesibilitas agar kualitas desktop app setara produk harian premium.
+
+Cakupan:
+
+- Design token cleanup (spacing, typography scale, radius consistency)
+- Accessibility pass (contrast, keyboard traversal, focus visibility)
+- Rich output UX (status badges, semantic coloring, readability)
+- Snapshot visual matrix (multi-size baseline + regression checks)
+
+Output fase:
+
+- UI OrionDesk konsisten, nyaman dipakai lama, dan siap kualitas rilis publik.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 
