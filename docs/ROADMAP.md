@@ -24,7 +24,15 @@ Tanpa:
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
 
-## 🚀 ROADMAP v4 (Active / v1.4)
+## 🚀 ROADMAP v5 (Active / v1.5)
+
+- PHASE 22 — Command Engine Stabilization + Unified Executor
+- PHASE 23 — Command Pack Expansion (File, Process, Network, Utility)
+- PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain)
+- PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies
+- PHASE 26 — Command Reliability Matrix + End-to-End Functional QA
+
+## 🚀 ROADMAP v4 (Completed / v1.4)
 
 - PHASE 17 — Tab Shell Refactor (UI Information Architecture)
 - PHASE 18 — About + Diagnostics Panels
@@ -63,6 +71,14 @@ Tanpa:
 - PHASE 19: **Done** — Command Assist & Discoverability
 - PHASE 20: **Done** — Theme Tokens + UI Scalability + Snapshot Refresh
 - PHASE 21: **Done** — Settings Priority Panel + Theme Selection (Light Mode)
+
+### Roadmap v5 (Aktif / v1.5)
+
+- PHASE 22: **Planned** — Command Engine Stabilization + Unified Executor
+- PHASE 23: **Planned** — Command Pack Expansion (File, Process, Network, Utility)
+- PHASE 24: **Planned** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
+- PHASE 25: **Planned** — Safe Execution Profiles + Risk-aware Command Policies
+- PHASE 26: **Planned** — Command Reliability Matrix + End-to-End Functional QA
 
 ### Catatan Perubahan Arah
 
@@ -337,6 +353,89 @@ Cakupan:
 Output fase:
 
 - Pengaturan penting bisa diakses user dari UI secara langsung dan konsisten.
+
+---
+
+## 🧩 Spesifikasi v5 (PHASE 22-26)
+
+## 🔹 PHASE 22 — Command Engine Stabilization + Unified Executor
+
+Tujuan: Menyatukan eksekusi command agar seluruh command path konsisten, terukur, dan lebih mudah di-maintain.
+
+Cakupan:
+
+- Unified executor untuk command normal dan smart command
+- Contract validation + error taxonomy konsisten
+- Standard response envelope untuk seluruh command
+
+Output fase:
+
+- Fondasi command engine solid untuk ekspansi fitur besar.
+
+---
+
+## 🔹 PHASE 23 — Command Pack Expansion (File, Process, Network, Utility)
+
+Tujuan: Menambah command yang benar-benar berguna untuk produktivitas harian.
+
+Cakupan:
+
+- File ops aman (list, read, copy, move, rename)
+- Process ops aman (list, detail, terminate terproteksi)
+- Network utility dasar (ping, dns lookup, interface summary)
+- Utility commands tambahan (time, env, path, hash)
+
+Output fase:
+
+- Cakupan command jauh lebih lengkap dan fungsional.
+
+---
+
+## 🔹 PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain)
+
+Tujuan: Mengurangi kesalahan input command dan meningkatkan discoverability secara cerdas.
+
+Cakupan:
+
+- Auto-correct typo command berbasis confidence
+- Auto-complete argument berdasarkan context command
+- Explain mode untuk menjelaskan aksi command sebelum eksekusi
+
+Output fase:
+
+- UX command menjadi lebih cepat, minim error, dan lebih jelas.
+
+---
+
+## 🔹 PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies
+
+Tujuan: Menjaga command power tetap aman dengan profile eksekusi berbasis risiko.
+
+Cakupan:
+
+- Profile policy (`strict`, `balanced`, `power`)
+- Risk scoring per command + level guard
+- Mandatory confirmation untuk high-risk action
+
+Output fase:
+
+- Command lebih powerful dengan safety guard yang adaptif.
+
+---
+
+## 🔹 PHASE 26 — Command Reliability Matrix + End-to-End Functional QA
+
+Tujuan: Memastikan command core benar-benar berfungsi penuh dan stabil lintas skenario.
+
+Cakupan:
+
+- Reliability matrix untuk seluruh command utama
+- E2E functional test untuk flow penting command
+- Regression suite untuk smart-assist dan policy
+
+Output fase:
+
+- Standar kualitas command siap untuk milestone v1.5.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 

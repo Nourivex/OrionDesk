@@ -42,3 +42,4 @@ pytest -q
 
 - PHASE 0–21: Done
 - ROADMAP v4 / v1.4: Completed (PHASE 17–21)
+- ROADMAP v5 / v1.5: Active Planning (PHASE 22–26)
