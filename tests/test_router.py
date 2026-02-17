@@ -177,3 +177,11 @@ def test_router_records_session_for_pending_and_cancelled() -> None:
     router.confirm_pending(False)
     cancelled = router.session_layer.recent(limit=1)[0]
     assert cancelled.status == "cancelled"
+
+
+def test_router_auto_registers_plugin_commands() -> None:
+    router = build_router()
+    registered = set(router.contracts.keys())
+
+    assert {"open", "search", "sys", "delete", "kill", "shutdown"}.issubset(registered)
+    assert {"delete", "kill", "shutdown"}.issubset(router.dangerous_keywords)

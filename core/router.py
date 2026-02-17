@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
+from core.plugin_registry import PluginRegistry
 from core.session import SessionLayer
 from modules.file_manager import FileManager
 from modules.launcher import Launcher
@@ -39,6 +40,7 @@ class CommandRouter:
     system_tools: SystemTools | None = None
     handlers: dict[str, Callable[[ParsedCommand], str]] | None = None
     contracts: dict[str, CommandContract] | None = None
+    dangerous_keywords: set[str] | None = None
     safe_mode: bool = True
     pending_confirmation: ParsedCommand | None = None
     session_layer: SessionLayer | None = None
@@ -50,49 +52,12 @@ class CommandRouter:
             self.file_manager = FileManager()
         if self.system_tools is None:
             self.system_tools = SystemTools()
-        self.handlers = {
-            "open": self._handle_open,
-            "search": self._handle_search,
-            "sys": self._handle_sys,
-        }
+        self.handlers = {}
+        self.contracts = {}
+        self.dangerous_keywords = set()
         if self.session_layer is None:
             self.session_layer = SessionLayer(session_name="router-session")
-        self.contracts = {
-            "open": CommandContract(
-                keyword="open",
-                usage="open <app_alias>",
-                min_args=1,
-            ),
-            "search": CommandContract(
-                keyword="search",
-                usage="search file <query>",
-                min_args=2,
-                first_arg_equals="file",
-            ),
-            "sys": CommandContract(
-                keyword="sys",
-                usage="sys info",
-                min_args=1,
-                max_args=1,
-                first_arg_equals="info",
-            ),
-            "delete": CommandContract(
-                keyword="delete",
-                usage="delete <path>",
-                min_args=1,
-            ),
-            "kill": CommandContract(
-                keyword="kill",
-                usage="kill <process_name_or_pid>",
-                min_args=1,
-            ),
-            "shutdown": CommandContract(
-                keyword="shutdown",
-                usage="shutdown",
-                min_args=0,
-                max_args=0,
-            ),
-        }
+        self._register_plugins()
 
     def route(self, command: str) -> str:
         return self.execute(command).message
@@ -176,7 +141,7 @@ class CommandRouter:
         return self.system_tools.system_info()
 
     def _is_dangerous(self, keyword: str) -> bool:
-        return keyword in {"delete", "kill", "shutdown"}
+        return keyword in self.dangerous_keywords
 
     def _execute_dangerous(self, command: ParsedCommand) -> CommandResult:
         if command.keyword == "shutdown":
@@ -195,9 +160,9 @@ class CommandRouter:
     def _validate_contract(self, command: ParsedCommand) -> CommandResult | None:
         contract = self.contracts.get(command.keyword)
         if contract is None:
+            allowed = ", ".join(sorted(self.contracts.keys()))
             return CommandResult(
-                "Perintah tidak dikenali. Gunakan command yang terdaftar: "
-                "open, search file, sys info, delete, kill, shutdown."
+                f"Perintah tidak dikenali. Gunakan command yang terdaftar: {allowed}."
             )
 
         arg_count = len(command.args)
@@ -219,3 +184,21 @@ class CommandRouter:
         if self.session_layer is None:
             return
         self.session_layer.record(command=command, message=message, status=status)
+
+    def _register_plugins(self) -> None:
+        registry = PluginRegistry(package_name="plugins")
+        for item in registry.discover():
+            self.contracts[item.keyword] = CommandContract(
+                keyword=item.keyword,
+                usage=item.usage,
+                min_args=item.min_args,
+                max_args=item.max_args,
+                first_arg_equals=item.first_arg_equals,
+            )
+
+            if item.dangerous:
+                self.dangerous_keywords.add(item.keyword)
+                continue
+
+            handler = getattr(self, item.handler_name)
+            self.handlers[item.keyword] = handler
