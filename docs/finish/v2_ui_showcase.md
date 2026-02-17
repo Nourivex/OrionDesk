@@ -13,3 +13,7 @@ Dokumen ini mereferensikan baseline tampilan setelah PHASE 10.
 - Top command card dengan border lembut
 - Kontrol rounded modern dengan state fokus
 - Panel output yang lebih kontras dan rapih
+- Material effect attempt (Mica/Acrylic fallback)
+- Persona switch fade micro-animation
+- Output syntax highlight untuk token penting
+- System tray behavior + hotkey akses cepat

@@ -11,6 +11,7 @@ OrionDesk adalah personal OS agent lokal untuk Windows 11 yang fokus pada keaman
 - Persona layer (style output, warning verbosity, risk tolerance)
 - Safe mode default untuk command berisiko (`delete`, `kill`, `shutdown`)
 - UI PySide6 dengan dark mode, persona selector, dan output console
+- UI modern Windows 11 feel (material effect attempt, animation, tray, hotkey)
 - Snapshot test PNG untuk validasi tampilan
 
 ## Menjalankan Aplikasi
