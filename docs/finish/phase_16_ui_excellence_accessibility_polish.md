@@ -18,7 +18,7 @@ PHASE 16 memoles UI untuk kualitas penggunaan harian yang lebih nyaman dan akses
   - highlighter diperluas untuk badge status
 - Snapshot visual regression matrix:
   - baseline multi-size (`1280x760`, `1024x640`)
-  - baseline disimpan pada `docs/assets/v3/`
+  - baseline disimpan pada `docs/assets/v4/`
 
 ## File Diubah
 

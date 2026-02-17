@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         self.persona_engine = persona_engine or PersonaEngine(persona_name="calm")
         self._input_focus_color = "#5A8BFF"
         self._explicit_quit = False
+        self.minimize_to_tray = False
         self._hotkey_registered = False
         self.tray_icon: QSystemTrayIcon | None = None
 
@@ -351,11 +352,14 @@ class MainWindow(QMainWindow):
 
     def _quit_app(self) -> None:
         self._explicit_quit = True
+        self.close()
+
+    def _cleanup_runtime_hooks(self) -> None:
         if self._hotkey_registered and hasattr(ctypes, "windll"):
             ctypes.windll.user32.UnregisterHotKey(None, HOTKEY_ID)
+            self._hotkey_registered = False
         if self.tray_icon is not None:
             self.tray_icon.hide()
-        self.close()
 
     def _on_tray_activated(self, reason) -> None:
         if reason == QSystemTrayIcon.ActivationReason.Trigger:
@@ -397,17 +401,19 @@ class MainWindow(QMainWindow):
         return super().nativeEvent(event_type, message)
 
     def closeEvent(self, event) -> None:
-        if self._explicit_quit:
-            return super().closeEvent(event)
-        event.ignore()
-        self.hide()
-        if self.tray_icon is not None:
+        if self.minimize_to_tray and not self._explicit_quit and self.tray_icon is not None:
+            event.ignore()
+            self.hide()
             self.tray_icon.showMessage(
                 "OrionDesk",
                 "Aplikasi tetap berjalan di System Tray.",
                 QSystemTrayIcon.MessageIcon.Information,
                 1500,
             )
+            return
+
+        self._cleanup_runtime_hooks()
+        return super().closeEvent(event)
 
     def _show_confirmation(self, command: str) -> bool:
         reply = QMessageBox.question(

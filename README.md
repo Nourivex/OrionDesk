@@ -38,7 +38,7 @@ pytest -q
 - Finish notes: `docs/finish/`
 - Baseline tampilan v1: `docs/assets/v1/oriondesk-baseline.png`
 - Baseline tampilan v2: `docs/assets/v2/oriondesk-baseline.png`
-- Baseline tampilan v3 matrix: `docs/assets/v3/`
+- Baseline tampilan v4 matrix: `docs/assets/v4/`
 
 ## Status Fase
 
