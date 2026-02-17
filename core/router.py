@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Callable
 
 from core.plugin_registry import PluginRegistry
+from core.safe_mode_policy import SafeModePolicy
+from core.security_guard import SecurityGuard
 from core.session import SessionLayer
 from modules.file_manager import FileManager
 from modules.launcher import Launcher
@@ -44,6 +46,8 @@ class CommandRouter:
     safe_mode: bool = True
     pending_confirmation: ParsedCommand | None = None
     session_layer: SessionLayer | None = None
+    safe_mode_policy: SafeModePolicy | None = None
+    security_guard: SecurityGuard | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -57,7 +61,11 @@ class CommandRouter:
         self.dangerous_keywords = set()
         if self.session_layer is None:
             self.session_layer = SessionLayer(session_name="router-session")
+        if self.safe_mode_policy is None:
+            self.safe_mode_policy = SafeModePolicy()
         self._register_plugins()
+        if self.security_guard is None:
+            self.security_guard = SecurityGuard(command_whitelist=set(self.contracts.keys()))
 
     def route(self, command: str) -> str:
         return self.execute(command).message
@@ -74,13 +82,27 @@ class CommandRouter:
             self._record_session(parsed.raw, result.message, "invalid")
             return result
 
+        if not self.security_guard.is_command_allowed(parsed.keyword):
+            result = CommandResult("Perintah ditolak oleh command whitelist policy.")
+            self._record_session(parsed.raw, result.message, "blocked")
+            return result
+
         validation = self._validate_contract(parsed)
         if validation is not None:
             self._record_session(parsed.raw, validation.message, "invalid")
             return validation
 
         if self._is_dangerous(parsed.keyword):
+            if self.safe_mode_policy.is_blocked(parsed.keyword):
+                result = CommandResult("Aksi ditolak oleh safe mode policy.")
+                self._record_session(parsed.raw, result.message, "blocked")
+                return result
+
             if self.safe_mode:
+                if not self.safe_mode_policy.requires_confirmation(parsed.keyword):
+                    result = self._execute_dangerous(parsed)
+                    self._record_session(parsed.raw, result.message, "success")
+                    return result
                 self.pending_confirmation = parsed
                 result = CommandResult(
                     "Safe Mode aktif. Aksi ini membutuhkan konfirmasi manual.",
@@ -144,15 +166,22 @@ class CommandRouter:
         return keyword in self.dangerous_keywords
 
     def _execute_dangerous(self, command: ParsedCommand) -> CommandResult:
+        if self.safe_mode_policy.is_blocked(command.keyword):
+            return CommandResult("Aksi ditolak oleh safe mode policy.")
+
         if command.keyword == "shutdown":
             return CommandResult("Simulasi shutdown dijalankan.")
 
         if command.keyword == "kill":
             target = " ".join(command.args)
+            if not self.security_guard.is_process_target_allowed(target):
+                return CommandResult("Kill process ditolak oleh process permission guard.")
             return CommandResult(f"Simulasi kill process untuk '{target}' dijalankan.")
 
         if command.keyword == "delete":
             target = " ".join(command.args)
+            if not self.security_guard.is_path_allowed(target):
+                return CommandResult("Delete ditolak oleh path restriction policy.")
             return CommandResult(f"Simulasi delete untuk '{target}' dijalankan.")
 
         return CommandResult("Aksi berbahaya tidak dikenali.")

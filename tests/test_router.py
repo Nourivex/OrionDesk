@@ -1,4 +1,6 @@
 from core.router import CommandRouter
+from core.safe_mode_policy import SafeModePolicy
+from core.security_guard import SecurityGuard
 
 
 class DummyLauncher:
@@ -60,7 +62,7 @@ def test_route_empty_command() -> None:
 
 def test_route_unknown_command() -> None:
     router = build_router()
-    assert "Perintah tidak dikenali" in router.route("foobar")
+    assert "command whitelist" in router.route("foobar")
 
 
 def test_route_invalid_search_format() -> None:
@@ -142,7 +144,7 @@ def test_contract_rejects_shutdown_with_extra_args() -> None:
 def test_contract_rejects_unknown_keyword() -> None:
     router = build_router()
     result = router.execute("hack system")
-    assert "Perintah tidak dikenali" in result.message
+    assert "command whitelist" in result.message
 
 
 def test_contract_rejects_too_long_command() -> None:
@@ -185,3 +187,39 @@ def test_router_auto_registers_plugin_commands() -> None:
 
     assert {"open", "search", "sys", "delete", "kill", "shutdown"}.issubset(registered)
     assert {"delete", "kill", "shutdown"}.issubset(router.dangerous_keywords)
+
+
+def test_delete_restricted_by_path_policy_when_safe_mode_off(tmp_path) -> None:
+    allowed_root = tmp_path / "allowed"
+    allowed_root.mkdir()
+    guard = SecurityGuard(
+        command_whitelist={"delete", "kill", "shutdown", "open", "search", "sys"},
+        allowed_delete_roots=[allowed_root],
+    )
+    router = build_router()
+    router.safe_mode = False
+    router.security_guard = guard
+
+    result = router.execute("delete C:/Windows/System32")
+    assert "path restriction" in result.message
+
+
+def test_kill_protected_process_denied_when_safe_mode_off() -> None:
+    guard = SecurityGuard(
+        command_whitelist={"delete", "kill", "shutdown", "open", "search", "sys"},
+    )
+    router = build_router()
+    router.safe_mode = False
+    router.security_guard = guard
+
+    result = router.execute("kill lsass.exe")
+    assert "process permission guard" in result.message
+
+
+def test_safe_mode_policy_can_block_shutdown() -> None:
+    policy = SafeModePolicy(blocked_actions=("shutdown",))
+    router = build_router()
+    router.safe_mode_policy = policy
+
+    result = router.execute("shutdown")
+    assert "safe mode policy" in result.message
