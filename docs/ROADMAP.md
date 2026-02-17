@@ -45,7 +45,7 @@ Tanpa:
 
 ### Roadmap v2 (Aktif)
 
-- PHASE 6: **Planned** — Command Contract Hardening
+- PHASE 6: **Done** — Command Contract Hardening
 - PHASE 7: **Planned** — Command History & Session Layer
 - PHASE 8: **Planned** — Plugin Architecture
 - PHASE 9: **Planned** — Security Hardening

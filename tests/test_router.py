@@ -122,3 +122,38 @@ def test_dangerous_command_executes_when_safe_mode_disabled() -> None:
     result = router.execute("shutdown")
     assert result.requires_confirmation is False
     assert "Simulasi shutdown" in result.message
+
+
+def test_contract_rejects_invalid_sys_args() -> None:
+    router = build_router()
+    result = router.execute("sys info now")
+    assert "Format salah" in result.message
+    assert "sys info" in result.message
+
+
+def test_contract_rejects_shutdown_with_extra_args() -> None:
+    router = build_router()
+    router.safe_mode = False
+    result = router.execute("shutdown now")
+    assert "Format salah" in result.message
+    assert "shutdown" in result.message
+
+
+def test_contract_rejects_unknown_keyword() -> None:
+    router = build_router()
+    result = router.execute("hack system")
+    assert "Perintah tidak dikenali" in result.message
+
+
+def test_contract_rejects_too_long_command() -> None:
+    router = build_router()
+    long_payload = "open " + ("a" * 301)
+    result = router.execute(long_payload)
+    assert "terlalu panjang" in result.message
+
+
+def test_contract_rejects_kill_without_target() -> None:
+    router = build_router()
+    result = router.execute("kill")
+    assert "Format salah" in result.message
+    assert "kill <process_name_or_pid>" in result.message

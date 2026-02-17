@@ -22,12 +22,22 @@ class CommandResult:
     pending_command: str | None = None
 
 
+@dataclass(frozen=True)
+class CommandContract:
+    keyword: str
+    usage: str
+    min_args: int = 0
+    max_args: int | None = None
+    first_arg_equals: str | None = None
+
+
 @dataclass
 class CommandRouter:
     launcher: Launcher | None = None
     file_manager: FileManager | None = None
     system_tools: SystemTools | None = None
     handlers: dict[str, Callable[[ParsedCommand], str]] | None = None
+    contracts: dict[str, CommandContract] | None = None
     safe_mode: bool = True
     pending_confirmation: ParsedCommand | None = None
 
@@ -43,6 +53,42 @@ class CommandRouter:
             "search": self._handle_search,
             "sys": self._handle_sys,
         }
+        self.contracts = {
+            "open": CommandContract(
+                keyword="open",
+                usage="open <app_alias>",
+                min_args=1,
+            ),
+            "search": CommandContract(
+                keyword="search",
+                usage="search file <query>",
+                min_args=2,
+                first_arg_equals="file",
+            ),
+            "sys": CommandContract(
+                keyword="sys",
+                usage="sys info",
+                min_args=1,
+                max_args=1,
+                first_arg_equals="info",
+            ),
+            "delete": CommandContract(
+                keyword="delete",
+                usage="delete <path>",
+                min_args=1,
+            ),
+            "kill": CommandContract(
+                keyword="kill",
+                usage="kill <process_name_or_pid>",
+                min_args=1,
+            ),
+            "shutdown": CommandContract(
+                keyword="shutdown",
+                usage="shutdown",
+                min_args=0,
+                max_args=0,
+            ),
+        }
 
     def route(self, command: str) -> str:
         return self.execute(command).message
@@ -51,6 +97,13 @@ class CommandRouter:
         parsed = self.parse(command)
         if parsed is None:
             return CommandResult("Perintah kosong. Silakan isi command terlebih dahulu.")
+
+        if len(parsed.raw) > 300:
+            return CommandResult("Perintah terlalu panjang. Batas maksimal 300 karakter.")
+
+        validation = self._validate_contract(parsed)
+        if validation is not None:
+            return validation
 
         if self._is_dangerous(parsed.keyword):
             if self.safe_mode:
@@ -89,23 +142,15 @@ class CommandRouter:
         )
 
     def _handle_open(self, command: ParsedCommand) -> str:
-        if len(command.args) < 1:
-            return "Format salah. Contoh: open vscode"
         app_alias = " ".join(command.args)
         return self.launcher.open_app(app_alias)
 
     def _handle_search(self, command: ParsedCommand) -> str:
-        if len(command.args) < 2 or command.args[0].lower() != "file":
-            return "Format salah. Contoh: search file report.pdf"
         query = " ".join(command.args[1:]).strip()
-        if not query:
-            return "Format salah. Contoh: search file report.pdf"
         return self.file_manager.search_file(query)
 
     def _handle_sys(self, command: ParsedCommand) -> str:
-        if len(command.args) >= 1 and command.args[0].lower() == "info":
-            return self.system_tools.system_info()
-        return "Format salah. Contoh: sys info"
+        return self.system_tools.system_info()
 
     def _is_dangerous(self, keyword: str) -> bool:
         return keyword in {"delete", "kill", "shutdown"}
@@ -115,15 +160,34 @@ class CommandRouter:
             return CommandResult("Simulasi shutdown dijalankan.")
 
         if command.keyword == "kill":
-            if not command.args:
-                return CommandResult("Format salah. Contoh: kill <process_name_or_pid>")
             target = " ".join(command.args)
             return CommandResult(f"Simulasi kill process untuk '{target}' dijalankan.")
 
         if command.keyword == "delete":
-            if not command.args:
-                return CommandResult("Format salah. Contoh: delete <path>")
             target = " ".join(command.args)
             return CommandResult(f"Simulasi delete untuk '{target}' dijalankan.")
 
         return CommandResult("Aksi berbahaya tidak dikenali.")
+
+    def _validate_contract(self, command: ParsedCommand) -> CommandResult | None:
+        contract = self.contracts.get(command.keyword)
+        if contract is None:
+            return CommandResult(
+                "Perintah tidak dikenali. Gunakan command yang terdaftar: "
+                "open, search file, sys info, delete, kill, shutdown."
+            )
+
+        arg_count = len(command.args)
+        if arg_count < contract.min_args:
+            return CommandResult(f"Format salah. Contoh: {contract.usage}")
+
+        if contract.max_args is not None and arg_count > contract.max_args:
+            return CommandResult(f"Format salah. Contoh: {contract.usage}")
+
+        if contract.first_arg_equals is None:
+            return None
+
+        first_arg = command.args[0].lower() if command.args else ""
+        if first_arg != contract.first_arg_equals:
+            return CommandResult(f"Format salah. Contoh: {contract.usage}")
+        return None
