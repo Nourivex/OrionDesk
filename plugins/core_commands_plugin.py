@@ -37,4 +37,12 @@ COMMAND_DEFINITIONS = [
         "handler_name": "_handle_smart",
         "dangerous": False,
     },
+    {
+        "keyword": "profile",
+        "usage": "profile <strict|balanced|power|explain-only>",
+        "min_args": 1,
+        "max_args": 1,
+        "handler_name": "_handle_profile",
+        "dangerous": False,
+    },
 ]

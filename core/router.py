@@ -10,6 +10,7 @@ from uuid import uuid4
 from core.capability_guardrail import CapabilityGuardrail
 from core.capability_layer import SystemCapabilityLayer
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
+from core.execution_profile import ExecutionProfilePolicy
 from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.intent_engine import LocalIntentEngine
 from core.memory_engine import MemoryEngine
@@ -79,6 +80,7 @@ class CommandRouter:
     system_intent_mapper: SystemIntentMapper | None = None
     smart_assist: SmartAssistEngine | None = None
     system_actions: SystemActions | None = None
+    execution_profile_policy: ExecutionProfilePolicy | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -104,6 +106,7 @@ class CommandRouter:
         self.system_intent_mapper = self.system_intent_mapper or SystemIntentMapper()
         self.smart_assist = self.smart_assist or SmartAssistEngine()
         self.system_actions = self.system_actions or SystemActions()
+        self.execution_profile_policy = self.execution_profile_policy or ExecutionProfilePolicy(profile="power")
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -130,6 +133,10 @@ class CommandRouter:
                 self._record_session(command, message, "pending_confirmation", context)
                 return CommandResult(message, requires_confirmation=True, pending_command=correction.corrected)
             normalized = correction.corrected
+
+        profile_block = self._apply_profile_policy(normalized)
+        if profile_block is not None:
+            return profile_block
 
         context = self._build_execution_context(normalized, dry_run=dry_run)
         envelope = self.executor.run(self, normalized, context)
@@ -207,6 +214,11 @@ class CommandRouter:
             lines.append("Note: Plan ini perlu approval manual sebelum aksi destruktif.")
         return "\n".join(lines)
 
+    def _handle_profile(self, command: ParsedCommand) -> str:
+        target = command.args[0].lower()
+        applied = self.execution_profile_policy.set_profile(target)
+        return f"Execution profile aktif: {applied}"
+
     def _execute_dangerous(self, command: ParsedCommand) -> CommandResult:
         if self.safe_mode_policy.is_blocked(command.keyword):
             return CommandResult("Aksi ditolak oleh safe mode policy.")
@@ -238,8 +250,9 @@ class CommandRouter:
 
     def _build_execution_context(self, command: str, dry_run: bool) -> ExecutionContext:
         parsed = self.parse(command)
-        risk_level = "high" if parsed and parsed.keyword in self.dangerous_keywords else "low"
-        profile_policy = "strict" if self.safe_mode else "power"
+        keyword = parsed.keyword if parsed is not None else ""
+        risk_level = self.execution_profile_policy.risk_level(keyword)
+        profile_policy = self.execution_profile_policy.profile
         return ExecutionContext(
             user=getpass.getuser(),
             profile_policy=profile_policy,
@@ -248,6 +261,30 @@ class CommandRouter:
             risk_level=risk_level,
             dry_run=dry_run,
         )
+
+    def _apply_profile_policy(self, normalized: str) -> CommandResult | None:
+        parsed = self.parse(normalized)
+        if parsed is None:
+            return None
+
+        decision = self.execution_profile_policy.evaluate(parsed.keyword)
+        if decision.mode == "blocked":
+            message = f"Execution profile blocked: {decision.reason}"
+            self._record_session(normalized, message, "blocked", self._build_execution_context(normalized, dry_run=True))
+            return CommandResult(message)
+
+        if decision.mode == "explain":
+            message = f"Execution profile explain-only: {parsed.raw}"
+            self._record_session(normalized, message, "success", self._build_execution_context(normalized, dry_run=True))
+            return CommandResult(message)
+
+        if decision.requires_confirmation and not self.safe_mode and parsed.keyword in self.dangerous_keywords:
+            self.pending_confirmation = parsed
+            message = "Execution profile membutuhkan konfirmasi manual."
+            self._record_session(normalized, message, "pending_confirmation", self._build_execution_context(normalized, dry_run=True))
+            return CommandResult(message, requires_confirmation=True, pending_command=parsed.raw)
+
+        return None
 
     def _resolve_autocorrect(self, normalized: str, allow_autocorrect: bool):
         if not allow_autocorrect:

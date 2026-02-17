@@ -84,6 +84,7 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 - PHASE 23 — System Capability Layer: **Done**
 - PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain): **Done**
 - PHASE 24.5 — Real Action Execution + Themed Guard Notifications: **Done**
+- PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies: **Done**
 
 ## Referensi Dokumen Selesai
 
@@ -96,3 +97,4 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 - `docs/finish/phase_23_system_capability_layer.md`
 - `docs/finish/phase_24_smart_command_assist.md`
 - `docs/finish/phase_24_5_real_action_execution_themed_guard.md`
+- `docs/finish/phase_25_safe_execution_profiles_risk_policy.md`

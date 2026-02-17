@@ -79,7 +79,7 @@ Tanpa:
 - PHASE 23: **Done** — System Capability Layer
 - PHASE 24: **Done** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 24.5: **Done** — Real Action Execution + Themed Guard Notifications
-- PHASE 25: **Planned** — Safe Execution Profiles + Risk-aware Command Policies
+- PHASE 25: **Done** — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26: **Planned** — Command Reliability Matrix + End-to-End Functional QA
 
 ### Catatan Perubahan Arah
@@ -432,7 +432,7 @@ Tujuan: Menjaga command power tetap aman dengan profile eksekusi berbasis risiko
 
 Cakupan:
 
-- Profile policy (`strict`, `balanced`, `power`)
+- Profile policy (`strict`, `balanced`, `power`, `explain-only`)
 - Risk scoring per command + level guard
 - Mandatory confirmation untuk high-risk action
 
