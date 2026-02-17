@@ -37,4 +37,4 @@ pytest -q
 ## Status Fase
 
 - PHASE 0–10: Done
-- ROADMAP v1.2+: Planned (contract hardening, session layer, plugin architecture, security hardening, native feel upgrade)
+- ROADMAP v3 / v1.3: Active Planning (PHASE 11–15)

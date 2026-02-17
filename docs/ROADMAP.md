@@ -1,4 +1,4 @@
-Target kita (Roadmap v2):  
+Target kita (Roadmap v3 / Update v1.3):  
 **OrionDesk – Windows 11 Personal OS Agent (Local, Safe, Modular)**
 
 ---
@@ -24,17 +24,13 @@ Tanpa:
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
 
-## 🚀 ROADMAP v2 (Active)
+## 🚀 ROADMAP v3 (Active / v1.3)
 
-- PHASE 6 — Command Contract Hardening
-- PHASE 7 — Command History & Session Layer
-- PHASE 8 — Plugin Architecture (auto-register module ke router)
-- PHASE 9 — Security Hardening
-  - Command whitelist
-  - Path restriction enforcement
-  - Process permission guard
-  - Safe mode policy object
-- PHASE 10 — Windows 11 Native Feel Upgrade
+- PHASE 11 — Local Intent Intelligence Layer
+- PHASE 12 — Workflow Automation & Task Recipes
+- PHASE 13 — Knowledge & Memory Engine (Local-first)
+- PHASE 14 — Observability, Reliability, and Recovery
+- PHASE 15 — Deployment, Distribution, and Upgrade Manager
 
 ## 📌 Status Fase
 
@@ -51,12 +47,20 @@ Tanpa:
 - PHASE 9: **Done** — Security Hardening
 - PHASE 10: **Done** — Windows 11 Native Feel Upgrade
 
+### Roadmap v3 (Aktif / v1.3)
+
+- PHASE 11: **Planned** — Local Intent Intelligence Layer
+- PHASE 12: **Planned** — Workflow Automation & Task Recipes
+- PHASE 13: **Planned** — Knowledge & Memory Engine (Local-first)
+- PHASE 14: **Planned** — Observability, Reliability, and Recovery
+- PHASE 15: **Planned** — Deployment, Distribution, and Upgrade Manager
+
 ### Catatan Perubahan Arah
 
 - Nama root project diseragamkan menjadi `OrionDesk/` (bukan `CuaOS/`).
 - PHASE 1 dipertahankan tanpa NLP, fokus pada kontrak command stabil untuk fondasi PHASE 2.
 
-## 🧩 Spesifikasi v2 (PHASE 6-10)
+## 📚 Arsip Spesifikasi v2 (PHASE 6-10)
 
 ## 🔹 PHASE 6 — Command Contract Hardening
 
@@ -141,6 +145,91 @@ Cakupan:
 Output fase:
 
 - UI lebih konsisten, modern, dan siap iterasi lanjutan.
+
+## 🧩 Spesifikasi v3 (PHASE 11-15)
+
+## 🔹 PHASE 11 — Local Intent Intelligence Layer
+
+Tujuan: OrionDesk memahami intent user lebih natural tanpa mengorbankan kontrol dan keamanan lokal.
+
+Cakupan:
+
+- Intent classifier lokal berbasis rules + scoring
+- Intent fallback chain (strict parser -> semantic parser)
+- Confidence score dan reason trace untuk tiap keputusan
+- Prompt-less command assist (saran command valid)
+
+Output fase:
+
+- Interaksi command lebih cerdas tanpa kehilangan determinisme.
+
+---
+
+## 🔹 PHASE 12 — Workflow Automation & Task Recipes
+
+Tujuan: User dapat menjalankan rangkaian task berulang sebagai recipe.
+
+Cakupan:
+
+- Format recipe YAML/JSON lokal
+- Step runner dengan precondition/postcondition
+- Retry policy per step
+- Manual approval hook untuk step berisiko
+
+Output fase:
+
+- OrionDesk mampu menjalankan automasi harian secara aman dan dapat diaudit.
+
+---
+
+## 🔹 PHASE 13 — Knowledge & Memory Engine (Local-first)
+
+Tujuan: Menyimpan konteks penting user secara lokal untuk personalisasi yang nyata.
+
+Cakupan:
+
+- Session memory persistence (ringkas, terstruktur)
+- Knowledge index untuk preferensi dan shortcut user
+- Memory privacy controls (retention, purge, export)
+- Query memory API untuk router/persona
+
+Output fase:
+
+- Agent menjadi lebih personal tanpa cloud dependency.
+
+---
+
+## 🔹 PHASE 14 — Observability, Reliability, and Recovery
+
+Tujuan: Menjadikan OrionDesk stabil untuk pemakaian harian jangka panjang.
+
+Cakupan:
+
+- Structured logging dan error taxonomy
+- Health checks untuk modul/plugin
+- Crash recovery session snapshot
+- Diagnostic report generator (lokal)
+
+Output fase:
+
+- Masalah operasional lebih mudah dilacak, diperbaiki, dan dicegah berulang.
+
+---
+
+## 🔹 PHASE 15 — Deployment, Distribution, and Upgrade Manager
+
+Tujuan: Distribusi aplikasi lebih rapi dan update lebih aman untuk user akhir.
+
+Cakupan:
+
+- Build packaging Windows installer
+- Channel update (`stable`, `beta`) lokal-aware
+- Config migration manager antar versi
+- One-click backup/restore profile
+
+Output fase:
+
+- OrionDesk siap dipakai sebagai aplikasi personal OS agent yang matang.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 
