@@ -119,6 +119,7 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(settings_tab, "Settings")
         self.tab_widget.addTab(diagnostics_tab, "Diagnostics")
         self.tab_widget.addTab(about_tab, "About")
+        self._apply_tab_icons()
         self.tab_widget.currentChanged.connect(self._handle_tab_changed)
         main_layout.addLayout(title_bar)
         main_layout.addWidget(self.tab_widget)
@@ -170,6 +171,7 @@ class MainWindow(QMainWindow):
 
         self.execute_button = QPushButton("Execute", page)
         self.execute_button.setMinimumWidth(120)
+        self.execute_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
         self.output_panel = QTextEdit(page)
         self.output_panel.setReadOnly(True)
         self.output_panel.setObjectName("outputPanel")
@@ -237,6 +239,17 @@ class MainWindow(QMainWindow):
         if name == "Diagnostics":
             self._refresh_diagnostics_panel()
 
+    def _apply_tab_icons(self) -> None:
+        icons = [
+            QStyle.StandardPixmap.SP_ComputerIcon,
+            QStyle.StandardPixmap.SP_DriveHDIcon,
+            QStyle.StandardPixmap.SP_FileDialogContentsView,
+            QStyle.StandardPixmap.SP_MessageBoxWarning,
+            QStyle.StandardPixmap.SP_MessageBoxInformation,
+        ]
+        for index, pixmap in enumerate(icons):
+            self.tab_widget.setTabIcon(index, self.style().standardIcon(pixmap))
+
     def _build_about_tab(self) -> QWidget:
         page = QWidget(self)
         layout = QVBoxLayout(page)
@@ -269,6 +282,7 @@ class MainWindow(QMainWindow):
         self.memory_info = QTextBrowser(page)
         self.memory_info.setObjectName("memoryInfo")
         refresh = QPushButton("Refresh Memory", page)
+        refresh.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_BrowserReload))
         refresh.clicked.connect(self._refresh_memory_panel)
         layout.addWidget(title)
         layout.addWidget(refresh)
@@ -289,8 +303,10 @@ class MainWindow(QMainWindow):
         title.setObjectName("placeholderTitle")
         button_row = QHBoxLayout()
         run_button = QPushButton("Generate Report", page)
+        run_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
         run_button.clicked.connect(self._generate_diagnostic_report)
         snapshot_button = QPushButton("Save Recovery Snapshot", page)
+        snapshot_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
         snapshot_button.clicked.connect(self._save_recovery_snapshot)
         button_row.addWidget(run_button)
         button_row.addWidget(snapshot_button)

@@ -80,7 +80,7 @@ Tanpa:
 - PHASE 24: **Done** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 24.5: **Done** — Real Action Execution + Themed Guard Notifications
 - PHASE 25: **Done** — Safe Execution Profiles + Risk-aware Command Policies
-- PHASE 26: **Planned** — Command Reliability Matrix + End-to-End Functional QA
+- PHASE 26: **Done** — Modern UI Icon Language + Reliability Matrix Validation
 
 ### Catatan Perubahan Arah
 
@@ -442,19 +442,19 @@ Output fase:
 
 ---
 
-## 🔹 PHASE 26 — Command Reliability Matrix + End-to-End Functional QA
+## 🔹 PHASE 26 — Modern UI Icon Language + Reliability Matrix Validation
 
-Tujuan: Memastikan command core benar-benar berfungsi penuh dan stabil lintas skenario.
+Tujuan: Menutup roadmap v5 dengan UI yang lebih modern (ikon konsisten) dan validasi reliability command secara menyeluruh.
 
 Cakupan:
 
-- Reliability matrix untuk seluruh command utama
-- E2E functional test untuk flow penting command
-- Regression suite untuk smart-assist dan policy
+- Tab shell dan action utama menggunakan icon language modern (fluent-like native icons)
+- Reliability matrix tervalidasi melalui full regression test suite
+- Snapshot matrix diperbarui untuk perubahan visual terbaru
 
 Output fase:
 
-- Standar kualitas command siap untuk milestone v1.5.
+- UX OrionDesk lebih modern, tetap ringan, dan kualitas command tervalidasi untuk rilis v1.5.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 

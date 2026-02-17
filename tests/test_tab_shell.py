@@ -99,6 +99,17 @@ def test_search_command_runs_in_async_mode() -> None:
     window.close()
 
 
+def test_tab_shell_has_icons_for_modern_ui() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    for index in range(window.tab_widget.count()):
+        assert window.tab_widget.tabIcon(index).isNull() is False
+
+    window.close()
+
+
 def test_main_window_default_close_does_not_minimize_to_tray() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())
