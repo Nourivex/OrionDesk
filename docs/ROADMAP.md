@@ -58,7 +58,7 @@ Tanpa:
 ### Roadmap v4 (Aktif / v1.4)
 
 - PHASE 17: **Done** — Tab Shell Refactor (UI Information Architecture)
-- PHASE 18: **Planned** — About + Diagnostics Panels
+- PHASE 18: **Done** — About + Diagnostics Panels
 - PHASE 19: **Planned** — Command Assist & Discoverability
 - PHASE 20: **Planned** — Theme Tokens + UI Scalability + Snapshot Refresh
 
@@ -263,7 +263,7 @@ Tujuan: Mengubah UI dari single-screen menjadi shell bertab agar fitur bisa scal
 
 Cakupan:
 
-- Tab architecture utama (`Command`, `About`, `Settings`, `Memory`, `Diagnostics`)
+- Tab architecture utama (`Command`, `Memory`, `Settings`, `Diagnostics`, `About`)
 - Isolasi komponen per tab
 - Routing event antar-tab yang bersih
 

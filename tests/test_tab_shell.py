@@ -11,13 +11,30 @@ def _app() -> QApplication:
     return app
 
 
-def test_main_window_has_phase17_tabs() -> None:
+def test_main_window_has_phase18_tabs() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())
     app.processEvents()
 
     names = [window.tab_widget.tabText(index) for index in range(window.tab_widget.count())]
-    assert names == ["Command", "About", "Settings", "Memory", "Diagnostics"]
+    assert names == ["Command", "Memory", "Settings", "Diagnostics", "About"]
+
+    window.close()
+
+
+def test_phase18_about_and_diagnostics_panels() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.tab_widget.setCurrentIndex(4)
+    app.processEvents()
+    assert "OrionDesk v1.4" in window.about_info.toPlainText()
+
+    window.tab_widget.setCurrentIndex(3)
+    app.processEvents()
+    diagnostics_text = window.diagnostics_info.toPlainText()
+    assert "Diagnostics panel siap" in diagnostics_text
 
     window.close()
 

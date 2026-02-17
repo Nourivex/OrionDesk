@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QStyle,
     QSystemTrayIcon,
     QTabWidget,
+    QTextBrowser,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -84,28 +85,16 @@ class MainWindow(QMainWindow):
         self.tab_widget.setDocumentMode(True)
 
         command_tab = self._build_command_tab()
-        about_tab = self._build_placeholder_tab(
-            title="About",
-            text="Informasi aplikasi akan ditampilkan di PHASE 18.",
-        )
-        settings_tab = self._build_placeholder_tab(
-            title="Settings",
-            text="Konfigurasi user akan ditampilkan pada fase berikutnya.",
-        )
-        memory_tab = self._build_placeholder_tab(
-            title="Memory",
-            text="Panel memory lokal akan ditampilkan pada fase berikutnya.",
-        )
-        diagnostics_tab = self._build_placeholder_tab(
-            title="Diagnostics",
-            text="Panel health/log diagnostics akan ditampilkan di PHASE 18.",
-        )
+        memory_tab = self._build_memory_tab()
+        settings_tab = self._build_placeholder_tab("Settings", "Konfigurasi user akan ditingkatkan di phase berikutnya.")
+        diagnostics_tab = self._build_diagnostics_tab()
+        about_tab = self._build_about_tab()
 
         self.tab_widget.addTab(command_tab, "Command")
-        self.tab_widget.addTab(about_tab, "About")
-        self.tab_widget.addTab(settings_tab, "Settings")
         self.tab_widget.addTab(memory_tab, "Memory")
+        self.tab_widget.addTab(settings_tab, "Settings")
         self.tab_widget.addTab(diagnostics_tab, "Diagnostics")
+        self.tab_widget.addTab(about_tab, "About")
         self.tab_widget.currentChanged.connect(self._handle_tab_changed)
         main_layout.addLayout(title_bar)
         main_layout.addWidget(self.tab_widget)
@@ -184,6 +173,106 @@ class MainWindow(QMainWindow):
     def _handle_tab_changed(self, index: int) -> None:
         name = self.tab_widget.tabText(index)
         self.active_tab_label.setText(f"Tab: {name}")
+        if name == "About":
+            self._refresh_about_panel()
+        if name == "Memory":
+            self._refresh_memory_panel()
+        if name == "Diagnostics":
+            self._refresh_diagnostics_panel()
+
+    def _build_about_tab(self) -> QWidget:
+        page = QWidget(self)
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 12, 12, 12)
+        title = QLabel("About OrionDesk", page)
+        title.setObjectName("placeholderTitle")
+        self.about_info = QTextBrowser(page)
+        self.about_info.setObjectName("aboutInfo")
+        layout.addWidget(title)
+        layout.addWidget(self.about_info)
+        self._refresh_about_panel()
+        return page
+
+    def _build_memory_tab(self) -> QWidget:
+        page = QWidget(self)
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 12, 12, 12)
+        title = QLabel("Memory Snapshot", page)
+        title.setObjectName("placeholderTitle")
+        self.memory_info = QTextBrowser(page)
+        self.memory_info.setObjectName("memoryInfo")
+        refresh = QPushButton("Refresh Memory", page)
+        refresh.clicked.connect(self._refresh_memory_panel)
+        layout.addWidget(title)
+        layout.addWidget(refresh)
+        layout.addWidget(self.memory_info)
+        self._refresh_memory_panel()
+        return page
+
+    def _build_diagnostics_tab(self) -> QWidget:
+        page = QWidget(self)
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(12, 12, 12, 12)
+        title = QLabel("Diagnostics", page)
+        title.setObjectName("placeholderTitle")
+        button_row = QHBoxLayout()
+        run_button = QPushButton("Generate Report", page)
+        run_button.clicked.connect(self._generate_diagnostic_report)
+        snapshot_button = QPushButton("Save Recovery Snapshot", page)
+        snapshot_button.clicked.connect(self._save_recovery_snapshot)
+        button_row.addWidget(run_button)
+        button_row.addWidget(snapshot_button)
+        button_row.addStretch()
+        self.diagnostics_info = QTextBrowser(page)
+        self.diagnostics_info.setObjectName("diagnosticsInfo")
+        layout.addWidget(title)
+        layout.addLayout(button_row)
+        layout.addWidget(self.diagnostics_info)
+        self._refresh_diagnostics_panel()
+        return page
+
+    def _refresh_about_panel(self) -> None:
+        channel = self.router.get_release_channel()
+        lines = [
+            "OrionDesk v1.4",
+            f"Release Channel: {channel}",
+            "Mode: Local, Safe, Modular",
+            "Build Focus: Personal OS Agent",
+        ]
+        self.about_info.setText("\n".join(lines))
+
+    def _refresh_memory_panel(self) -> None:
+        summary = self.router.memory_summary()
+        top_commands = summary.get("top_commands", [])
+        lines = ["Top Commands:"]
+        if not top_commands:
+            lines.append("- (belum ada data)")
+        else:
+            for command, count in top_commands:
+                lines.append(f"- {command}: {count}")
+        self.memory_info.setText("\n".join(lines))
+
+    def _refresh_diagnostics_panel(self) -> None:
+        lines = [
+            "Diagnostics panel siap.",
+            "Klik 'Generate Report' untuk membuat diagnostic JSON.",
+            "Klik 'Save Recovery Snapshot' untuk simpan session snapshot.",
+        ]
+        self.diagnostics_info.setText("\n".join(lines))
+
+    def _generate_diagnostic_report(self) -> None:
+        report = self.router.create_diagnostic_report()
+        if report is None:
+            self.diagnostics_info.append("\n[Error] Gagal membuat report.")
+            return
+        self.diagnostics_info.append(f"\n[Success] Report dibuat: {report}")
+
+    def _save_recovery_snapshot(self) -> None:
+        snapshot = self.router.save_recovery_snapshot()
+        if snapshot is None:
+            self.diagnostics_info.append("\n[Error] Gagal menyimpan snapshot.")
+            return
+        self.diagnostics_info.append(f"\n[Success] Snapshot disimpan: {snapshot}")
 
     def _handle_execute(self) -> None:
         command = self.command_input.text()
@@ -251,6 +340,13 @@ class MainWindow(QMainWindow):
             }}
             QLabel#placeholderTitle {{ font-size: 15px; color: #ffffff; font-weight: 700; }}
             QLabel#placeholderText {{ font-size: 11px; color: #b3bbd4; }}
+            QTextBrowser#aboutInfo, QTextBrowser#memoryInfo, QTextBrowser#diagnosticsInfo {{
+                background-color: #272e42;
+                color: #d9def0;
+                border: 1px solid #39425d;
+                border-radius: 8px;
+                padding: 8px;
+            }}
             QLineEdit, QComboBox {{
                 background-color: #272e42;
                 color: #f4f6fc;

@@ -68,3 +68,17 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 - `docs/finish/phase_14_observability_reliability_recovery.md`
 - `docs/finish/phase_15_deployment_distribution_upgrade_manager.md`
 - `docs/finish/phase_16_ui_excellence_accessibility_polish.md`
+
+---
+
+# OrionDesk — FINISHED (Roadmap v4)
+
+## Status Fase Selesai
+
+- PHASE 17 — Tab Shell Refactor (UI Information Architecture): **Done**
+- PHASE 18 — About + Diagnostics Panels: **Done**
+
+## Referensi Dokumen Selesai
+
+- `docs/finish/phase_17_tab_shell_refactor.md`
+- `docs/finish/phase_18_about_diagnostics_panels.md`
