@@ -27,7 +27,7 @@ Tanpa:
 ## 🚀 ROADMAP v5 (Active / v1.5)
 
 - PHASE 22 — Command Engine Stabilization + Unified Executor
-- PHASE 23 — Command Pack Expansion (File, Process, Network, Utility)
+- PHASE 23 — System Capability Layer
 - PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26 — Command Reliability Matrix + End-to-End Functional QA
@@ -75,7 +75,7 @@ Tanpa:
 ### Roadmap v5 (Aktif / v1.5)
 
 - PHASE 22: **Done** — Command Engine Stabilization + Unified Executor
-- PHASE 23: **Planned** — Command Pack Expansion (File, Process, Network, Utility)
+- PHASE 23: **Done** — System Capability Layer
 - PHASE 24: **Planned** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 25: **Planned** — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26: **Planned** — Command Reliability Matrix + End-to-End Functional QA
@@ -375,20 +375,19 @@ Output fase:
 
 ---
 
-## 🔹 PHASE 23 — Command Pack Expansion (File, Process, Network, Utility)
+## 🔹 PHASE 23 — System Capability Layer
 
-Tujuan: Menambah command yang benar-benar berguna untuk produktivitas harian.
+Tujuan: Menjadikan operasi sistem sebagai capability primitives yang aman, lalu dipakai oleh intent-level agent behavior.
 
 Cakupan:
 
-- File ops aman (list, read, copy, move, rename)
-- Process ops aman (list, detail, terminate terproteksi)
-- Network utility dasar (ping, dns lookup, interface summary)
-- Utility commands tambahan (time, env, path, hash)
+- Capability Layer (low-level tools): file ops, process ops, network ops, utility ops
+- Intent Mapping Layer: mapping request natural ke rangkaian capability steps
+- Safety & Guardrail Layer: permission tier, confirmation policy, protected process, sandboxed preview
 
 Output fase:
 
-- Cakupan command jauh lebih lengkap dan fungsional.
+- Fondasi capability modular siap dipakai command cerdas dan aman.
 
 ---
 

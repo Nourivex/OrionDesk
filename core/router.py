@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import getpass
+import os
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from uuid import uuid4
 from typing import Callable
 
+from core.capability_guardrail import CapabilityGuardrail
+from core.capability_layer import SystemCapabilityLayer
 from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
 from core.intent_engine import LocalIntentEngine
@@ -14,6 +18,7 @@ from core.plugin_registry import PluginRegistry
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
 from core.session import SessionLayer
+from core.system_intent_mapper import SystemIntentMapper
 from modules.file_manager import FileManager
 from modules.launcher import Launcher
 from modules.system_tools import SystemTools
@@ -66,6 +71,9 @@ class CommandRouter:
     backup_manager: ProfileBackupManager | None = None
     executor: UnifiedCommandExecutor | None = None
     session_id: str | None = None
+    capability_layer: SystemCapabilityLayer | None = None
+    capability_guardrail: CapabilityGuardrail | None = None
+    system_intent_mapper: SystemIntentMapper | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -101,6 +109,12 @@ class CommandRouter:
             self.backup_manager = ProfileBackupManager()
         if self.executor is None:
             self.executor = UnifiedCommandExecutor()
+        if self.capability_layer is None:
+            self.capability_layer = SystemCapabilityLayer()
+        if self.capability_guardrail is None:
+            self.capability_guardrail = CapabilityGuardrail(permission_tier="basic")
+        if self.system_intent_mapper is None:
+            self.system_intent_mapper = SystemIntentMapper()
         if self.session_id is None:
             self.session_id = uuid4().hex
         self._register_plugins()
@@ -151,6 +165,49 @@ class CommandRouter:
 
     def _handle_sys(self, command: ParsedCommand) -> str:
         return self.system_tools.system_info()
+
+    def _handle_capability(self, command: ParsedCommand) -> str:
+        if len(command.args) < 2:
+            return "Format salah. Contoh: capability <domain> <action> [args]"
+
+        domain = command.args[0]
+        action = command.args[1]
+        args = [self._expand_path(item) for item in command.args[2:]]
+
+        decision = self.capability_guardrail.evaluate(domain, action, args)
+        if not decision.allowed:
+            return f"Guardrail blocked: {decision.reason}"
+
+        if decision.requires_confirmation:
+            preview = self.capability_layer.execute(domain, action, args)
+            return f"Guardrail confirmation required. {decision.reason}\n{preview}"
+
+        return self.capability_layer.execute(domain, action, args)
+
+    def _handle_smart(self, command: ParsedCommand) -> str:
+        request = " ".join(command.args).strip()
+        if not request:
+            return "Format salah. Contoh: smart <permintaan_user>"
+
+        plan = self.system_intent_mapper.map_request(request)
+        if plan is None:
+            return "Belum ada mapping intent untuk request ini."
+
+        result_lines = [f"Plan: {plan.title}"]
+        for step in plan.steps:
+            result_lines.append(f"- {step}")
+
+        for raw in plan.commands:
+            parsed = self.parse(raw)
+            if parsed is None:
+                continue
+            result_lines.append(f"> {raw}")
+            result_lines.append(self._handle_capability(parsed))
+
+        if plan.requires_confirmation:
+            result_lines.append("Note: Plan ini perlu approval manual sebelum aksi destruktif.")
+
+        return "\n".join(result_lines)
 
     def _execute_dangerous(self, command: ParsedCommand) -> CommandResult:
         if self.safe_mode_policy.is_blocked(command.keyword):
@@ -207,6 +264,11 @@ class CommandRouter:
             risk_level=risk_level,
             dry_run=dry_run,
         )
+
+    def _expand_path(self, value: str) -> str:
+        if value.startswith("~/"):
+            return str(Path.home() / value[2:])
+        return os.path.expandvars(value)
 
     def memory_summary(self) -> dict:
         if self.memory_engine is None:

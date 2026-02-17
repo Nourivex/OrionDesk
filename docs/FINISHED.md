@@ -81,6 +81,7 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 - PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh: **Done**
 - PHASE 21 — Settings Priority Panel + Theme Selection (Light Mode): **Done**
 - PHASE 22 — Command Engine Stabilization + Unified Executor: **Done**
+- PHASE 23 — System Capability Layer: **Done**
 
 ## Referensi Dokumen Selesai
 
@@ -90,3 +91,4 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 - `docs/finish/phase_20_theme_tokens_ui_scalability_snapshot_refresh.md`
 - `docs/finish/phase_21_settings_priority_panel_theme_selection.md`
 - `docs/finish/phase_22_command_engine_unified_executor.md`
+- `docs/finish/phase_23_system_capability_layer.md`

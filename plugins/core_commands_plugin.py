@@ -23,4 +23,18 @@ COMMAND_DEFINITIONS = [
         "handler_name": "_handle_sys",
         "dangerous": False,
     },
+    {
+        "keyword": "capability",
+        "usage": "capability <domain> <action> [args]",
+        "min_args": 2,
+        "handler_name": "_handle_capability",
+        "dangerous": False,
+    },
+    {
+        "keyword": "smart",
+        "usage": "smart <request>",
+        "min_args": 1,
+        "handler_name": "_handle_smart",
+        "dangerous": False,
+    },
 ]

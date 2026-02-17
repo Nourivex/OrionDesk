@@ -7,7 +7,7 @@ Roadmap v5 berfokus penuh pada penguatan command engine agar lebih banyak comman
 ## Daftar Fase
 
 - PHASE 22 — Command Engine Stabilization + Unified Executor
-- PHASE 23 — Command Pack Expansion (File, Process, Network, Utility)
+- PHASE 23 — System Capability Layer (Capability + Intent Mapping + Guardrail)
 - PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26 — Command Reliability Matrix + End-to-End Functional QA

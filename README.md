@@ -18,6 +18,7 @@ OrionDesk adalah personal OS agent lokal untuk Windows 11 yang fokus pada keaman
 - Observability & recovery (structured logs, health checks, diagnostics, snapshots)
 - Deployment/upgrade managers (release channel, config migration, profile backup-restore)
 - UI accessibility polish (shortcuts, tab order, multi-size snapshot matrix)
+- System capability layer (`capability` + `smart`) dengan guardrail permission tier dan preview-safe actions
 
 ## Menjalankan Aplikasi
 
@@ -40,6 +41,6 @@ pytest -q
 
 ## Status Fase
 
-- PHASE 0–22: Done
+- PHASE 0–23: Done
 - ROADMAP v4 / v1.4: Completed (PHASE 17–21)
 - ROADMAP v5 / v1.5: Active Planning (PHASE 22–26)
