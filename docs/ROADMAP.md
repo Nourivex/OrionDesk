@@ -30,6 +30,7 @@ Tanpa:
 - PHASE 18 — About + Diagnostics Panels
 - PHASE 19 — Command Assist & Discoverability
 - PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh
+- PHASE 21 — Settings Priority Panel + Theme Selection (Light Mode)
 
 ## 📌 Status Fase
 
@@ -60,7 +61,8 @@ Tanpa:
 - PHASE 17: **Done** — Tab Shell Refactor (UI Information Architecture)
 - PHASE 18: **Done** — About + Diagnostics Panels
 - PHASE 19: **Done** — Command Assist & Discoverability
-- PHASE 20: **Planned** — Theme Tokens + UI Scalability + Snapshot Refresh
+- PHASE 20: **Done** — Theme Tokens + UI Scalability + Snapshot Refresh
+- PHASE 21: **Done** — Settings Priority Panel + Theme Selection (Light Mode)
 
 ### Catatan Perubahan Arah
 
@@ -319,6 +321,22 @@ Cakupan:
 Output fase:
 
 - UI maintainable, scalable, dan siap evolusi roadmap berikutnya.
+
+---
+
+## 🔹 PHASE 21 — Settings Priority Panel + Theme Selection (Light Mode)
+
+Tujuan: Menjadikan tab Settings benar-benar berguna untuk pengaturan inti user harian.
+
+Cakupan:
+
+- Settings panel berisi pengaturan prioritas (`theme`, `release channel`, `minimize to tray`)
+- Theme selection mendukung `dark` dan `light`
+- Theme apply real-time tanpa restart
+
+Output fase:
+
+- Pengaturan penting bisa diakses user dari UI secara langsung dan konsisten.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 

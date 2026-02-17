@@ -6,6 +6,7 @@ import ctypes.wintypes
 from PySide6.QtCore import QEasingCurve, QEvent, Qt, QVariantAnimation
 from PySide6.QtGui import QAction, QColor, QFont, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
+    QCheckBox,
     QComboBox,
     QFrame,
     QGraphicsOpacityEffect,
@@ -28,6 +29,8 @@ from PySide6.QtWidgets import (
 from core.router import CommandRouter
 from persona.persona_engine import PersonaEngine
 from ui.output_highlighter import OutputHighlighter
+from ui.style_layers import build_main_window_stylesheet
+from ui.theme_tokens import default_dark_tokens, default_light_tokens
 from ui.win11_effects import apply_mica_or_acrylic
 
 
@@ -43,7 +46,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.router = router
         self.persona_engine = persona_engine or PersonaEngine(persona_name="calm")
-        self._input_focus_color = "#5A8BFF"
+        self.theme = default_dark_tokens()
+        self._input_focus_color = self.theme.input_focus
         self._explicit_quit = False
         self.minimize_to_tray = False
         self._hotkey_registered = False
@@ -64,11 +68,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(root)
 
         main_layout = QVBoxLayout(root)
-        main_layout.setContentsMargins(16, 14, 16, 16)
-        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(
+            self.theme.spacing_lg,
+            self.theme.spacing_md,
+            self.theme.spacing_lg,
+            self.theme.spacing_lg,
+        )
+        main_layout.setSpacing(self.theme.spacing_sm + 2)
 
         title_bar = QHBoxLayout()
-        title_bar.setSpacing(8)
+        title_bar.setSpacing(self.theme.spacing_sm)
         self.title_label = QLabel("OrionDesk", self)
         self.title_label.setObjectName("titleLabel")
         self.subtitle_label = QLabel("Windows 11 Personal OS Agent", self)
@@ -86,7 +95,7 @@ class MainWindow(QMainWindow):
 
         command_tab = self._build_command_tab()
         memory_tab = self._build_memory_tab()
-        settings_tab = self._build_placeholder_tab("Settings", "Konfigurasi user akan ditingkatkan di phase berikutnya.")
+        settings_tab = self._build_settings_tab()
         diagnostics_tab = self._build_diagnostics_tab()
         about_tab = self._build_about_tab()
 
@@ -103,6 +112,9 @@ class MainWindow(QMainWindow):
         self.command_input.returnPressed.connect(self._handle_execute)
         self.command_input.textChanged.connect(self._handle_command_text_changed)
         self.persona_selector.currentTextChanged.connect(self._handle_persona_change)
+        self.theme_selector.currentTextChanged.connect(self._handle_theme_change)
+        self.channel_selector.currentTextChanged.connect(self._handle_channel_change)
+        self.minimize_tray_checkbox.toggled.connect(self._handle_minimize_tray_toggled)
         self._setup_shortcuts()
 
         self.setTabOrder(self.persona_selector, self.command_input)
@@ -113,13 +125,18 @@ class MainWindow(QMainWindow):
         page = QWidget(self)
         page_layout = QVBoxLayout(page)
         page_layout.setContentsMargins(0, 0, 0, 0)
-        page_layout.setSpacing(10)
+        page_layout.setSpacing(self.theme.spacing_sm + 2)
 
         top_card = QFrame(page)
         top_card.setObjectName("topCard")
         top_layout = QVBoxLayout(top_card)
-        top_layout.setContentsMargins(12, 10, 12, 10)
-        top_layout.setSpacing(10)
+        top_layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_sm + 2,
+            self.theme.spacing_md,
+            self.theme.spacing_sm + 2,
+        )
+        top_layout.setSpacing(self.theme.spacing_sm + 2)
 
         persona_layout = QHBoxLayout()
         command_layout = QHBoxLayout()
@@ -175,7 +192,12 @@ class MainWindow(QMainWindow):
     def _build_placeholder_tab(self, title: str, text: str) -> QWidget:
         page = QWidget(self)
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
         heading = QLabel(title, page)
         heading.setObjectName("placeholderTitle")
         body = QLabel(text, page)
@@ -199,7 +221,12 @@ class MainWindow(QMainWindow):
     def _build_about_tab(self) -> QWidget:
         page = QWidget(self)
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
         title = QLabel("About OrionDesk", page)
         title.setObjectName("placeholderTitle")
         self.about_info = QTextBrowser(page)
@@ -212,7 +239,12 @@ class MainWindow(QMainWindow):
     def _build_memory_tab(self) -> QWidget:
         page = QWidget(self)
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
         title = QLabel("Memory Snapshot", page)
         title.setObjectName("placeholderTitle")
         self.memory_info = QTextBrowser(page)
@@ -228,7 +260,12 @@ class MainWindow(QMainWindow):
     def _build_diagnostics_tab(self) -> QWidget:
         page = QWidget(self)
         layout = QVBoxLayout(page)
-        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
         title = QLabel("Diagnostics", page)
         title.setObjectName("placeholderTitle")
         button_row = QHBoxLayout()
@@ -245,6 +282,52 @@ class MainWindow(QMainWindow):
         layout.addLayout(button_row)
         layout.addWidget(self.diagnostics_info)
         self._refresh_diagnostics_panel()
+        return page
+
+    def _build_settings_tab(self) -> QWidget:
+        page = QWidget(self)
+        layout = QVBoxLayout(page)
+        layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
+        layout.setSpacing(self.theme.spacing_sm)
+
+        title = QLabel("Settings", page)
+        title.setObjectName("placeholderTitle")
+
+        theme_row = QHBoxLayout()
+        theme_label = QLabel("Theme", page)
+        self.theme_selector = QComboBox(page)
+        self.theme_selector.addItems(["dark", "light"])
+        self.theme_selector.setCurrentText("dark")
+        theme_row.addWidget(theme_label)
+        theme_row.addWidget(self.theme_selector)
+        theme_row.addStretch()
+
+        channel_row = QHBoxLayout()
+        channel_label = QLabel("Release Channel", page)
+        self.channel_selector = QComboBox(page)
+        self.channel_selector.addItems(["stable", "beta"])
+        self.channel_selector.setCurrentText(self.router.get_release_channel())
+        channel_row.addWidget(channel_label)
+        channel_row.addWidget(self.channel_selector)
+        channel_row.addStretch()
+
+        self.minimize_tray_checkbox = QCheckBox("Minimize to tray when closing", page)
+        self.minimize_tray_checkbox.setChecked(self.minimize_to_tray)
+
+        self.settings_status = QLabel("Settings siap digunakan.", page)
+        self.settings_status.setObjectName("placeholderText")
+
+        layout.addWidget(title)
+        layout.addLayout(theme_row)
+        layout.addLayout(channel_row)
+        layout.addWidget(self.minimize_tray_checkbox)
+        layout.addWidget(self.settings_status)
+        layout.addStretch()
         return page
 
     def _refresh_about_panel(self) -> None:
@@ -289,6 +372,24 @@ class MainWindow(QMainWindow):
             self.diagnostics_info.append("\n[Error] Gagal menyimpan snapshot.")
             return
         self.diagnostics_info.append(f"\n[Success] Snapshot disimpan: {snapshot}")
+
+    def _handle_theme_change(self, theme_name: str) -> None:
+        if theme_name == "light":
+            self.theme = default_light_tokens()
+        else:
+            self.theme = default_dark_tokens()
+        self._input_focus_color = self.theme.input_focus
+        self.setStyleSheet(self._build_stylesheet(self._input_focus_color))
+        self.settings_status.setText(f"Theme active: {theme_name}")
+
+    def _handle_channel_change(self, channel: str) -> None:
+        applied = self.router.set_release_channel(channel)
+        self.settings_status.setText(f"Release channel active: {applied}")
+        self._refresh_about_panel()
+
+    def _handle_minimize_tray_toggled(self, enabled: bool) -> None:
+        self.minimize_to_tray = enabled
+        self.settings_status.setText(f"Minimize to tray: {'on' if enabled else 'off'}")
 
     def _handle_command_text_changed(self, text: str) -> None:
         self._refresh_command_assist(text)
@@ -350,75 +451,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(self._build_stylesheet(self._input_focus_color))
 
     def _build_stylesheet(self, focus_color: str) -> str:
-        return f"""
-            QMainWindow {{ background-color: #1b1f2a; color: #f1f4fb; }}
-            QLabel {{ color: #e7eaf2; font-weight: 600; }}
-            QLabel#titleLabel {{ font-size: 18px; font-weight: 700; color: #ffffff; }}
-            QLabel#subtitleLabel {{ font-size: 11px; color: #9ea7be; font-weight: 500; }}
-            QLabel#activeTabLabel {{ font-size: 10px; color: #8bb4ff; font-weight: 600; }}
-            QFrame#topCard {{
-                background-color: #202636;
-                border: 1px solid #313a52;
-                border-radius: 8px;
-            }}
-            QTabWidget#mainTabs::pane {{
-                border: 1px solid #313a52;
-                border-radius: 8px;
-                background-color: #1e2434;
-            }}
-            QTabBar::tab {{
-                background: #222a3d;
-                color: #b9c2db;
-                padding: 8px 12px;
-                margin-right: 4px;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
-            }}
-            QTabBar::tab:selected {{
-                background: #2d3853;
-                color: #ffffff;
-            }}
-            QLabel#placeholderTitle {{ font-size: 15px; color: #ffffff; font-weight: 700; }}
-            QLabel#placeholderText {{ font-size: 11px; color: #b3bbd4; }}
-            QLabel#commandSuggestions {{ font-size: 10px; color: #b2bdd9; }}
-            QLabel#commandHint {{ font-size: 10px; color: #95c7ff; }}
-            QLabel#intentHint {{ font-size: 10px; color: #f5c586; }}
-            QTextBrowser#aboutInfo, QTextBrowser#memoryInfo, QTextBrowser#diagnosticsInfo {{
-                background-color: #272e42;
-                color: #d9def0;
-                border: 1px solid #39425d;
-                border-radius: 8px;
-                padding: 8px;
-            }}
-            QLineEdit, QComboBox {{
-                background-color: #272e42;
-                color: #f4f6fc;
-                border: 1px solid #39425d;
-                border-radius: 4px;
-                padding: 8px;
-            }}
-            QLineEdit#commandInput {{ border: 1px solid {focus_color}; }}
-            QPushButton {{
-                background-color: #4f8dfd;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 8px 16px;
-                font-weight: 600;
-            }}
-            QPushButton:hover {{ background-color: #669cff; }}
-            QPushButton:pressed {{ background-color: #3f7de7; }}
-            QTextEdit#outputPanel {{
-                background-color: #272e42;
-                color: #f4f6fc;
-                border: 1px solid #39425d;
-                border-radius: 8px;
-                padding: 12px;
-                font-family: 'Cascadia Code';
-                font-size: 10pt;
-                line-height: 1.4;
-            }}
-        """
+        return build_main_window_stylesheet(self.theme, focus_color)
 
     def _setup_focus_animation(self) -> None:
         self.command_input.setObjectName("commandInput")
@@ -514,20 +547,20 @@ class MainWindow(QMainWindow):
         self.output_effect.setOpacity(float(value))
 
     def _on_focus_color_changed(self, value) -> None:
-        color = value.name() if isinstance(value, QColor) else "#5A8BFF"
+        color = value.name() if isinstance(value, QColor) else self.theme.input_focus
         self._input_focus_color = color
         self.setStyleSheet(self._build_stylesheet(color))
 
     def eventFilter(self, watched, event):
         if watched is self.command_input and event.type() == QEvent.Type.FocusIn:
             self.focus_animation.stop()
-            self.focus_animation.setStartValue(QColor("#39425d"))
-            self.focus_animation.setEndValue(QColor("#79A5FF"))
+            self.focus_animation.setStartValue(QColor(self.theme.input_border))
+            self.focus_animation.setEndValue(QColor(self.theme.input_focus_active))
             self.focus_animation.start()
         if watched is self.command_input and event.type() == QEvent.Type.FocusOut:
             self.focus_animation.stop()
-            self.focus_animation.setStartValue(QColor("#79A5FF"))
-            self.focus_animation.setEndValue(QColor("#39425d"))
+            self.focus_animation.setStartValue(QColor(self.theme.input_focus_active))
+            self.focus_animation.setEndValue(QColor(self.theme.input_border))
             self.focus_animation.start()
         return super().eventFilter(watched, event)
 

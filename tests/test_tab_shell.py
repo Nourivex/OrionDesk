@@ -57,6 +57,23 @@ def test_phase19_command_assist_updates() -> None:
     window.close()
 
 
+def test_phase21_settings_theme_selection_light_mode() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.tab_widget.setCurrentIndex(2)
+    app.processEvents()
+
+    window.theme_selector.setCurrentText("light")
+    app.processEvents()
+
+    assert window.theme_selector.currentText() == "light"
+    assert "Theme active: light" in window.settings_status.text()
+
+    window.close()
+
+
 def test_main_window_default_close_does_not_minimize_to_tray() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())

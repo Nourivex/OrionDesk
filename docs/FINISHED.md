@@ -78,9 +78,13 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 - PHASE 17 — Tab Shell Refactor (UI Information Architecture): **Done**
 - PHASE 18 — About + Diagnostics Panels: **Done**
 - PHASE 19 — Command Assist & Discoverability: **Done**
+- PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh: **Done**
+- PHASE 21 — Settings Priority Panel + Theme Selection (Light Mode): **Done**
 
 ## Referensi Dokumen Selesai
 
 - `docs/finish/phase_17_tab_shell_refactor.md`
 - `docs/finish/phase_18_about_diagnostics_panels.md`
 - `docs/finish/phase_19_command_assist_discoverability.md`
+- `docs/finish/phase_20_theme_tokens_ui_scalability_snapshot_refresh.md`
+- `docs/finish/phase_21_settings_priority_panel_theme_selection.md`
