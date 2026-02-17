@@ -1,34 +1,63 @@
-# OrionDesk Wireframe (v5)
+# 🖼 OrionDesk Wireframe (v5)
 
-Dokumen ini menjadi referensi wireframe visual untuk UI OrionDesk versi roadmap aktif terbaru.
+Dokumen ini menjadi referensi visual resmi untuk baseline UI OrionDesk pada roadmap aktif.
 
-## Struktur Tab Utama
+Snapshot digunakan untuk:
+- Validasi konsistensi layout
+- Visual regression testing
+- Dokumentasi evolusi antarmuka
 
-- Command
-- Memory
-- Settings
-- Diagnostics
-- About
+---
 
-## Baseline Snapshot v5
+## 🧭 Main Navigation Tabs
 
-### 1280 x 760
+OrionDesk saat ini terdiri dari lima tab utama:
 
-![Command 1280](assets/v5/oriondesk-baseline-command-1280x760.png)
-![Memory 1280](assets/v5/oriondesk-baseline-memory-1280x760.png)
-![Settings 1280](assets/v5/oriondesk-baseline-settings-1280x760.png)
-![Diagnostics 1280](assets/v5/oriondesk-baseline-diagnostics-1280x760.png)
-![About 1280](assets/v5/oriondesk-baseline-about-1280x760.png)
+- **Command**
+- **Memory**
+- **Settings**
+- **Diagnostics**
+- **About**
 
-### 1024 x 640
+Struktur tab ini menjadi baseline navigasi untuk versi v5.
 
-![Command 1024](assets/v5/oriondesk-baseline-command-1024x640.png)
-![Memory 1024](assets/v5/oriondesk-baseline-memory-1024x640.png)
-![Settings 1024](assets/v5/oriondesk-baseline-settings-1024x640.png)
-![Diagnostics 1024](assets/v5/oriondesk-baseline-diagnostics-1024x640.png)
-![About 1024](assets/v5/oriondesk-baseline-about-1024x640.png)
+---
 
-## Catatan
+## 📐 Baseline Snapshot – Desktop Layout
 
-- Snapshot dihasilkan dari test visual regression.
-- Jika layout berubah, baseline v5 harus direfresh via test snapshot.
+### 1280 × 760
+
+| Tab | Preview |
+|-----|---------|
+| Command | ![Command 1280](assets/v6/oriondesk-baseline-command-1280x760.png) |
+| Memory | ![Memory 1280](assets/v6/oriondesk-baseline-memory-1280x760.png) |
+| Settings | ![Settings 1280](assets/v6/oriondesk-baseline-settings-1280x760.png) |
+| Diagnostics | ![Diagnostics 1280](assets/v6/oriondesk-baseline-diagnostics-1280x760.png) |
+| About | ![About 1280](assets/v6/oriondesk-baseline-about-1280x760.png) |
+
+---
+
+### 1024 × 640
+
+| Tab | Preview |
+|-----|---------|
+| Command | ![Command 1024](assets/v6/oriondesk-baseline-command-1024x640.png) |
+| Memory | ![Memory 1024](assets/v6/oriondesk-baseline-memory-1024x640.png) |
+| Settings | ![Settings 1024](assets/v6/oriondesk-baseline-settings-1024x640.png) |
+| Diagnostics | ![Diagnostics 1024](assets/v6/oriondesk-baseline-diagnostics-1024x640.png) |
+| About | ![About 1024](assets/v6/oriondesk-baseline-about-1024x640.png) |
+
+---
+
+## 🧪 Snapshot Governance
+
+- Snapshot dihasilkan melalui automated visual regression test.
+- Perubahan layout signifikan **wajib** diikuti refresh baseline.
+- Perubahan minor harus dievaluasi melalui PR review.
+
+---
+
+## 🔄 Versioning Policy
+
+- `v5` → Stabil baseline untuk ROADMAP v5.
+- Versi berikutnya akan memiliki folder snapshot terpisah (`v6/`, `v7/`, dst).

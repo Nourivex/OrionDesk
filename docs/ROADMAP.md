@@ -1,18 +1,55 @@
 <div align="center">
-  <h1>OrionDesk Roadmap</h1>
-  <p>Versioned execution plan for product, platform, and engineering quality.</p>
+
+# 🗺 OrionDesk Roadmap
+
+Versioned execution plan covering product evolution, platform capability, and engineering quality standards.
+
 </div>
 
-<table>
-  <tr>
-    <td><strong>Current Planning</strong><br/>v6 / v1.6</td>
-    <td><strong>Last Completed</strong><br/>v5 / v1.5</td>
-    <td><strong>Current Focus</strong><br/>Performance, Automation, Utility</td>
-  </tr>
-</table>
+---
 
-Target kita (Roadmap v4 / Update v1.4):  
-**OrionDesk – Windows 11 Personal OS Agent (Local, Safe, Modular)**
+## 📦 Current Cycle
+
+**Roadmap v6 — Product Version v1.6**
+
+- 🎯 Focus Areas: Performance, Automation, Utility Expansion
+- 🧠 Priority: Capability Layer Refinement
+- ⚙ Stability: Snapshot & Regression Governance
+
+---
+
+## ✅ Previous Milestone
+
+**Roadmap v5 — Product Version v1.5**
+
+- Modular command architecture stabilized
+- Execution profiles introduced
+- Guardrail system hardened
+- Baseline UI snapshot coverage finalized
+
+---
+
+## 🧭 Strategic Direction
+
+OrionDesk is evolving toward:
+
+> **A Local-First OS Intelligence Layer for Windows**
+
+Core principles:
+
+- 🔒 Policy-driven execution safety  
+- 🧩 Modular capability expansion  
+- ⚡ Fast and structured command orchestration  
+- 🧠 Foundation for future cognitive automation  
+
+---
+
+## 🏁 Versioning Philosophy
+
+- `vX` → Roadmap generation
+- `v1.X` → Product release alignment
+- Phases tracked independently per roadmap cycle
+
 
 ---
 
