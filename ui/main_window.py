@@ -101,6 +101,7 @@ class MainWindow(QMainWindow):
 
         self.execute_button.clicked.connect(self._handle_execute)
         self.command_input.returnPressed.connect(self._handle_execute)
+        self.command_input.textChanged.connect(self._handle_command_text_changed)
         self.persona_selector.currentTextChanged.connect(self._handle_persona_change)
         self._setup_shortcuts()
 
@@ -151,6 +152,21 @@ class MainWindow(QMainWindow):
         command_layout.addWidget(self.command_input)
         command_layout.addWidget(self.execute_button)
         top_layout.addLayout(command_layout)
+
+        self.command_suggestions = QLabel(page)
+        self.command_suggestions.setObjectName("commandSuggestions")
+        self.command_suggestions.setWordWrap(True)
+        self.command_hint_label = QLabel(page)
+        self.command_hint_label.setObjectName("commandHint")
+        self.command_hint_label.setWordWrap(True)
+        self.intent_hint_label = QLabel(page)
+        self.intent_hint_label.setObjectName("intentHint")
+        self.intent_hint_label.setWordWrap(True)
+
+        top_layout.addWidget(self.command_suggestions)
+        top_layout.addWidget(self.command_hint_label)
+        top_layout.addWidget(self.intent_hint_label)
+        self._refresh_command_assist("")
 
         page_layout.addWidget(top_card)
         page_layout.addWidget(self.output_panel)
@@ -274,6 +290,29 @@ class MainWindow(QMainWindow):
             return
         self.diagnostics_info.append(f"\n[Success] Snapshot disimpan: {snapshot}")
 
+    def _handle_command_text_changed(self, text: str) -> None:
+        self._refresh_command_assist(text)
+
+    def _refresh_command_assist(self, text: str) -> None:
+        suggestions = self.router.suggest_commands(text)
+        if suggestions:
+            suggestion_text = " | ".join(suggestions)
+            self.command_suggestions.setText(f"Suggestions: {suggestion_text}")
+        else:
+            self.command_suggestions.setText("Suggestions: -")
+
+        usage_hint = self.router.usage_hint(text)
+        if usage_hint is None:
+            self.command_hint_label.setText("Usage: -")
+        else:
+            self.command_hint_label.setText(f"Usage: {usage_hint}")
+
+        intent_explanation = self.router.explain_intent(text)
+        if not intent_explanation:
+            self.intent_hint_label.setText("Intent: -")
+        else:
+            self.intent_hint_label.setText(f"Intent: {intent_explanation}")
+
     def _handle_execute(self) -> None:
         command = self.command_input.text()
         result = self.router.execute(command)
@@ -297,6 +336,7 @@ class MainWindow(QMainWindow):
 
         self.output_panel.append("")
         self.command_input.clear()
+        self._refresh_command_assist("")
 
     def _handle_persona_change(self, persona_name: str) -> None:
         self._animate_output_fade()
@@ -340,6 +380,9 @@ class MainWindow(QMainWindow):
             }}
             QLabel#placeholderTitle {{ font-size: 15px; color: #ffffff; font-weight: 700; }}
             QLabel#placeholderText {{ font-size: 11px; color: #b3bbd4; }}
+            QLabel#commandSuggestions {{ font-size: 10px; color: #b2bdd9; }}
+            QLabel#commandHint {{ font-size: 10px; color: #95c7ff; }}
+            QLabel#intentHint {{ font-size: 10px; color: #f5c586; }}
             QTextBrowser#aboutInfo, QTextBrowser#memoryInfo, QTextBrowser#diagnosticsInfo {{
                 background-color: #272e42;
                 color: #d9def0;

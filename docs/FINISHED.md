@@ -77,8 +77,10 @@ Dokumen ini menjadi arsip status fase lama (v1) yang sudah selesai.
 
 - PHASE 17 — Tab Shell Refactor (UI Information Architecture): **Done**
 - PHASE 18 — About + Diagnostics Panels: **Done**
+- PHASE 19 — Command Assist & Discoverability: **Done**
 
 ## Referensi Dokumen Selesai
 
 - `docs/finish/phase_17_tab_shell_refactor.md`
 - `docs/finish/phase_18_about_diagnostics_panels.md`
+- `docs/finish/phase_19_command_assist_discoverability.md`

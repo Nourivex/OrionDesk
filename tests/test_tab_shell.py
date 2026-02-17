@@ -39,6 +39,24 @@ def test_phase18_about_and_diagnostics_panels() -> None:
     window.close()
 
 
+def test_phase19_command_assist_updates() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.command_input.setText("sys")
+    app.processEvents()
+
+    assert "sys info" in window.command_hint_label.text()
+    assert "sys info" in window.command_suggestions.text()
+
+    window.command_input.setText("tolong bukakan vscode")
+    app.processEvents()
+    assert "Did you mean" in window.intent_hint_label.text()
+
+    window.close()
+
+
 def test_main_window_default_close_does_not_minimize_to_tray() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())

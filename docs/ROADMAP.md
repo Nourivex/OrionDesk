@@ -59,7 +59,7 @@ Tanpa:
 
 - PHASE 17: **Done** — Tab Shell Refactor (UI Information Architecture)
 - PHASE 18: **Done** — About + Diagnostics Panels
-- PHASE 19: **Planned** — Command Assist & Discoverability
+- PHASE 19: **Done** — Command Assist & Discoverability
 - PHASE 20: **Planned** — Theme Tokens + UI Scalability + Snapshot Refresh
 
 ### Catatan Perubahan Arah

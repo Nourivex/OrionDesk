@@ -259,6 +259,51 @@ class CommandRouter:
             "persona": self.memory_engine.get_preference("persona", None),
         }
 
+    def list_command_keywords(self) -> list[str]:
+        return sorted(self.contracts.keys())
+
+    def suggest_commands(self, raw_input: str, limit: int = 5) -> list[str]:
+        typed = raw_input.strip().lower()
+        usages = [contract.usage for contract in self.contracts.values()]
+        if not typed:
+            return sorted(usages)[:limit]
+
+        matched: list[str] = []
+        for usage in sorted(usages):
+            if usage.startswith(typed):
+                matched.append(usage)
+            elif usage.split(" ")[0].startswith(typed):
+                matched.append(usage)
+
+        seen: set[str] = set()
+        unique = []
+        for item in matched:
+            if item in seen:
+                continue
+            seen.add(item)
+            unique.append(item)
+        return unique[:limit]
+
+    def usage_hint(self, raw_input: str) -> str | None:
+        command = raw_input.strip().split(" ")[0].lower() if raw_input.strip() else ""
+        if not command:
+            return None
+        contract = self.contracts.get(command)
+        if contract is None:
+            return None
+        return contract.usage
+
+    def explain_intent(self, raw_input: str) -> str:
+        text = raw_input.strip()
+        if not text:
+            return ""
+        if self.intent_engine is None:
+            return ""
+        resolution = self.intent_engine.resolve(text, allowed_keywords=set(self.contracts.keys()))
+        if resolution.resolved == text:
+            return ""
+        return f"Did you mean: {resolution.resolved}"
+
     def save_recovery_snapshot(self):
         if self.recovery_manager is None or self.session_layer is None:
             return None

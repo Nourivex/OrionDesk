@@ -265,3 +265,23 @@ def test_router_release_channel_api() -> None:
     channel = router.set_release_channel("beta")
     assert channel == "beta"
     assert router.get_release_channel() == "beta"
+
+
+def test_router_command_assist_suggestions() -> None:
+    router = build_router()
+    suggestions = router.suggest_commands("se")
+
+    assert "search file <query>" in suggestions
+
+
+def test_router_usage_hint_matches_contract() -> None:
+    router = build_router()
+    assert router.usage_hint("sys") == "sys info"
+
+
+def test_router_explain_intent_for_semantic_input() -> None:
+    router = build_router()
+    explanation = router.explain_intent("tolong bukakan vscode")
+
+    assert "Did you mean" in explanation
+    assert "open vscode" in explanation

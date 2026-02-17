@@ -36,11 +36,9 @@ pytest -q
 
 - Roadmap: `docs/ROADMAP.md`
 - Finish notes: `docs/finish/`
-- Baseline tampilan v1: `docs/assets/v1/oriondesk-baseline.png`
-- Baseline tampilan v2: `docs/assets/v2/oriondesk-baseline.png`
-- Baseline tampilan v4 matrix: `docs/assets/v4/`
+- Baseline tampilan aktif (berdasarkan roadmap): `docs/assets/v4/`
 
 ## Status Fase
 
-- PHASE 0–18: Done
+- PHASE 0–19: Done
 - ROADMAP v4 / v1.4: Active Planning (PHASE 17–20)
