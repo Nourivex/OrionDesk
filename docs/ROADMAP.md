@@ -1,4 +1,4 @@
-Target kita (Roadmap v3 / Update v1.3):  
+Target kita (Roadmap v4 / Update v1.4):  
 **OrionDesk – Windows 11 Personal OS Agent (Local, Safe, Modular)**
 
 ---
@@ -24,14 +24,12 @@ Tanpa:
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
 
-## 🚀 ROADMAP v3 (Active / v1.3)
+## 🚀 ROADMAP v4 (Active / v1.4)
 
-- PHASE 11 — Local Intent Intelligence Layer
-- PHASE 12 — Workflow Automation & Task Recipes
-- PHASE 13 — Knowledge & Memory Engine (Local-first)
-- PHASE 14 — Observability, Reliability, and Recovery
-- PHASE 15 — Deployment, Distribution, and Upgrade Manager
-- PHASE 16 — UI Excellence & Accessibility Polish
+- PHASE 17 — Tab Shell Refactor (UI Information Architecture)
+- PHASE 18 — About + Diagnostics Panels
+- PHASE 19 — Command Assist & Discoverability
+- PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh
 
 ## 📌 Status Fase
 
@@ -56,6 +54,13 @@ Tanpa:
 - PHASE 14: **Done** — Observability, Reliability, and Recovery
 - PHASE 15: **Done** — Deployment, Distribution, and Upgrade Manager
 - PHASE 16: **Done** — UI Excellence & Accessibility Polish
+
+### Roadmap v4 (Aktif / v1.4)
+
+- PHASE 17: **Planned** — Tab Shell Refactor (UI Information Architecture)
+- PHASE 18: **Planned** — About + Diagnostics Panels
+- PHASE 19: **Planned** — Command Assist & Discoverability
+- PHASE 20: **Planned** — Theme Tokens + UI Scalability + Snapshot Refresh
 
 ### Catatan Perubahan Arah
 
@@ -148,7 +153,7 @@ Output fase:
 
 - UI lebih konsisten, modern, dan siap iterasi lanjutan.
 
-## 🧩 Spesifikasi v3 (PHASE 11-16)
+## 📚 Arsip Spesifikasi v3 (PHASE 11-16)
 
 ## 🔹 PHASE 11 — Local Intent Intelligence Layer
 
@@ -249,6 +254,71 @@ Cakupan:
 Output fase:
 
 - UI OrionDesk konsisten, nyaman dipakai lama, dan siap kualitas rilis publik.
+
+## 🧩 Spesifikasi v4 (PHASE 17-20)
+
+## 🔹 PHASE 17 — Tab Shell Refactor (UI Information Architecture)
+
+Tujuan: Mengubah UI dari single-screen menjadi shell bertab agar fitur bisa scale tanpa menumpuk layout.
+
+Cakupan:
+
+- Tab architecture utama (`Command`, `About`, `Settings`, `Memory`, `Diagnostics`)
+- Isolasi komponen per tab
+- Routing event antar-tab yang bersih
+
+Output fase:
+
+- Fondasi UI modular siap menampung fitur baru.
+
+---
+
+## 🔹 PHASE 18 — About + Diagnostics Panels
+
+Tujuan: Menyediakan surface user-visible untuk informasi aplikasi dan kesehatan sistem.
+
+Cakupan:
+
+- About panel (versi, channel, info build)
+- Diagnostics panel (health checks, log tail, recovery snapshot info)
+- Tombol ekspor report diagnostics
+
+Output fase:
+
+- Observability backend menjadi fitur UI yang mudah dipakai user.
+
+---
+
+## 🔹 PHASE 19 — Command Assist & Discoverability
+
+Tujuan: Mengurangi trial-error input command melalui bantuan interaktif di UI.
+
+Cakupan:
+
+- Suggestion list command valid berdasarkan kontrak plugin
+- Inline hint usage saat user mengetik
+- Intent explanation ringan ("did you mean")
+
+Output fase:
+
+- UX command lebih discoverable dan onboarding lebih cepat.
+
+---
+
+## 🔹 PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh
+
+Tujuan: Mengurangi hardcoded styling agar iterasi desain besar lebih murah dan terukur.
+
+Cakupan:
+
+- Refactor stylesheet ke design tokens
+- Konsolidasi spacing/radius/typography constants
+- Snapshot matrix refresh untuk seluruh layout tab utama
+- Milestone rilis UI v1.4 dengan acceptance checklist
+
+Output fase:
+
+- UI maintainable, scalable, dan siap evolusi roadmap berikutnya.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 
