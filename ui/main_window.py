@@ -403,10 +403,14 @@ class MainWindow(QMainWindow):
             self.command_suggestions.setText("Suggestions: -")
 
         usage_hint = self.router.usage_hint(text)
+        argument_hint = self.router.argument_hint(text)
         if usage_hint is None:
             self.command_hint_label.setText("Usage: -")
         else:
-            self.command_hint_label.setText(f"Usage: {usage_hint}")
+            if argument_hint:
+                self.command_hint_label.setText(f"Usage: {usage_hint} | Args: {argument_hint}")
+            else:
+                self.command_hint_label.setText(f"Usage: {usage_hint}")
 
         intent_explanation = self.router.explain_intent(text)
         if not intent_explanation:

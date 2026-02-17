@@ -76,7 +76,7 @@ Tanpa:
 
 - PHASE 22: **Done** — Command Engine Stabilization + Unified Executor
 - PHASE 23: **Done** — System Capability Layer
-- PHASE 24: **Planned** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
+- PHASE 24: **Done** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 25: **Planned** — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26: **Planned** — Command Reliability Matrix + End-to-End Functional QA
 
@@ -400,6 +400,7 @@ Cakupan:
 - Auto-correct typo command berbasis confidence
 - Auto-complete argument berdasarkan context command
 - Explain mode untuk menjelaskan aksi command sebelum eksekusi
+- Levenshtein distance + command registry introspection untuk candidate ranking
 
 Output fase:
 

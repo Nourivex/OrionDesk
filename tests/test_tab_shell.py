@@ -74,6 +74,20 @@ def test_phase21_settings_theme_selection_light_mode() -> None:
     window.close()
 
 
+def test_phase24_command_assist_argument_hints() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.command_input.setText("capability")
+    app.processEvents()
+
+    assert "Args:" in window.command_hint_label.text()
+    assert "file list <path>" in window.command_hint_label.text()
+
+    window.close()
+
+
 def test_main_window_default_close_does_not_minimize_to_tray() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())
