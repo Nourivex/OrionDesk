@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from core.intent_engine import LocalIntentEngine
+from core.memory_engine import MemoryEngine
 from core.plugin_registry import PluginRegistry
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -50,6 +51,7 @@ class CommandRouter:
     safe_mode_policy: SafeModePolicy | None = None
     security_guard: SecurityGuard | None = None
     intent_engine: LocalIntentEngine | None = None
+    memory_engine: MemoryEngine | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -67,6 +69,8 @@ class CommandRouter:
             self.safe_mode_policy = SafeModePolicy()
         if self.intent_engine is None:
             self.intent_engine = LocalIntentEngine()
+        if self.memory_engine is None:
+            self.memory_engine = MemoryEngine()
         self._register_plugins()
         if self.security_guard is None:
             self.security_guard = SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -218,6 +222,16 @@ class CommandRouter:
         if self.session_layer is None:
             return
         self.session_layer.record(command=command, message=message, status=status)
+        if self.memory_engine is not None:
+            self.memory_engine.record_command(command=command, status=status)
+
+    def memory_summary(self) -> dict:
+        if self.memory_engine is None:
+            return {"top_commands": [], "persona": None}
+        return {
+            "top_commands": self.memory_engine.top_commands(limit=5),
+            "persona": self.memory_engine.get_preference("persona", None),
+        }
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

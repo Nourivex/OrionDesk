@@ -24,3 +24,6 @@ Thumbs.db
 
 # UI snapshot artifacts
 tests/artifacts/
+
+# Local runtime memory storage
+.oriondesk/

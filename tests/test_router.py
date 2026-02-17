@@ -237,3 +237,13 @@ def test_safe_mode_policy_can_block_shutdown() -> None:
 
     result = router.execute("shutdown")
     assert "safe mode policy" in result.message
+
+
+def test_router_memory_summary_tracks_commands() -> None:
+    router = build_router()
+    router.execute("open vscode")
+    router.execute("open vscode")
+
+    summary = router.memory_summary()
+    counts = dict(summary["top_commands"])
+    assert counts.get("open vscode", 0) >= 2
