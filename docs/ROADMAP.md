@@ -74,7 +74,7 @@ Tanpa:
 
 ### Roadmap v5 (Aktif / v1.5)
 
-- PHASE 22: **Planned** — Command Engine Stabilization + Unified Executor
+- PHASE 22: **Done** — Command Engine Stabilization + Unified Executor
 - PHASE 23: **Planned** — Command Pack Expansion (File, Process, Network, Utility)
 - PHASE 24: **Planned** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
 - PHASE 25: **Planned** — Safe Execution Profiles + Risk-aware Command Policies
@@ -367,6 +367,7 @@ Cakupan:
 - Unified executor untuk command normal dan smart command
 - Contract validation + error taxonomy konsisten
 - Standard response envelope untuk seluruh command
+- Execution Context Object (`user`, `profile policy`, `session id`, `timestamp`, `risk level`, `dry-run`)
 
 Output fase:
 
@@ -446,7 +447,7 @@ Tujuan: Skeleton project jalan.
 Struktur:
 
 ```
-CuaOS/
+OrionDesk/
 │
 ├── main.py
 ├── ui/

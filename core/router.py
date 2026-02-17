@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+import getpass
+from dataclasses import asdict, dataclass
+from uuid import uuid4
 from typing import Callable
 
+from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
 from core.intent_engine import LocalIntentEngine
 from core.memory_engine import MemoryEngine
@@ -61,6 +64,8 @@ class CommandRouter:
     release_channel_manager: ReleaseChannelManager | None = None
     migration_manager: ConfigMigrationManager | None = None
     backup_manager: ProfileBackupManager | None = None
+    executor: UnifiedCommandExecutor | None = None
+    session_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.launcher is None:
@@ -94,6 +99,10 @@ class CommandRouter:
             self.migration_manager = ConfigMigrationManager()
         if self.backup_manager is None:
             self.backup_manager = ProfileBackupManager()
+        if self.executor is None:
+            self.executor = UnifiedCommandExecutor()
+        if self.session_id is None:
+            self.session_id = uuid4().hex
         self._register_plugins()
         if self.security_guard is None:
             self.security_guard = SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -101,76 +110,25 @@ class CommandRouter:
     def route(self, command: str) -> str:
         return self.execute(command).message
 
-    def execute(self, command: str) -> CommandResult:
+    def execute(self, command: str, dry_run: bool = False) -> CommandResult:
         normalized = self._resolve_intent(command)
-        parsed = self.parse(normalized)
-        if parsed is None:
-            result = CommandResult("Perintah kosong. Silakan isi command terlebih dahulu.")
-            self._record_session(command, result.message, "invalid")
-            return result
-
-        if len(parsed.raw) > 300:
-            result = CommandResult("Perintah terlalu panjang. Batas maksimal 300 karakter.")
-            self._record_session(parsed.raw, result.message, "invalid")
-            return result
-
-        if not self.security_guard.is_command_allowed(parsed.keyword):
-            result = CommandResult("Perintah ditolak oleh command whitelist policy.")
-            self._record_session(parsed.raw, result.message, "blocked")
-            return result
-
-        validation = self._validate_contract(parsed)
-        if validation is not None:
-            self._record_session(parsed.raw, validation.message, "invalid")
-            return validation
-
-        if self._is_dangerous(parsed.keyword):
-            if self.safe_mode_policy.is_blocked(parsed.keyword):
-                result = CommandResult("Aksi ditolak oleh safe mode policy.")
-                self._record_session(parsed.raw, result.message, "blocked")
-                return result
-
-            if self.safe_mode:
-                if not self.safe_mode_policy.requires_confirmation(parsed.keyword):
-                    result = self._execute_dangerous(parsed)
-                    self._record_session(parsed.raw, result.message, "success")
-                    return result
-                self.pending_confirmation = parsed
-                result = CommandResult(
-                    "Safe Mode aktif. Aksi ini membutuhkan konfirmasi manual.",
-                    requires_confirmation=True,
-                    pending_command=parsed.raw,
-                )
-                self._record_session(parsed.raw, result.message, "pending_confirmation")
-                return result
-            result = self._execute_dangerous(parsed)
-            self._record_session(parsed.raw, result.message, "success")
-            return result
-
-        handler = self.handlers.get(parsed.keyword)
-        if handler is None:
-            result = CommandResult("Perintah tidak dikenali. Gunakan: open, search file, atau sys info.")
-            self._record_session(parsed.raw, result.message, "invalid")
-            return result
-        result = CommandResult(handler(parsed))
-        self._record_session(parsed.raw, result.message, "success")
-        return result
+        context = self._build_execution_context(normalized, dry_run=dry_run)
+        envelope = self.executor.run(self, normalized, context)
+        self._record_session(normalized or command, envelope.message, envelope.status, envelope.context)
+        return self._to_command_result(envelope)
 
     def confirm_pending(self, approved: bool) -> CommandResult:
-        if self.pending_confirmation is None:
-            result = CommandResult("Tidak ada aksi yang menunggu konfirmasi.")
-            self._record_session("<confirm>", result.message, "invalid")
-            return result
+        context = self._build_execution_context("<confirm>", dry_run=False)
+        envelope = self.executor.confirm(self, approved, context)
+        self._record_session("<confirm>", envelope.message, envelope.status, envelope.context)
+        return self._to_command_result(envelope)
 
-        command = self.pending_confirmation
-        self.pending_confirmation = None
-        if not approved:
-            result = CommandResult("Aksi dibatalkan oleh pengguna.")
-            self._record_session(command.raw, result.message, "cancelled")
-            return result
-        result = self._execute_dangerous(command)
-        self._record_session(command.raw, result.message, "success")
-        return result
+    def execute_enveloped(self, command: str, dry_run: bool = False):
+        normalized = self._resolve_intent(command)
+        context = self._build_execution_context(normalized, dry_run=dry_run)
+        envelope = self.executor.run(self, normalized, context)
+        self._record_session(normalized or command, envelope.message, envelope.status, envelope.context)
+        return envelope
 
     def parse(self, command: str) -> ParsedCommand | None:
         clean_command = command.strip()
@@ -194,9 +152,6 @@ class CommandRouter:
     def _handle_sys(self, command: ParsedCommand) -> str:
         return self.system_tools.system_info()
 
-    def _is_dangerous(self, keyword: str) -> bool:
-        return keyword in self.dangerous_keywords
-
     def _execute_dangerous(self, command: ParsedCommand) -> CommandResult:
         if self.safe_mode_policy.is_blocked(command.keyword):
             return CommandResult("Aksi ditolak oleh safe mode policy.")
@@ -218,30 +173,7 @@ class CommandRouter:
 
         return CommandResult("Aksi berbahaya tidak dikenali.")
 
-    def _validate_contract(self, command: ParsedCommand) -> CommandResult | None:
-        contract = self.contracts.get(command.keyword)
-        if contract is None:
-            allowed = ", ".join(sorted(self.contracts.keys()))
-            return CommandResult(
-                f"Perintah tidak dikenali. Gunakan command yang terdaftar: {allowed}."
-            )
-
-        arg_count = len(command.args)
-        if arg_count < contract.min_args:
-            return CommandResult(f"Format salah. Contoh: {contract.usage}")
-
-        if contract.max_args is not None and arg_count > contract.max_args:
-            return CommandResult(f"Format salah. Contoh: {contract.usage}")
-
-        if contract.first_arg_equals is None:
-            return None
-
-        first_arg = command.args[0].lower() if command.args else ""
-        if first_arg != contract.first_arg_equals:
-            return CommandResult(f"Format salah. Contoh: {contract.usage}")
-        return None
-
-    def _record_session(self, command: str, message: str, status: str) -> None:
+    def _record_session(self, command: str, message: str, status: str, context: ExecutionContext | None = None) -> None:
         if self.session_layer is None:
             return
         self.session_layer.record(command=command, message=message, status=status)
@@ -249,7 +181,32 @@ class CommandRouter:
             self.memory_engine.record_command(command=command, status=status)
         if self.logger is not None:
             level = "error" if status in {"invalid", "blocked", "failed"} else "info"
-            self.logger.log(level=level, event="command", message=message, metadata={"command": command, "status": status})
+            metadata = {"command": command, "status": status}
+            if context is not None:
+                metadata["execution_context"] = asdict(context)
+            self.logger.log(level=level, event="command", message=message, metadata=metadata)
+
+    def _to_command_result(self, envelope) -> CommandResult:
+        return CommandResult(
+            message=envelope.message,
+            requires_confirmation=envelope.requires_confirmation,
+            pending_command=envelope.pending_command,
+        )
+
+    def _build_execution_context(self, command: str, dry_run: bool) -> ExecutionContext:
+        parsed = self.parse(command)
+        risk_level = "low"
+        if parsed is not None and parsed.keyword in self.dangerous_keywords:
+            risk_level = "high"
+        profile_policy = "strict" if self.safe_mode else "power"
+        return ExecutionContext(
+            user=getpass.getuser(),
+            profile_policy=profile_policy,
+            session_id=self.session_id or "router-session",
+            timestamp=build_execution_timestamp(),
+            risk_level=risk_level,
+            dry_run=dry_run,
+        )
 
     def memory_summary(self) -> dict:
         if self.memory_engine is None:

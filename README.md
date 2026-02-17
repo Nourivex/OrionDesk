@@ -36,10 +36,10 @@ pytest -q
 
 - Roadmap: `docs/ROADMAP.md`
 - Finish notes: `docs/finish/`
-- Baseline tampilan aktif (berdasarkan roadmap): `docs/assets/v4/`
+- Baseline tampilan aktif (berdasarkan roadmap): `docs/assets/v5/`
 
 ## Status Fase
 
-- PHASE 0–21: Done
+- PHASE 0–22: Done
 - ROADMAP v4 / v1.4: Completed (PHASE 17–21)
 - ROADMAP v5 / v1.5: Active Planning (PHASE 22–26)
