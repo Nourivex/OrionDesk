@@ -51,7 +51,7 @@ Tanpa:
 ### Roadmap v3 (Aktif / v1.3)
 
 - PHASE 11: **Done** — Local Intent Intelligence Layer
-- PHASE 12: **Planned** — Workflow Automation & Task Recipes
+- PHASE 12: **Done** — Workflow Automation & Task Recipes
 - PHASE 13: **Planned** — Knowledge & Memory Engine (Local-first)
 - PHASE 14: **Planned** — Observability, Reliability, and Recovery
 - PHASE 15: **Planned** — Deployment, Distribution, and Upgrade Manager

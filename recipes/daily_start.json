@@ -1,0 +1,15 @@
+{
+  "name": "daily_start",
+  "steps": [
+    {
+      "name": "open-notepad",
+      "command": "open notepad",
+      "expected_contains": "Membuka"
+    },
+    {
+      "name": "system-overview",
+      "command": "sys info",
+      "expected_contains": "Informasi Sistem"
+    }
+  ]
+}

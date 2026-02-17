@@ -13,6 +13,7 @@ OrionDesk adalah personal OS agent lokal untuk Windows 11 yang fokus pada keaman
 - UI PySide6 dengan dark mode, persona selector, dan output console
 - UI modern Windows 11 feel (material effect attempt, animation, tray, hotkey)
 - Snapshot test PNG untuk validasi tampilan
+- Workflow automation engine dengan recipe JSON + retry + approval hook
 
 ## Menjalankan Aplikasi
 
@@ -36,5 +37,5 @@ pytest -q
 
 ## Status Fase
 
-- PHASE 0–10: Done
+- PHASE 0–12: Done
 - ROADMAP v3 / v1.3: Active Planning (PHASE 11–15)
