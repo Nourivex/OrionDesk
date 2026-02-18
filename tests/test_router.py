@@ -382,3 +382,20 @@ def test_route_net_command_flow() -> None:
     assert router.route("net ping localhost") == "ping:localhost:2"
     assert router.route("net dns localhost") == "dns:localhost"
     assert router.route("net ip") == "ip:127.0.0.1"
+
+
+def test_router_build_performance_baseline() -> None:
+    router = build_router()
+    baseline = router.build_performance_baseline()
+
+    assert set(baseline.keys()) == {"startup_ms", "command_latency_ms", "storage_io_ms"}
+    assert baseline["startup_ms"] >= 0
+
+
+def test_router_release_hardening_summary() -> None:
+    router = build_router()
+    router.build_performance_baseline()
+    summary = router.release_hardening_summary()
+
+    assert summary["completed"] >= 1
+    assert summary["total"] >= summary["completed"]

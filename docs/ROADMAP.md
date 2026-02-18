@@ -10,22 +10,23 @@ Versioned execution plan covering product evolution, platform capability, and en
 
 ## 📦 Current Cycle
 
-**Roadmap v6 — Product Version v1.6**
+**Roadmap v7 — Product Version v1.7 (Planning)**
 
-- 🎯 Focus Areas: Performance, Automation, Utility Expansion
-- 🧠 Priority: Capability Layer Refinement
-- ⚙ Stability: Snapshot & Regression Governance
+- 🎯 Focus Areas: Interface Elevation, UX Density, Runtime Clarity
+- 🧠 Priority: Pro Ops Console UI Foundation
+- ⚙ Stability: Snapshot Governance + Acceptance Matrix
 
 ---
 
 ## ✅ Previous Milestone
 
-**Roadmap v5 — Product Version v1.5**
+**Roadmap v6 — Product Version v1.6**
 
-- Modular command architecture stabilized
-- Execution profiles introduced
-- Guardrail system hardened
-- Baseline UI snapshot coverage finalized
+- Storage migration selesai (JSON → SQLite)
+- Trigger-action automation foundation tersedia
+- Utility/developer modules diperluas
+- Global hotkey + fast command surface stabil
+- Reliability/profiling/release hardening selesai
 
 ---
 
@@ -74,13 +75,20 @@ Tanpa:
 
 # 🗺️ ROADMAP OrionDesk (PySide6)
 
-## 🚀 ROADMAP v6 (Active / v1.6)
+## 🚀 ROADMAP v6 (Completed / v1.6)
 
 - PHASE 27 — Storage Engine Migration (JSON to SQLite) ✅
 - PHASE 28 — Trigger-Action Automation Engine (Watcher + Scheduler) ✅
 - PHASE 29 — Utility & Developer Modules Expansion ✅
 - PHASE 30 — Global Hotkey UX + Fast Command Surface ✅
-- PHASE 31 — Reliability, Profiling, and Release Hardening
+- PHASE 31 — Reliability, Profiling, and Release Hardening ✅
+
+## 🚀 ROADMAP v7 (Planned / v1.7)
+
+- PHASE 32 — v6 Interface Closure Pack + UX Debt Audit
+- PHASE 33 — Pro Ops Console Visual System Revamp
+- PHASE 34 — Full Tab Layout Redesign + Runtime Status Rail
+- PHASE 35 — UI Stabilization, Snapshot Governance, and Release Checklist
 
 ## 🚀 ROADMAP v5 (Completed / v1.5)
 
@@ -140,13 +148,20 @@ Tanpa:
 - PHASE 25: **Done** — Safe Execution Profiles + Risk-aware Command Policies
 - PHASE 26: **Done** — Modern UI Icon Language + Reliability Matrix Validation
 
-### Roadmap v6 (Aktif / v1.6)
+### Roadmap v6 (Selesai / v1.6)
 
 - PHASE 27: **Done** — Storage Engine Migration (JSON to SQLite)
 - PHASE 28: **Done** — Trigger-Action Automation Engine (Watcher + Scheduler)
 - PHASE 29: **Done** — Utility & Developer Modules Expansion
 - PHASE 30: **Done** — Global Hotkey UX + Fast Command Surface
-- PHASE 31: **Planned** — Reliability, Profiling, and Release Hardening
+- PHASE 31: **Done** — Reliability, Profiling, and Release Hardening
+
+### Roadmap v7 (Rencana / v1.7)
+
+- PHASE 32: **Planned** — v6 Interface Closure Pack + UX Debt Audit
+- PHASE 33: **Planned** — Pro Ops Console Visual System Revamp
+- PHASE 34: **Planned** — Full Tab Layout Redesign + Runtime Status Rail
+- PHASE 35: **Planned** — UI Stabilization, Snapshot Governance, and Release Checklist
 
 ### Catatan Perubahan Arah
 

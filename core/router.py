@@ -16,6 +16,8 @@ from core.intent_engine import LocalIntentEngine
 from core.memory_engine import MemoryEngine
 from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManager, StructuredLogger
 from core.plugin_registry import PluginRegistry
+from core.performance_profiler import PerformanceProfiler
+from core.release_hardening import ReleaseHardeningPlan
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
 from core.session import SessionLayer
@@ -89,6 +91,8 @@ class CommandRouter:
     clipboard_manager: ClipboardManager | None = None
     focus_mode_manager: FocusModeManager | None = None
     network_diagnostics: NetworkDiagnostics | None = None
+    performance_profiler: PerformanceProfiler | None = None
+    release_hardening_plan: ReleaseHardeningPlan | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -119,6 +123,8 @@ class CommandRouter:
         self.clipboard_manager = self.clipboard_manager or ClipboardManager()
         self.focus_mode_manager = self.focus_mode_manager or FocusModeManager()
         self.network_diagnostics = self.network_diagnostics or NetworkDiagnostics()
+        self.performance_profiler = self.performance_profiler or PerformanceProfiler()
+        self.release_hardening_plan = self.release_hardening_plan or ReleaseHardeningPlan()
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -417,6 +423,20 @@ class CommandRouter:
         checks = self.health_monitor.run(self)
         recent_logs = self.logger.tail(limit=30)
         return self.diagnostic_reporter.generate(checks, recent_logs)
+
+    def build_performance_baseline(self) -> dict:
+        startup = self.performance_profiler.measure_startup(lambda: CommandRouter())
+        command_latency = self.performance_profiler.measure_command_latency(self.route, "sys info", iterations=3)
+        storage_io = self.performance_profiler.measure_storage_io(iterations=10)
+        self.release_hardening_plan.mark_completed("profiling")
+        return {
+            "startup_ms": startup.average_ms,
+            "command_latency_ms": command_latency.average_ms,
+            "storage_io_ms": storage_io.average_ms,
+        }
+
+    def release_hardening_summary(self) -> dict:
+        return self.release_hardening_plan.summary()
 
     def get_release_channel(self) -> str:
         return self.release_channel_manager.get_channel()

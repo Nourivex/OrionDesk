@@ -29,7 +29,7 @@ def test_phase18_about_and_diagnostics_panels() -> None:
 
     window.tab_widget.setCurrentIndex(4)
     app.processEvents()
-    assert "OrionDesk v1.4" in window.about_info.toPlainText()
+    assert "OrionDesk v1.6" in window.about_info.toPlainText()
 
     window.tab_widget.setCurrentIndex(3)
     app.processEvents()

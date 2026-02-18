@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.hotkey_manager import GlobalHotkeyManager
+from core.app_metadata import APP_BUILD_FOCUS, APP_MODE, APP_NAME, APP_VERSION
 from core.router import CommandRouter
 from persona.persona_engine import PersonaEngine
 from ui.output_highlighter import OutputHighlighter
@@ -307,10 +308,14 @@ class MainWindow(QMainWindow):
         run_button = QPushButton("Generate Report", page)
         run_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogDetailedView))
         run_button.clicked.connect(self._generate_diagnostic_report)
+        profile_button = QPushButton("Run Performance Baseline", page)
+        profile_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon))
+        profile_button.clicked.connect(self._run_performance_baseline)
         snapshot_button = QPushButton("Save Recovery Snapshot", page)
         snapshot_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
         snapshot_button.clicked.connect(self._save_recovery_snapshot)
         button_row.addWidget(run_button)
+        button_row.addWidget(profile_button)
         button_row.addWidget(snapshot_button)
         button_row.addStretch()
         self.diagnostics_info = QTextBrowser(page)
@@ -384,10 +389,10 @@ class MainWindow(QMainWindow):
     def _refresh_about_panel(self) -> None:
         channel = self.router.get_release_channel()
         lines = [
-            "OrionDesk v1.4",
+            f"{APP_NAME} {APP_VERSION}",
             f"Release Channel: {channel}",
-            "Mode: Local, Safe, Modular",
-            "Build Focus: Personal OS Agent",
+            f"Mode: {APP_MODE}",
+            f"Build Focus: {APP_BUILD_FOCUS}",
         ]
         self.about_info.setText("\n".join(lines))
 
@@ -423,6 +428,21 @@ class MainWindow(QMainWindow):
             self.diagnostics_info.append("\n[Error] Gagal menyimpan snapshot.")
             return
         self.diagnostics_info.append(f"\n[Success] Snapshot disimpan: {snapshot}")
+
+    def _run_performance_baseline(self) -> None:
+        baseline = self.router.build_performance_baseline()
+        release_summary = self.router.release_hardening_summary()
+        lines = [
+            "[Performance Baseline]",
+            f"startup_ms: {baseline['startup_ms']}",
+            f"command_latency_ms: {baseline['command_latency_ms']}",
+            f"storage_io_ms: {baseline['storage_io_ms']}",
+            (
+                "release_checklist: "
+                f"{release_summary['completed']}/{release_summary['total']} completed"
+            ),
+        ]
+        self.diagnostics_info.append("\n" + "\n".join(lines))
 
     def _handle_theme_change(self, theme_name: str) -> None:
         if theme_name == "light":
