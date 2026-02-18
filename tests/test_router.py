@@ -291,6 +291,27 @@ def test_router_embed_text_uses_provider() -> None:
     assert vector == [5.0]
 
 
+def test_router_intent_graph_decomposes_steps() -> None:
+    router = build_router()
+
+    graph = router.intent_graph("open vscode lalu sys info")
+    steps = graph["steps"]
+
+    assert len(steps) == 2
+    assert steps[0]["step_id"] == "S1"
+    assert steps[1]["depends_on"] == ["S1"]
+
+
+def test_router_intent_graph_contains_reason_trace() -> None:
+    router = build_router()
+
+    graph = router.intent_graph("tolong bukakan vscode lalu cek system")
+    reasons = [item["reason"] for item in graph["steps"]]
+
+    assert len(reasons) >= 1
+    assert all("confidence=" in reason for reason in reasons)
+
+
 def test_router_semantic_intent_open() -> None:
     router = build_router()
     result = router.execute("tolong bukakan notepad")

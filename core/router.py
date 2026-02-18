@@ -14,6 +14,7 @@ from core.embedding_provider import EmbeddingConfig, EmbeddingProvider, OllamaEm
 from core.execution_profile import ExecutionProfilePolicy
 from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.intent_engine import LocalIntentEngine
+from core.intent_graph import IntentGraphPlanner
 from core.memory_engine import MemoryEngine
 from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManager, StructuredLogger
 from core.plugin_registry import PluginRegistry
@@ -95,6 +96,7 @@ class CommandRouter:
     performance_profiler: PerformanceProfiler | None = None
     release_hardening_plan: ReleaseHardeningPlan | None = None
     embedding_provider: EmbeddingProvider | None = None
+    intent_graph_planner: IntentGraphPlanner | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -130,6 +132,7 @@ class CommandRouter:
         self.embedding_provider = self.embedding_provider or OllamaEmbeddingProvider(
             config=self._build_embedding_config_from_env()
         )
+        self.intent_graph_planner = self.intent_graph_planner or IntentGraphPlanner()
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -473,6 +476,14 @@ class CommandRouter:
 
     def embed_text(self, text: str) -> list[float]:
         return self.embedding_provider.embed(text)
+
+    def intent_graph(self, raw_input: str) -> dict:
+        allowed = set(self.contracts.keys())
+        graph = self.intent_graph_planner.build(
+            raw_input=raw_input,
+            resolve_intent=lambda text: self.intent_engine.resolve(text, allowed_keywords=allowed),
+        )
+        return graph.to_dict()
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

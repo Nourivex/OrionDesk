@@ -36,7 +36,8 @@ Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 ### Progress v8 Saat Ini
 
 - ✅ PHASE 36 selesai: Ollama embedding foundation (`nomic-embed-text:latest`, health + config surface)
-- 🚧 PHASE 37-40: planned
+- ✅ PHASE 37 selesai: multi-step intent graph (decomposition, step typing, dependency chain, reason trace)
+- 🚧 PHASE 38-40: planned
 
 ---
 
@@ -79,7 +80,7 @@ Output:
 
 ---
 
-### PHASE 37 — Multi-step Intent Graph
+### PHASE 37 — Multi-step Intent Graph ✅
 
 Tujuan:
 
