@@ -13,6 +13,9 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
 - Menambahkan suggestion chips (`capability system info`, `clip show`, `mode game on`) untuk input cepat.
 - Menambahkan alur clear chat yang mereset panel output, statistik, dan mengembalikan welcome message.
 - Menyesuaikan tampilan chat ke format bubble user/assistant agar lebih dekat ke wireframe target.
+- Migrasi rendering chat ke arsitektur native (`QScrollArea` + `ChatBubbleWidget`) untuk kontrol layout yang lebih presisi.
+- Memecah setiap tab UI ke `ui/pages/*.py` agar `MainWindow` fokus ke orchestration.
+- Menurunkan ukuran `ui/main_window.py` menjadi <= 500 baris untuk maintainability.
 
 ## Perubahan Dokumen
 
@@ -26,7 +29,18 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
   - Refactor command tab ke model sidebar + chat area.
   - Penambahan quick action handlers, clear chat handler, stats counters, suggestion chip handlers.
   - Integrasi counters dengan lifecycle eksekusi command dan perubahan persona.
-  - Rendering output berbasis rich bubble chat untuk pesan user dan assistant.
+  - Integrasi output chat berbasis widget-native.
+- `ui/chat_surface.py`
+  - `ChatBubbleWidget` untuk bubble user/assistant.
+  - `ChatSurface` sebagai container chat berbasis `QScrollArea`.
+- `ui/pages/command_page.py`
+- `ui/pages/memory_page.py`
+- `ui/pages/settings_page.py`
+- `ui/pages/diagnostics_page.py`
+- `ui/pages/about_page.py`
+- `ui/pages/__init__.py`
+- `ui/window_helpers.py`
+  - `CommandWorker`, `with_status_badge`, dan `show_confirmation_dialog`.
 - `ui/style_layers.py`
   - Penambahan style token-driven untuk komponen command workspace baru.
 - `tests/test_tab_shell.py`
@@ -36,7 +50,7 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
 ## Validasi
 
 - `pytest -q tests/test_tab_shell.py tests/test_ui_acceptance_v14.py`
-- Hasil: `15 passed`
+- Hasil: `16 passed`
 
 ## Dampak
 

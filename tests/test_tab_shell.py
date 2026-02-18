@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QApplication
+from pathlib import Path
 
 from core.router import CommandRouter
 from ui.main_window import MainWindow
@@ -166,6 +167,8 @@ def test_phase32_command_workspace_components() -> None:
     assert window.clear_chat_button.text() == "Clear"
     assert window.message_count_label.text() == "0"
     assert window.command_count_label.text() == "0"
+    assert window.output_panel.__class__.__name__ == "ChatSurface"
+    assert hasattr(window.output_panel, "add_message")
     assert "OrionDesk AI Assistant" in window.output_panel.toPlainText()
 
     window.close()
@@ -192,3 +195,8 @@ def test_phase32_command_workspace_stats_and_clear_chat() -> None:
     assert "Ketik command atau pilih quick action" in window.output_panel.toPlainText()
 
     window.close()
+
+
+def test_phase32_main_window_file_size_target() -> None:
+    content = Path("ui/main_window.py").read_text(encoding="utf-8")
+    assert len(content.splitlines()) <= 500

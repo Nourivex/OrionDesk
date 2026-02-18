@@ -83,7 +83,7 @@ def build_main_window_stylesheet(tokens: ThemeTokens, focus_color: str) -> str:
         }}
         QPushButton:hover {{ background-color: {tokens.button_hover}; }}
         QPushButton:pressed {{ background-color: {tokens.button_pressed}; }}
-        QTextEdit#outputPanel {{
+        QScrollArea#outputPanel {{
             background-color: {tokens.output_bg};
             color: {tokens.output_text};
             border: 1px solid {tokens.panel_border};
