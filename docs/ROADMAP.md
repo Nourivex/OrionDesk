@@ -2,858 +2,200 @@
 
 # 🗺 OrionDesk Roadmap
 
-Versioned execution plan covering product evolution, platform capability, and engineering quality standards.
+Strategic roadmap for OrionDesk product evolution, split clearly between legacy Application V1 and active Application V2.1 planning.
 
 </div>
 
 ---
 
-## 📦 Current Cycle
+## 📌 Document Intent
 
-**Roadmap v7 — Product Version v1.7 (Completed)**
+Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 
-- 🎯 Focus Areas: Interface Elevation, UX Density, Runtime Clarity
-- 🧠 Priority: Pro Ops Console UI Foundation
-- ⚙ Stability: Snapshot Governance + Acceptance Matrix
-
-### Progress v7 Terkini
-
-- ✅ PHASE 32 selesai: Command Workspace Refresh (sidebar persona, native bubble chat, smart auto-scroll, split UI pages)
-- ✅ PHASE 33 selesai: visual modernization lintas tab (`Memory`, `Settings`, `Diagnostics`, `About`) + header SVG logo
-- ✅ PHASE 34 selesai: full tab layout redesign + runtime status rail
-- ✅ PHASE 35 selesai: UI stabilization, snapshot governance, release checklist
+1. **Legacy Track (Application V1 / Roadmap v1-v7)** → arsip implementasi yang sudah selesai
+2. **Active Track (Application V2.1 / Roadmap v8)** → fokus pengembangan berikutnya
 
 ---
 
-## ✅ Previous Milestone
+## 🚀 Active Track — Application V2.1
 
-**Roadmap v6 — Product Version v1.6**
+### Roadmap v8 (Planned / v2.1)
 
-- Storage migration selesai (JSON → SQLite)
-- Trigger-action automation foundation tersedia
-- Utility/developer modules diperluas
-- Global hotkey + fast command surface stabil
-- Reliability/profiling/release hardening selesai
+**North Star**
 
----
+> OrionDesk menjadi local-first reasoning assistant yang bisa memahami intent kompleks, menyusun multi-step action, dan mengeksekusi multi-command secara aman.
 
-## 🧭 Strategic Direction
+**Core Focus v8_v2.1**
 
-OrionDesk is evolving toward:
-
-> **A Local-First OS Intelligence Layer for Windows**
-
-Core principles:
-
-- 🔒 Policy-driven execution safety  
-- 🧩 Modular capability expansion  
-- ⚡ Fast and structured command orchestration  
-- 🧠 Foundation for future cognitive automation  
+- Local LLM embedding via Ollama (`nomic-embed-text:latest`)
+- Multi-step intent planning
+- Complex reasoning pipeline
+- Detail argument extraction
+- Multi-command execution (`2+` perintah dalam satu input) dengan safety guard
 
 ---
 
-## 🏁 Versioning Philosophy
+## 🎯 Scope V2.1 (What Must Work)
 
-- `vX` → Roadmap generation
-- `v1.X` → Product release alignment
-- Phases tracked independently per roadmap cycle
+Versi v2.1 harus bisa:
 
+- Menerima input natural yang berisi **lebih dari satu instruksi**
+- Memecah input menjadi **intent graph** terstruktur
+- Mengekstrak argumen dengan detail (path, target, mode, flags)
+- Menjalankan langkah secara berurutan dengan observability dan rollback-aware behavior
+- Tetap policy-driven (safe mode, profile risk, confirmation hooks)
 
----
+Tidak termasuk (pada cycle awal v8):
 
-# 🎯 Visi Awal (Scope Biar Nggak Meledak)
-
-Versi 1.0 harus bisa:
-
-- Launch aplikasi
-- Cari file
-- Jalankan command aman
-- Tampilkan output di GUI
-- Punya persona system sederhana
-- Safe mode default
-
-Tanpa:
-- LLM dulu
-- Tanpa async berat
-- Tanpa automation mouse/keyboard
-- Tanpa sandbox ribet
+- Cloud dependency wajib
+- Agent autonomy tanpa guardrail
+- Arbitrary unrestricted tool execution
 
 ---
 
-# 🗺️ ROADMAP OrionDesk (PySide6)
+## 🧩 PHASE Plan — Roadmap v8 / v2.1
 
-## 🚀 ROADMAP v6 (Completed / v1.6)
+### PHASE 36 — Ollama Embedding Foundation
 
-- PHASE 27 — Storage Engine Migration (JSON to SQLite) ✅
-- PHASE 28 — Trigger-Action Automation Engine (Watcher + Scheduler) ✅
-- PHASE 29 — Utility & Developer Modules Expansion ✅
-- PHASE 30 — Global Hotkey UX + Fast Command Surface ✅
-- PHASE 31 — Reliability, Profiling, and Release Hardening ✅
+Tujuan:
 
-## 🚀 ROADMAP v7 (Completed / v1.7)
-
-- PHASE 32 — Command Workspace Refresh (Persona Rail + Chat Command Surface) ✅
-- PHASE 33 — Pro Ops Console Visual System Revamp ✅
-- PHASE 34 — Full Tab Layout Redesign + Runtime Status Rail ✅
-- PHASE 35 — UI Stabilization, Snapshot Governance, and Release Checklist ✅
-
-## 🚀 ROADMAP v5 (Completed / v1.5)
-
-- PHASE 22 — Command Engine Stabilization + Unified Executor
-- PHASE 23 — System Capability Layer
-- PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain)
-- PHASE 24.5 — Real Action Execution + Themed Guard Notifications
-- PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies
-- PHASE 26 — Command Reliability Matrix + End-to-End Functional QA
-
-## 🚀 ROADMAP v4 (Completed / v1.4)
-
-- PHASE 17 — Tab Shell Refactor (UI Information Architecture)
-- PHASE 18 — About + Diagnostics Panels
-- PHASE 19 — Command Assist & Discoverability
-- PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh
-- PHASE 21 — Settings Priority Panel + Theme Selection (Light Mode)
-
-## 📌 Status Fase
-
-### Roadmap v1 (Arsip)
-
-- PHASE 0–5: **Done**
-- Detail dipindahkan ke: `docs/FINISHED.md`
-
-### Roadmap v2 (Aktif)
-
-- PHASE 6: **Done** — Command Contract Hardening
-- PHASE 7: **Done** — Command History & Session Layer
-- PHASE 8: **Done** — Plugin Architecture
-- PHASE 9: **Done** — Security Hardening
-- PHASE 10: **Done** — Windows 11 Native Feel Upgrade
-
-### Roadmap v3 (Aktif / v1.3)
-
-- PHASE 11: **Done** — Local Intent Intelligence Layer
-- PHASE 12: **Done** — Workflow Automation & Task Recipes
-- PHASE 13: **Done** — Knowledge & Memory Engine (Local-first)
-- PHASE 14: **Done** — Observability, Reliability, and Recovery
-- PHASE 15: **Done** — Deployment, Distribution, and Upgrade Manager
-- PHASE 16: **Done** — UI Excellence & Accessibility Polish
-
-### Roadmap v4 (Aktif / v1.4)
-
-- PHASE 17: **Done** — Tab Shell Refactor (UI Information Architecture)
-- PHASE 18: **Done** — About + Diagnostics Panels
-- PHASE 19: **Done** — Command Assist & Discoverability
-- PHASE 20: **Done** — Theme Tokens + UI Scalability + Snapshot Refresh
-- PHASE 21: **Done** — Settings Priority Panel + Theme Selection (Light Mode)
-
-### Roadmap v5 (Aktif / v1.5)
-
-- PHASE 22: **Done** — Command Engine Stabilization + Unified Executor
-- PHASE 23: **Done** — System Capability Layer
-- PHASE 24: **Done** — Smart Command Assist (Auto-correct, Auto-complete, Explain)
-- PHASE 24.5: **Done** — Real Action Execution + Themed Guard Notifications
-- PHASE 25: **Done** — Safe Execution Profiles + Risk-aware Command Policies
-- PHASE 26: **Done** — Modern UI Icon Language + Reliability Matrix Validation
-
-### Roadmap v6 (Selesai / v1.6)
-
-- PHASE 27: **Done** — Storage Engine Migration (JSON to SQLite)
-- PHASE 28: **Done** — Trigger-Action Automation Engine (Watcher + Scheduler)
-- PHASE 29: **Done** — Utility & Developer Modules Expansion
-- PHASE 30: **Done** — Global Hotkey UX + Fast Command Surface
-- PHASE 31: **Done** — Reliability, Profiling, and Release Hardening
-
-### Roadmap v7 (Rencana / v1.7)
-
-- PHASE 32: **Done** — Command Workspace Refresh (Persona Rail + Chat Command Surface)
-- PHASE 33: **Done** — Pro Ops Console Visual System Revamp (multi-tab modernization + SVG header brand)
-- PHASE 34: **Done** — Full Tab Layout Redesign + Runtime Status Rail
-- PHASE 35: **Done** — UI Stabilization, Snapshot Governance, and Release Checklist
-
-### Catatan Perubahan Arah
-
-- Nama root project diseragamkan menjadi `OrionDesk/` (bukan `CuaOS/`).
-- PHASE 1 dipertahankan tanpa NLP, fokus pada kontrak command stabil untuk fondasi PHASE 2.
-
-## 📚 Arsip Spesifikasi v2 (PHASE 6-10)
-
-## 🔹 PHASE 6 — Command Contract Hardening
-
-Tujuan: Kontrak command lebih ketat dan seragam.
+- Integrasi adapter embedding lokal via Ollama.
 
 Cakupan:
 
-- Command whitelist terpusat
-- Usage/format validation per command
-- Argument min/max validation
-- Subcommand validation (`search file`, `sys info`)
-- Batas panjang input command
+- Embedding provider interface + Ollama implementation
+- Default model: `nomic-embed-text:latest`
+- Health check endpoint dan fallback status message
+- Config surface untuk host/model/timeout
 
-Output fase:
+Output:
 
-- Parser dan validator command stabil untuk pengembangan lanjutan.
+- Foundation semantic embedding siap dipakai intent/ranking layer.
 
 ---
 
-## 🔹 PHASE 7 — Command History & Session Layer
+### PHASE 37 — Multi-step Intent Graph
 
-Tujuan: Menyediakan histori command per sesi secara headless.
+Tujuan:
+
+- Input kompleks diubah menjadi graph langkah aksi yang terstruktur.
 
 Cakupan:
 
-- Session layer terpisah dari GUI
-- Record command, result message, dan status
-- Recent history retrieval
-- Session export ke JSON
+- Intent decomposition (`goal -> steps`)
+- Step typing (`read`, `analyze`, `execute`, `verify`)
+- Dependency ordering antar-step
+- Explainable trace untuk setiap mapping keputusan
 
-Output fase:
+Output:
 
-- Riwayat command siap dipakai untuk fitur history UI dan audit ringan.
+- OrionDesk bisa memahami request multi-step secara deterministik.
 
 ---
 
-## 🔹 PHASE 8 — Plugin Architecture
+### PHASE 38 — Complex Reasoning Engine
 
-Tujuan: Modul dapat auto-register tanpa edit router utama.
+Tujuan:
+
+- Menambah reasoning orchestration untuk memilih urutan aksi yang paling relevan dan aman.
 
 Cakupan:
 
-- Interface plugin command handler
-- Registry plugin terpusat
-- Auto-discovery/auto-register plugin lokal
-- Router membaca command dari registry
+- Reasoning loop berbasis local context + embedding recall
+- Confidence scoring per-step
+- Branch fallback strategy untuk ambiguity
+- Safety-aware plan pruning
 
-Output fase:
+Output:
 
-- Ekosistem modul lebih extensible dan scalable.
+- Engine reasoning lokal yang lebih kuat tanpa melepas kontrol policy.
 
 ---
 
-## 🔹 PHASE 9 — Security Hardening
+### PHASE 39 — Argument Extraction + Multi-command Executor
 
-Tujuan: Menguatkan keamanan OrionDesk sebagai local safe agent.
+Tujuan:
+
+- Menjamin input natural dapat dieksekusi menjadi 2+ command nyata secara aman.
 
 Cakupan:
 
-- Command whitelist enforcement
-- Path restriction enforcement
-- Process permission guard
-- Safe mode policy object
+- Fine-grained argument extraction (`target`, `path`, `mode`, `scope`)
+- Multi-command bundling (`chain`, `parallel-eligible`, `guarded`)
+- Execution report per command (status, duration, reason)
+- Confirmation gates untuk high-risk command dalam chain
 
-Output fase:
+Output:
 
-- Command berisiko lebih terkendali dan policy-driven.
+- Satu input bisa menghasilkan multi-command execution yang terukur dan dapat diaudit.
 
 ---
 
-## 🔹 PHASE 10 — Windows 11 Native Feel Upgrade
+### PHASE 40 — Stabilization + Release Gate v2.1
 
-Tujuan: Meningkatkan pengalaman visual dan interaksi agar lebih native.
+Tujuan:
+
+- Menutup roadmap v8 dengan quality gate sebelum release v2.1.
 
 Cakupan:
 
-- Penyelarasan spacing/typography
-- Native-like control behavior
-- Polishing visual state (hover/focus/active)
-- Stabilitas snapshot visual regression
+- Reliability matrix untuk flow multi-step dan multi-command
+- Snapshot + UI acceptance refresh
+- Regression tests untuk parser/intent/reasoning/executor
+- Final release checklist + migration notes
 
-Output fase:
+Output:
 
-- UI lebih konsisten, modern, dan siap iterasi lanjutan.
-
-## 📚 Arsip Spesifikasi v3 (PHASE 11-16)
-
-## 🔹 PHASE 11 — Local Intent Intelligence Layer
-
-Tujuan: OrionDesk memahami intent user lebih natural tanpa mengorbankan kontrol dan keamanan lokal.
-
-Cakupan:
-
-- Intent classifier lokal berbasis rules + scoring
-- Intent fallback chain (strict parser -> semantic parser)
-- Confidence score dan reason trace untuk tiap keputusan
-- Prompt-less command assist (saran command valid)
-
-Output fase:
-
-- Interaksi command lebih cerdas tanpa kehilangan determinisme.
+- OrionDesk v2.1 siap release dengan baseline engineering yang stabil.
 
 ---
 
-## 🔹 PHASE 12 — Workflow Automation & Task Recipes
+## 🛡 Guardrail Contract (V2.1)
 
-Tujuan: User dapat menjalankan rangkaian task berulang sebagai recipe.
+Semua fase v8 tetap wajib:
 
-Cakupan:
-
-- Format recipe YAML/JSON lokal
-- Step runner dengan precondition/postcondition
-- Retry policy per step
-- Manual approval hook untuk step berisiko
-
-Output fase:
-
-- OrionDesk mampu menjalankan automasi harian secara aman dan dapat diaudit.
+- Headless-compatible logic
+- No business logic in GUI
+- Policy first (`safe_mode`, `execution_profile`, confirmation)
+- Test coverage untuk fitur baru
+- Documentation sync di `docs/finish/`
 
 ---
 
-## 🔹 PHASE 13 — Knowledge & Memory Engine (Local-first)
+## ✅ Legacy Track — Application V1 (Archived)
 
-Tujuan: Menyimpan konteks penting user secara lokal untuk personalisasi yang nyata.
+### Status Ringkas
 
-Cakupan:
+- Roadmap v1 → v7: **Completed**
+- Product track v1.x: **Closed**
 
-- Session memory persistence (ringkas, terstruktur)
-- Knowledge index untuk preferensi dan shortcut user
-- Memory privacy controls (retention, purge, export)
-- Query memory API untuk router/persona
+### Legacy Milestone Summary
 
-Output fase:
+- v1-v3: command foundation, persona, safety, intent/memory/observability
+- v4-v5: tab shell architecture, command assist, capability layer, risk policy
+- v6: storage migration, automation, hotkey UX, reliability hardening
+- v7: command workspace revamp, multi-tab visual modernization, stabilization closure
 
-- Agent menjadi lebih personal tanpa cloud dependency.
+### Legacy References
 
----
+Detail implementasi legacy tersedia di:
 
-## 🔹 PHASE 14 — Observability, Reliability, and Recovery
-
-Tujuan: Menjadikan OrionDesk stabil untuk pemakaian harian jangka panjang.
-
-Cakupan:
-
-- Structured logging dan error taxonomy
-- Health checks untuk modul/plugin
-- Crash recovery session snapshot
-- Diagnostic report generator (lokal)
-
-Output fase:
-
-- Masalah operasional lebih mudah dilacak, diperbaiki, dan dicegah berulang.
+- `docs/FINISHED.md`
+- `docs/finish/` (per-phase completion docs)
+- changelog dan commit history
 
 ---
 
-## 🔹 PHASE 15 — Deployment, Distribution, and Upgrade Manager
+## 🧭 Versioning Convention
 
-Tujuan: Distribusi aplikasi lebih rapi dan update lebih aman untuk user akhir.
-
-Cakupan:
-
-- Build packaging Windows installer
-- Channel update (`stable`, `beta`) lokal-aware
-- Config migration manager antar versi
-- One-click backup/restore profile
-
-Output fase:
-
-- OrionDesk siap dipakai sebagai aplikasi personal OS agent yang matang.
+- `Roadmap vX` → planning cycle
+- `v1.X` / `v2.X` → product release line
+- Phase numbering berlanjut lintas cycle untuk traceability
 
 ---
 
-## 🔹 PHASE 16 — UI Excellence & Accessibility Polish
+## 📍 Current Operating Mode
 
-Tujuan: Menyempurnakan pengalaman visual dan aksesibilitas agar kualitas desktop app setara produk harian premium.
+**Active development:** `Roadmap v8 / Application v2.1`
 
-Cakupan:
-
-- Design token cleanup (spacing, typography scale, radius consistency)
-- Accessibility pass (contrast, keyboard traversal, focus visibility)
-- Rich output UX (status badges, semantic coloring, readability)
-- Snapshot visual matrix (multi-size baseline + regression checks)
-
-Output fase:
-
-- UI OrionDesk konsisten, nyaman dipakai lama, dan siap kualitas rilis publik.
-
-## 🧩 Spesifikasi v4 (PHASE 17-20)
-
-## 🔹 PHASE 17 — Tab Shell Refactor (UI Information Architecture)
-
-Tujuan: Mengubah UI dari single-screen menjadi shell bertab agar fitur bisa scale tanpa menumpuk layout.
-
-Cakupan:
-
-- Tab architecture utama (`Command`, `Memory`, `Settings`, `Diagnostics`, `About`)
-- Isolasi komponen per tab
-- Routing event antar-tab yang bersih
-
-Output fase:
-
-- Fondasi UI modular siap menampung fitur baru.
-
----
-
-## 🔹 PHASE 18 — About + Diagnostics Panels
-
-Tujuan: Menyediakan surface user-visible untuk informasi aplikasi dan kesehatan sistem.
-
-Cakupan:
-
-- About panel (versi, channel, info build)
-- Diagnostics panel (health checks, log tail, recovery snapshot info)
-- Tombol ekspor report diagnostics
-
-Output fase:
-
-- Observability backend menjadi fitur UI yang mudah dipakai user.
-
----
-
-## 🔹 PHASE 19 — Command Assist & Discoverability
-
-Tujuan: Mengurangi trial-error input command melalui bantuan interaktif di UI.
-
-Cakupan:
-
-- Suggestion list command valid berdasarkan kontrak plugin
-- Inline hint usage saat user mengetik
-- Intent explanation ringan ("did you mean")
-
-Output fase:
-
-- UX command lebih discoverable dan onboarding lebih cepat.
-
----
-
-## 🔹 PHASE 20 — Theme Tokens + UI Scalability + Snapshot Refresh
-
-Tujuan: Mengurangi hardcoded styling agar iterasi desain besar lebih murah dan terukur.
-
-Cakupan:
-
-- Refactor stylesheet ke design tokens
-- Konsolidasi spacing/radius/typography constants
-- Snapshot matrix refresh untuk seluruh layout tab utama
-- Milestone rilis UI v1.4 dengan acceptance checklist
-
-Output fase:
-
-- UI maintainable, scalable, dan siap evolusi roadmap berikutnya.
-
----
-
-## 🔹 PHASE 21 — Settings Priority Panel + Theme Selection (Light Mode)
-
-Tujuan: Menjadikan tab Settings benar-benar berguna untuk pengaturan inti user harian.
-
-Cakupan:
-
-- Settings panel berisi pengaturan prioritas (`theme`, `release channel`, `minimize to tray`)
-- Theme selection mendukung `dark` dan `light`
-- Theme apply real-time tanpa restart
-
-Output fase:
-
-- Pengaturan penting bisa diakses user dari UI secara langsung dan konsisten.
-
----
-
-## 🧩 Spesifikasi v5 (PHASE 22-26)
-
-## 🔹 PHASE 22 — Command Engine Stabilization + Unified Executor
-
-Tujuan: Menyatukan eksekusi command agar seluruh command path konsisten, terukur, dan lebih mudah di-maintain.
-
-Cakupan:
-
-- Unified executor untuk command normal dan smart command
-- Contract validation + error taxonomy konsisten
-- Standard response envelope untuk seluruh command
-- Execution Context Object (`user`, `profile policy`, `session id`, `timestamp`, `risk level`, `dry-run`)
-
-Output fase:
-
-- Fondasi command engine solid untuk ekspansi fitur besar.
-
----
-
-## 🔹 PHASE 23 — System Capability Layer
-
-Tujuan: Menjadikan operasi sistem sebagai capability primitives yang aman, lalu dipakai oleh intent-level agent behavior.
-
-Cakupan:
-
-- Capability Layer (low-level tools): file ops, process ops, network ops, utility ops
-- Intent Mapping Layer: mapping request natural ke rangkaian capability steps
-- Safety & Guardrail Layer: permission tier, confirmation policy, protected process, sandboxed preview
-
-Output fase:
-
-- Fondasi capability modular siap dipakai command cerdas dan aman.
-
----
-
-## 🔹 PHASE 24 — Smart Command Assist (Auto-correct, Auto-complete, Explain)
-
-Tujuan: Mengurangi kesalahan input command dan meningkatkan discoverability secara cerdas.
-
-Cakupan:
-
-- Auto-correct typo command berbasis confidence
-- Auto-complete argument berdasarkan context command
-- Explain mode untuk menjelaskan aksi command sebelum eksekusi
-- Levenshtein distance + command registry introspection untuk candidate ranking
-
-Output fase:
-
-- UX command menjadi lebih cepat, minim error, dan lebih jelas.
-
----
-
-## 🔹 PHASE 24.5 — Real Action Execution + Themed Guard Notifications
-
-Tujuan: Menjadikan command berisiko utama berjalan nyata (bukan simulasi) dengan guard UI yang konsisten tema.
-
-Cakupan:
-
-- `kill`, `delete`, `shutdown` memakai eksekusi real melalui action module
-- Test safety tetap dijaga lewat dependency injection dummy actions
-- Notifikasi/konfirmasi guard mengikuti theme token aktif (dark/light)
-
-Output fase:
-
-- Fitur berisiko inti berfungsi nyata dengan UX guard yang konsisten.
-
----
-
-## 🔹 PHASE 25 — Safe Execution Profiles + Risk-aware Command Policies
-
-Tujuan: Menjaga command power tetap aman dengan profile eksekusi berbasis risiko.
-
-Cakupan:
-
-- Profile policy (`strict`, `balanced`, `power`, `explain-only`)
-- Risk scoring per command + level guard
-- Mandatory confirmation untuk high-risk action
-
-Output fase:
-
-- Command lebih powerful dengan safety guard yang adaptif.
-
----
-
-## 🔹 PHASE 26 — Modern UI Icon Language + Reliability Matrix Validation
-
-Tujuan: Menutup roadmap v5 dengan UI yang lebih modern (ikon konsisten) dan validasi reliability command secara menyeluruh.
-
-Cakupan:
-
-- Tab shell dan action utama menggunakan icon language modern (fluent-like native icons)
-- Reliability matrix tervalidasi melalui full regression test suite
-- Snapshot matrix diperbarui untuk perubahan visual terbaru
-
-Output fase:
-
-- UX OrionDesk lebih modern, tetap ringan, dan kualitas command tervalidasi untuk rilis v1.5.
-
----
-
-## 🧩 Spesifikasi v6 (PHASE 27-31)
-
-## 🔹 PHASE 27 — Storage Engine Migration (JSON to SQLite)
-
-Tujuan: Meningkatkan performa, queryability, dan reliability data layer untuk skenario production jangka panjang.
-
-Cakupan:
-
-- Migrasi storage utama dari JSON ke SQLite
-- Repository layer untuk command history, memory, preference, dan session logs
-- Skema awal + migration scripts versi database
-- Adapter compatibility agar modul lama tetap berjalan selama transisi
-
-Keputusan teknis:
-
-- Main storage menggunakan SQLite sebagai default
-- ORM/query layer direkomendasikan SQLModel
-
-Output fase:
-
-- Data layer lebih cepat, aman terhadap concurrency, dan siap query analitik.
-
----
-
-## 🔹 PHASE 28 — Trigger-Action Automation Engine (Watcher + Scheduler)
-
-Tujuan: Mengubah OrionDesk dari command runner menjadi automation hub berbasis rule lokal.
-
-Cakupan:
-
-- File watcher engine (event file create/modify)
-- Scheduler engine (cron-like task runner)
-- Trigger-Action registry (rule JSON/YAML)
-- Approval hooks untuk action berisiko
-
-Output fase:
-
-- Otomasi harian berjalan otomatis, aman, dan dapat diaudit.
-
----
-
-## 🔹 PHASE 29 — Utility & Developer Modules Expansion
-
-Tujuan: Menambahkan modul utility yang berdampak langsung pada workflow power user dan developer.
-
-Cakupan:
-
-- Project Manager module (`open proj <name>`)
-- Clipboard Manager (history ring buffer)
-- Focus/Game mode module (resource guardrails)
-- Network diagnostics module (public IP, ping profile, DNS actions)
-
-Output fase:
-
-- OrionDesk menjadi utility hub praktis untuk produktivitas harian.
-
----
-
-## 🔹 PHASE 30 — Global Hotkey UX + Fast Command Surface
-
-Tujuan: Membuat interaksi OrionDesk instan dari mana saja tanpa menggangu flow kerja utama.
-
-Cakupan:
-
-- Global hotkey configurable (`Alt+Space`/`Ctrl+Shift+O`)
-- Quick toggle shell show/hide dengan state restore
-- Fast command input mode (focus-first execution)
-- Conflict detection untuk hotkey OS/global lain
-
-Output fase:
-
-- UX OrionDesk lebih cepat, ringan, dan launcher-like.
-
----
-
-## 🔹 PHASE 31 — Reliability, Profiling, and Release Hardening
-
-Tujuan: Menutup roadmap v6 dengan quality gate production untuk performa, stabilitas, dan maintainability.
-
-Cakupan:
-
-- Performance profiling baseline (startup, command latency, storage I/O)
-- Reliability matrix lintas module + automation scenarios
-- Failure recovery drills dan stress tests
-- Release checklist v1.6 + rollback strategy
-
-Output fase:
-
-- OrionDesk v1.6 siap rilis dengan standar engineering yang terukur.
-
----
-
-## 🧩 Spesifikasi v7 (PHASE 32-35)
-
-## 🔹 PHASE 32 — Command Workspace Refresh (Persona Rail + Chat Command Surface)
-
-Tujuan: Memperbarui halaman `Command` agar tampil sebagai workspace chat modern dengan sidebar persona/quick actions sesuai wireframe v7.
-
-Cakupan:
-
-- Layout 2 area utama: sidebar kiri (`Persona`, `Quick Actions`, `Stats`) dan chat area kanan (`Chat Container`, `Input Area`, `Suggestions`).
-- Persona card berisi selector gaya AI: `calm`, `professional`, `hacker`, `friendly`, `minimal`.
-- Quick actions siap klik untuk command umum: `open vscode`, `open notepad`, `mode focus on`, `system status`, `clear chat`.
-- Stats card menampilkan metrik ringkas `Messages` dan `Commands` secara real-time.
-- Chat container menampilkan welcome message, histori interaksi command, dan styling bubble yang konsisten dengan design token.
-- Input bar mendukung aksi `Send` dan `Clear Chat` plus suggestion chips command cepat.
-- Arsitektur tetap headless-compatible: business logic tetap di `core/`, GUI hanya sebagai presentasi dan event dispatcher.
-
-Output fase:
-
-- Halaman `Command` memiliki UX baru yang lebih padat, modern, dan cepat dipakai untuk workflow harian.
-
-## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
-
-## 🔹 PHASE 0 — Setup Project (Hari Ini)
-
-Tujuan: Skeleton project jalan.
-
-Struktur:
-
-```
-OrionDesk/
-│
-├── main.py
-├── ui/
-│   ├── main_window.py
-│
-├── core/
-│   ├── router.py
-│
-├── modules/
-│   ├── launcher.py
-│   ├── file_manager.py
-│   ├── system_tools.py
-│
-├── persona/
-│   ├── profiles/
-│   │   ├── calm.json
-│   │   ├── hacker.json
-│   └── persona_engine.py
-```
-
-Install:
-
-```powershell
-pip install PySide6 psutil
-```
-
-Goal:
-Window muncul dengan:
-- Input command
-- Output panel
-- Execute button
-
----
-
-## 🔹 PHASE 1 — Core Command Router
-
-Bikin command pattern sederhana:
-
-Contoh input:
-
-```
-open vscode
-search file report.pdf
-sys info
-```
-
-Router akan:
-- Parse keyword pertama
-- Kirim ke module yang sesuai
-
-Tidak pakai NLP dulu.
-Keyword-based saja.
-
----
-
-## 🔹 PHASE 2 — Module Implementation
-
-### 1️⃣ Launcher Module
-- Map alias → path aplikasi
-- Gunakan `subprocess.Popen`
-
-Contoh:
-```
-open vscode
-open chrome
-```
-
----
-
-### 2️⃣ File Manager Module
-- Search file pakai pathlib
-- Optional: batasi drive dulu (misal C:/Users)
-
----
-
-### 3️⃣ System Tools Module
-- psutil:
-  - CPU usage
-  - RAM usage
-  - Running process list
-
----
-
-## 🔹 PHASE 3 — Persona Layer
-
-Persona hanya mempengaruhi:
-
-- Cara output ditampilkan
-- Warning verbosity
-- Risk tolerance
-
-Contoh:
-
-calm:
-```
-Saya akan membuka VS Code untuk Anda.
-```
-
-hacker:
-```
-Launching VS Code. Stay sharp.
-```
-
-Engine tetap sama.
-Persona cuma style.
-
----
-
-## 🔹 PHASE 4 — Safe Mode Engine
-
-Tambahkan:
-
-```
-self.safe_mode = True
-```
-
-Jika:
-- delete
-- kill process
-- shutdown
-
-Maka:
-- Tampilkan dialog konfirmasi
-- Butuh klik manual
-
----
-
-## 🔹 PHASE 5 — UI Polish (Windows 11 Feel)
-
-Di PySide6:
-
-- Dark mode
-- Rounded button
-- Segoe UI font
-- Acrylic-ish background (opsional)
-- Minimalist design
-
-Layout ideal:
-
-```
-+--------------------------------+
-| OrionDesk                     |
-+--------------------------------+
-| Persona: [calm ▼]             |
-+--------------------------------+
-| > [ input box               ] |
-| [ Execute ]                  |
-+--------------------------------+
-| Output console area           |
-|                               |
-+--------------------------------+
-```
-
----
-
-# 🧠 Architecture Philosophy (Penting)
-
-Engine tidak tahu GUI.
-
-GUI hanya:
-- Ambil input
-- Kirim ke router
-- Tampilkan output
-
-Engine harus bisa jalan headless juga.
-
-Itu bikin clean architecture.
-
----
-
-# ⚙️ Milestone Timeline (Santai Sampai Rabu)
-
-Hari 1:
-- Setup PySide6 window
-- Basic router
-
-Hari 2:
-- Launcher + file search
-
-Hari 3:
-- Persona layer
-
-Hari 4:
-- Safe mode
-
-Hari 5:
-- UI polish
-
----
+**Legacy maintenance only:** `Roadmap v1-v7 / Application v1.x`
