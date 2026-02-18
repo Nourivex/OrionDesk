@@ -10,7 +10,7 @@ Versioned execution plan covering product evolution, platform capability, and en
 
 ## 📦 Current Cycle
 
-**Roadmap v7 — Product Version v1.7 (Planning)**
+**Roadmap v7 — Product Version v1.7 (Completed)**
 
 - 🎯 Focus Areas: Interface Elevation, UX Density, Runtime Clarity
 - 🧠 Priority: Pro Ops Console UI Foundation
@@ -20,6 +20,8 @@ Versioned execution plan covering product evolution, platform capability, and en
 
 - ✅ PHASE 32 selesai: Command Workspace Refresh (sidebar persona, native bubble chat, smart auto-scroll, split UI pages)
 - ✅ PHASE 33 selesai: visual modernization lintas tab (`Memory`, `Settings`, `Diagnostics`, `About`) + header SVG logo
+- ✅ PHASE 34 selesai: full tab layout redesign + runtime status rail
+- ✅ PHASE 35 selesai: UI stabilization, snapshot governance, release checklist
 
 ---
 
@@ -88,12 +90,12 @@ Tanpa:
 - PHASE 30 — Global Hotkey UX + Fast Command Surface ✅
 - PHASE 31 — Reliability, Profiling, and Release Hardening ✅
 
-## 🚀 ROADMAP v7 (Planned / v1.7)
+## 🚀 ROADMAP v7 (Completed / v1.7)
 
 - PHASE 32 — Command Workspace Refresh (Persona Rail + Chat Command Surface) ✅
 - PHASE 33 — Pro Ops Console Visual System Revamp ✅
-- PHASE 34 — Full Tab Layout Redesign + Runtime Status Rail
-- PHASE 35 — UI Stabilization, Snapshot Governance, and Release Checklist
+- PHASE 34 — Full Tab Layout Redesign + Runtime Status Rail ✅
+- PHASE 35 — UI Stabilization, Snapshot Governance, and Release Checklist ✅
 
 ## 🚀 ROADMAP v5 (Completed / v1.5)
 
@@ -165,8 +167,8 @@ Tanpa:
 
 - PHASE 32: **Done** — Command Workspace Refresh (Persona Rail + Chat Command Surface)
 - PHASE 33: **Done** — Pro Ops Console Visual System Revamp (multi-tab modernization + SVG header brand)
-- PHASE 34: **Planned** — Full Tab Layout Redesign + Runtime Status Rail
-- PHASE 35: **Planned** — UI Stabilization, Snapshot Governance, and Release Checklist
+- PHASE 34: **Done** — Full Tab Layout Redesign + Runtime Status Rail
+- PHASE 35: **Done** — UI Stabilization, Snapshot Governance, and Release Checklist
 
 ### Catatan Perubahan Arah
 
