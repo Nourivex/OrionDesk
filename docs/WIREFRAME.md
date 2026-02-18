@@ -1,4 +1,4 @@
-# 🖼 OrionDesk Wireframe (v5)
+# 🖼 OrionDesk Wireframe (v6)
 
 Dokumen ini menjadi referensi visual resmi untuk baseline UI OrionDesk pada roadmap aktif.
 
@@ -19,33 +19,21 @@ OrionDesk saat ini terdiri dari lima tab utama:
 - **Diagnostics**
 - **About**
 
-Struktur tab ini menjadi baseline navigasi untuk versi v5.
+Struktur tab ini menjadi baseline navigasi untuk versi v6.
 
 ---
 
 ## 📐 Baseline Snapshot – Desktop Layout
 
-### 1280 × 760
+Snapshot PNG baseline di `docs/assets/` dibersihkan otomatis oleh test untuk menjaga konsistensi lintas environment.
 
-| Tab | Preview |
-|-----|---------|
-| Command | ![Command 1280](assets/v6/oriondesk-baseline-command-1280x760.png) |
-| Memory | ![Memory 1280](assets/v6/oriondesk-baseline-memory-1280x760.png) |
-| Settings | ![Settings 1280](assets/v6/oriondesk-baseline-settings-1280x760.png) |
-| Diagnostics | ![Diagnostics 1280](assets/v6/oriondesk-baseline-diagnostics-1280x760.png) |
-| About | ![About 1280](assets/v6/oriondesk-baseline-about-1280x760.png) |
+Baseline visual akan digenerate ulang saat test snapshot dijalankan.
 
----
+Target baseline:
 
-### 1024 × 640
-
-| Tab | Preview |
-|-----|---------|
-| Command | ![Command 1024](assets/v6/oriondesk-baseline-command-1024x640.png) |
-| Memory | ![Memory 1024](assets/v6/oriondesk-baseline-memory-1024x640.png) |
-| Settings | ![Settings 1024](assets/v6/oriondesk-baseline-settings-1024x640.png) |
-| Diagnostics | ![Diagnostics 1024](assets/v6/oriondesk-baseline-diagnostics-1024x640.png) |
-| About | ![About 1024](assets/v6/oriondesk-baseline-about-1024x640.png) |
+- Resolution: `1280x760`, `1024x640`
+- Tabs: `Command`, `Memory`, `Settings`, `Diagnostics`, `About`
+- Output folder: `tests/artifacts/baseline/v6/`
 
 ---
 
@@ -59,5 +47,5 @@ Struktur tab ini menjadi baseline navigasi untuk versi v5.
 
 ## 🔄 Versioning Policy
 
-- `v5` → Stabil baseline untuk ROADMAP v5.
+- `v6` → Baseline aktif untuk ROADMAP v6.
 - Versi berikutnya akan memiliki folder snapshot terpisah (`v6/`, `v7/`, dst).

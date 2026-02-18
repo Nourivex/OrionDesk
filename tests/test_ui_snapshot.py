@@ -41,6 +41,13 @@ def _cleanup_outdated_asset_pngs(assets_dir: Path, active_version: str) -> None:
             png_file.unlink(missing_ok=True)
 
 
+def _cleanup_all_asset_pngs(assets_dir: Path) -> None:
+    if not assets_dir.exists():
+        return
+    for png_file in assets_dir.rglob("*.png"):
+        png_file.unlink(missing_ok=True)
+
+
 def _configure_snapshot_platform() -> None:
     if os.name == "nt":
         os.environ.setdefault("QT_QPA_PLATFORM", "windows")
@@ -139,11 +146,12 @@ def test_window_snapshot_compare_or_archive() -> None:
     _configure_snapshot_platform()
 
     root = Path(__file__).resolve().parents[1]
+    _cleanup_all_asset_pngs(root / "docs" / "assets")
     active_version = _detect_active_assets_version(root / "docs" / "ROADMAP.md")
     _cleanup_outdated_asset_pngs(root / "docs" / "assets", active_version)
 
-    baseline_dir = root / "docs" / "assets" / active_version
     artifacts_dir = root / "tests" / "artifacts"
+    baseline_dir = artifacts_dir / "baseline" / active_version
     archive_dir = artifacts_dir / "archive"
 
     baseline_dir.mkdir(parents=True, exist_ok=True)
