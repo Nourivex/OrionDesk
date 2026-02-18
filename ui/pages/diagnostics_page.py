@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QStyle, QTextBrowser, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QPushButton, QStyle, QTextBrowser, QVBoxLayout, QWidget
 
 from ui.theme_tokens import ThemeTokens
 
@@ -22,6 +22,35 @@ class DiagnosticsPage(QWidget):
         )
         title = QLabel("Diagnostics", self)
         title.setObjectName("placeholderTitle")
+
+        summary_card = QFrame(self)
+        summary_card.setObjectName("topCard")
+        summary_layout = QGridLayout(summary_card)
+        summary_layout.setContentsMargins(theme.spacing_md, theme.spacing_md, theme.spacing_md, theme.spacing_md)
+        summary_layout.setHorizontalSpacing(theme.spacing_md)
+        summary_layout.setVerticalSpacing(theme.spacing_sm)
+
+        health_title = QLabel("Runtime Health", summary_card)
+        health_title.setObjectName("sectionHint")
+        self.health_state_label = QLabel("Online", summary_card)
+        self.health_state_label.setObjectName("sectionTitle")
+
+        release_title = QLabel("Release Checklist", summary_card)
+        release_title.setObjectName("sectionHint")
+        self.release_checklist_label = QLabel("-", summary_card)
+        self.release_checklist_label.setObjectName("sectionTitle")
+
+        profile_title = QLabel("Execution Profile", summary_card)
+        profile_title.setObjectName("sectionHint")
+        self.profile_state_label = QLabel("-", summary_card)
+        self.profile_state_label.setObjectName("sectionTitle")
+
+        summary_layout.addWidget(health_title, 0, 0)
+        summary_layout.addWidget(release_title, 0, 1)
+        summary_layout.addWidget(profile_title, 0, 2)
+        summary_layout.addWidget(self.health_state_label, 1, 0)
+        summary_layout.addWidget(self.release_checklist_label, 1, 1)
+        summary_layout.addWidget(self.profile_state_label, 1, 2)
 
         button_row = QHBoxLayout()
         self.generate_button = QPushButton("Generate Report", self)
@@ -46,5 +75,6 @@ class DiagnosticsPage(QWidget):
         self.diagnostics_info = QTextBrowser(self)
         self.diagnostics_info.setObjectName("diagnosticsInfo")
         layout.addWidget(title)
+        layout.addWidget(summary_card)
         layout.addLayout(button_row)
         layout.addWidget(self.diagnostics_info)

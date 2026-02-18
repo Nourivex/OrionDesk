@@ -40,6 +40,24 @@ def test_phase18_about_and_diagnostics_panels() -> None:
     window.close()
 
 
+def test_memory_page_has_summary_cards() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.tab_widget.setCurrentIndex(1)
+    app.processEvents()
+
+    assert window.memory_page.total_commands_value.text().isdigit()
+    assert window.memory_page.top_command_value.text() != ""
+    assert ":" in window.memory_page.last_refresh_value.text()
+    assert window.memory_page.recent_activity_list.count() >= 1
+    assert "Safe Mode Trigger" in window.memory_page.safe_mode_triggers_value.text()
+    assert "Session Duration" in window.memory_page.session_duration_value.text()
+
+    window.close()
+
+
 def test_phase19_command_assist_updates() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())
@@ -161,7 +179,11 @@ def test_phase32_command_workspace_components() -> None:
     assert personas == ["calm", "professional", "hacker", "friendly", "minimal"]
 
     quick_labels = [button.text() for button in window.quick_action_buttons]
-    assert quick_labels == ["Open VSCode", "Open Notepad", "Focus Mode", "System Status", "Clear Chat"]
+    assert any("Open VSCode" in label for label in quick_labels)
+    assert any("Open Notepad" in label for label in quick_labels)
+    assert any("Focus Mode" in label for label in quick_labels)
+    assert any("System Status" in label for label in quick_labels)
+    assert any("Clear Chat" in label for label in quick_labels)
 
     assert window.execute_button.text() == "Send"
     assert window.clear_chat_button.text() == "Clear"

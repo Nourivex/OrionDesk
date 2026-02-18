@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, QTimer
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from ui.theme_tokens import ThemeTokens
@@ -30,13 +31,13 @@ class ChatBubbleWidget(QFrame):
 
         self.avatar = QLabel("Y" if is_user else "AI", self)
         self.avatar.setObjectName("chatAvatar")
-        self.avatar.setFixedSize(24, 24)
+        self.avatar.setFixedSize(30, 30)
 
         self.bubble = QFrame(self)
         self.bubble.setObjectName("chatBubble")
         bubble_layout = QVBoxLayout(self.bubble)
-        bubble_layout.setContentsMargins(10, 8, 10, 8)
-        bubble_layout.setSpacing(4)
+        bubble_layout.setContentsMargins(12, 10, 12, 10)
+        bubble_layout.setSpacing(6)
 
         self.header = QLabel(self.bubble)
         self.header.setObjectName("chatMeta")
@@ -72,6 +73,7 @@ class ChatBubbleWidget(QFrame):
         self._theme = theme
         bubble_bg = theme.tab_active_bg if self._is_user else theme.card_bg
         avatar_bg = theme.input_focus if self._is_user else theme.button_bg
+        message_color = theme.text_primary
 
         self.avatar.setStyleSheet(
             (
@@ -85,20 +87,34 @@ class ChatBubbleWidget(QFrame):
         )
         self.bubble.setStyleSheet(
             (
-                f"background-color: {bubble_bg};"
-                f"border: 1px solid {theme.panel_border};"
-                f"border-radius: {theme.radius_md + 8}px;"
+                f"background: {bubble_bg};"
+                f"border: none;"
+                "border-top-left-radius: 8px;"
+                "border-top-right-radius: 8px;"
+                "border-bottom-left-radius: 18px;"
+                "border-bottom-right-radius: 18px;"
             )
         )
+        if self._is_user:
+            self.bubble.setStyleSheet(
+                (
+                    f"background: {bubble_bg};"
+                    "border: none;"
+                    "border-top-left-radius: 18px;"
+                    "border-top-right-radius: 8px;"
+                    "border-bottom-left-radius: 18px;"
+                    "border-bottom-right-radius: 18px;"
+                )
+            )
         self.header.setStyleSheet(
-            f"font-size: 10px; font-weight: 700; color: {theme.text_secondary};"
+            f"font-size: 10px; font-weight: 500; color: {theme.text_muted}; margin-bottom: 4px;"
         )
         self.message_label.setStyleSheet(
-            f"font-size: 13px; color: {theme.text_primary};"
+            f"font-size: 13px; color: {message_color};"
         )
         if self.subtitle_label is not None:
             self.subtitle_label.setStyleSheet(
-                f"font-size: 11px; color: {theme.text_secondary};"
+                f"font-size: 11px; color: {theme.text_muted};"
             )
 
 
@@ -107,13 +123,15 @@ class ChatSurface(QScrollArea):
         super().__init__(parent)
         self._theme = theme
         self._history: list[tuple[str, bool, str | None]] = []
+        self._animations: list[QPropertyAnimation] = []
+        self._enable_animations = False
 
         self.setWidgetResizable(True)
         self.setObjectName("outputPanel")
         self.container = QWidget(self)
         self.messages_layout = QVBoxLayout(self.container)
-        self.messages_layout.setContentsMargins(8, 8, 8, 8)
-        self.messages_layout.setSpacing(2)
+        self.messages_layout.setContentsMargins(12, 16, 12, 16)
+        self.messages_layout.setSpacing(12)
         self.messages_layout.addStretch()
         self.setWidget(self.container)
         self._apply_frame_theme()
@@ -122,10 +140,17 @@ class ChatSurface(QScrollArea):
         self.add_message(text=text, is_user=False)
 
     def add_message(self, text: str, is_user: bool, subtitle: str | None = None) -> None:
+        should_follow_tail = self._is_near_bottom()
         bubble = ChatBubbleWidget(text=text, is_user=is_user, theme=self._theme, subtitle=subtitle, parent=self.container)
         self.messages_layout.insertWidget(self.messages_layout.count() - 1, bubble)
         self._history.append((text, is_user, subtitle))
-        self._scroll_to_bottom()
+        if not should_follow_tail:
+            return
+        if self._enable_animations and self.isVisible():
+            self._animate_bubble_in(bubble, is_user)
+            QTimer.singleShot(0, self._animate_scroll_to_bottom)
+        else:
+            QTimer.singleShot(0, self._scroll_to_bottom)
 
     def clear(self) -> None:
         self._history = []
@@ -152,16 +177,56 @@ class ChatSurface(QScrollArea):
             if isinstance(widget, ChatBubbleWidget):
                 widget.update_theme(theme)
 
+    def scroll_to_latest(self) -> None:
+        self._scroll_to_bottom()
+        QTimer.singleShot(0, self._scroll_to_bottom)
+        QTimer.singleShot(40, self._scroll_to_bottom)
+
     def _apply_frame_theme(self) -> None:
         self.setStyleSheet(
             (
-                f"QScrollArea {{ background-color: {self._theme.output_bg};"
+                f"QScrollArea {{ background: qlineargradient(x1:0, y1:0, x2:0, y2:1,"
+                f"stop:0 {self._theme.tab_bg}, stop:1 {self._theme.output_bg});"
                 f"border: 1px solid {self._theme.panel_border};"
                 f"border-radius: {self._theme.radius_md}px; }}"
+                f"QScrollBar:vertical {{"
+                f"background: transparent; width: 7px; margin: 4px 2px 4px 2px; }}"
+                f"QScrollBar::handle:vertical {{"
+                f"background: {self._theme.panel_border}; min-height: 28px; border-radius: 4px; }}"
+                f"QScrollBar::handle:vertical:hover {{ background: {self._theme.input_focus}; }}"
+                f"QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0px; }}"
             )
         )
-        self.container.setStyleSheet(f"background-color: {self._theme.output_bg};")
+        self.container.setStyleSheet("background-color: transparent;")
 
     def _scroll_to_bottom(self) -> None:
         scrollbar = self.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
+
+    def _animate_bubble_in(self, bubble: QWidget, is_user: bool) -> None:
+        start_geometry = bubble.geometry()
+        offset = 8 if is_user else -8
+        slide = QPropertyAnimation(bubble, b"geometry", self)
+        slide.setDuration(180)
+        slide.setStartValue(start_geometry.translated(offset, 0))
+        slide.setEndValue(start_geometry)
+        slide.setEasingCurve(QEasingCurve.Type.InOutQuad)
+
+        slide.start()
+        self._animations.append(slide)
+
+    def _animate_scroll_to_bottom(self) -> None:
+        scrollbar = self.verticalScrollBar()
+        animation = QPropertyAnimation(scrollbar, b"value", self)
+        animation.setDuration(180)
+        animation.setStartValue(scrollbar.value())
+        animation.setEndValue(scrollbar.maximum())
+        animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        animation.start()
+        self._animations.append(animation)
+
+    def _is_near_bottom(self) -> bool:
+        scrollbar = self.verticalScrollBar()
+        if scrollbar.maximum() <= 0:
+            return True
+        return scrollbar.maximum() - scrollbar.value() <= 24

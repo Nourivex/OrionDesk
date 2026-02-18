@@ -14,6 +14,8 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
 - Menambahkan alur clear chat yang mereset panel output, statistik, dan mengembalikan welcome message.
 - Menyesuaikan tampilan chat ke format bubble user/assistant agar lebih dekat ke wireframe target.
 - Migrasi rendering chat ke arsitektur native (`QScrollArea` + `ChatBubbleWidget`) untuk kontrol layout yang lebih presisi.
+- Menambahkan smart auto-scroll: auto-follow hanya saat user berada di area bawah chat.
+- Menambahkan deferred scroll update agar sinkron dengan update layout widget bubble.
 - Memecah setiap tab UI ke `ui/pages/*.py` agar `MainWindow` fokus ke orchestration.
 - Menurunkan ukuran `ui/main_window.py` menjadi <= 500 baris untuk maintainability.
 
@@ -33,6 +35,7 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
 - `ui/chat_surface.py`
   - `ChatBubbleWidget` untuk bubble user/assistant.
   - `ChatSurface` sebagai container chat berbasis `QScrollArea`.
+  - Smart follow-tail dan smooth scroll animation saat user berada di bagian bawah.
 - `ui/pages/command_page.py`
 - `ui/pages/memory_page.py`
 - `ui/pages/settings_page.py`

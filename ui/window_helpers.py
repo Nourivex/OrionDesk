@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QMessageBox
 
@@ -54,3 +56,59 @@ def show_confirmation_dialog(parent, theme: ThemeTokens, command: str) -> bool:
     )
     reply = dialog.exec()
     return reply == int(QMessageBox.StandardButton.Yes)
+
+
+def memory_insight_payload(router: CommandRouter) -> dict:
+    summary = router.memory_summary()
+    top_commands = summary.get("top_commands", [])
+    total_commands = sum(count for _, count in top_commands)
+    session_entries = router.session_layer.entries
+    recent_entries = list(reversed(router.session_layer.recent(limit=5)))
+
+    lines = ["Top Commands:"]
+    if not top_commands:
+        lines.append("- (belum ada data)")
+        top_command_label = "-"
+    else:
+        for command, count in top_commands:
+            lines.append(f"- {command}: {count}")
+        top_command_label = f"{top_commands[0][0]} ({top_commands[0][1]})"
+
+    blocked_count = sum(1 for entry in session_entries if entry.status in {"blocked", "invalid", "failed"})
+    pending_count = sum(1 for entry in session_entries if entry.status == "pending_confirmation")
+    warning_count = sum(1 for entry in session_entries if entry.status in {"pending_confirmation", "cancelled"})
+
+    if session_entries:
+        session_start = datetime.fromisoformat(session_entries[0].timestamp).astimezone()
+        now_local = datetime.now().astimezone()
+        elapsed = now_local - session_start
+        duration = f"{elapsed.seconds // 3600:02d}:{(elapsed.seconds % 3600) // 60:02d}:{elapsed.seconds % 60:02d}"
+        offset_hours = int(session_start.utcoffset().total_seconds() // 3600)
+        gmt_label = f"GMT{offset_hours:+d}"
+        session_start_label = f"{session_start.strftime('%H:%M:%S')} {gmt_label}"
+    else:
+        duration = "-"
+        session_start_label = "-"
+
+    recent_rows = ["(belum ada aktivitas)"] if not recent_entries else [
+        (
+            f"{datetime.fromisoformat(entry.timestamp).astimezone().strftime('%H:%M:%S')} "
+            f"| {entry.status.upper()} | {entry.command}"
+        )
+        for entry in recent_entries
+    ]
+
+    now_local = datetime.now().astimezone()
+    offset_hours = int(now_local.utcoffset().total_seconds() // 3600)
+    return {
+        "total_commands": total_commands,
+        "top_command_label": top_command_label,
+        "blocked_count": blocked_count,
+        "pending_count": pending_count,
+        "warning_count": warning_count,
+        "session_start_label": session_start_label,
+        "duration": duration,
+        "recent_rows": recent_rows,
+        "top_command_lines": "\n".join(lines),
+        "refreshed_at": f"{now_local.strftime('%H:%M:%S')} GMT{offset_hours:+d}",
+    }

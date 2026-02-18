@@ -53,11 +53,11 @@ class CommandPage(QWidget):
         quick_layout.addWidget(quick_title)
         self.quick_action_buttons = []
         for label, command in [
-            ("Open VSCode", "open vscode"),
-            ("Open Notepad", "open notepad"),
-            ("Focus Mode", "mode focus on"),
-            ("System Status", "system status"),
-            ("Clear Chat", "clear chat"),
+            ("▸ Open VSCode", "open vscode"),
+            ("▸ Open Notepad", "open notepad"),
+            ("▸ Focus Mode", "mode focus on"),
+            ("▸ System Status", "system status"),
+            ("▸ Clear Chat", "clear chat"),
         ]:
             button = QPushButton(label, quick_card)
             button.setObjectName("quickActionButton")
@@ -129,7 +129,7 @@ class CommandPage(QWidget):
         suggestion_row.addWidget(suggestion_title)
         self.suggestion_buttons = []
         for command in ["capability system info", "clip show", "mode game on"]:
-            chip = QPushButton(command, chat_area)
+            chip = QPushButton(f"⚡ {command}", chat_area)
             chip.setObjectName("suggestionChip")
             chip.clicked.connect(lambda _checked=False, cmd=command: self.suggestionRequested.emit(cmd))
             suggestion_row.addWidget(chip)
