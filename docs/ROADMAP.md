@@ -19,7 +19,7 @@ Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 
 ## 🚀 Active Track — Application V2.1
 
-### Roadmap v8 (In Progress / v2.1)
+### Roadmap v8 (Completed / v2.1)
 
 **North Star**
 
@@ -39,7 +39,7 @@ Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 - ✅ PHASE 37 selesai: multi-step intent graph (decomposition, step typing, dependency chain, reason trace)
 - ✅ PHASE 38 selesai: complex reasoning plan (confidence scoring, fallback branch, risk pruning)
 - ✅ PHASE 39 selesai: argument extraction detail + multi-command executor report
-- 🚧 PHASE 40: planned
+- ✅ PHASE 40 selesai: stabilization + release gate v2.1
 
 ---
 
@@ -139,7 +139,7 @@ Output:
 
 ---
 
-### PHASE 40 — Stabilization + Release Gate v2.1
+### PHASE 40 — Stabilization + Release Gate v2.1 ✅
 
 Tujuan:
 
