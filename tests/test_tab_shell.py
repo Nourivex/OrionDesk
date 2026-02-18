@@ -120,3 +120,32 @@ def test_main_window_default_close_does_not_minimize_to_tray() -> None:
     window.close()
     app.processEvents()
     assert window.isVisible() is False
+
+
+def test_phase30_settings_hotkey_and_fast_surface_controls() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.tab_widget.setCurrentIndex(2)
+    app.processEvents()
+
+    assert window.hotkey_selector.currentText() in {"Win+Shift+O", "Ctrl+Shift+O", "Alt+Space"}
+    assert window.fast_mode_checkbox.isChecked() is True
+
+    window.close()
+
+
+def test_phase30_fast_surface_focuses_command_input() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.tab_widget.setCurrentIndex(3)
+    app.processEvents()
+    window._activate_fast_command_surface()
+    app.processEvents()
+
+    assert window.tab_widget.currentIndex() == 0
+
+    window.close()

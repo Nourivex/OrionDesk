@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.hotkey_manager import GlobalHotkeyManager
 from core.router import CommandRouter
 from persona.persona_engine import PersonaEngine
 from ui.output_highlighter import OutputHighlighter
@@ -35,10 +36,7 @@ from ui.win11_effects import apply_mica_or_acrylic
 
 
 WM_HOTKEY = 0x0312
-MOD_SHIFT = 0x0004
-MOD_WIN = 0x0008
 HOTKEY_ID = 1
-KEY_O = 0x4F
 
 
 class CommandWorker(QObject):
@@ -64,6 +62,8 @@ class MainWindow(QMainWindow):
         self._explicit_quit = False
         self.minimize_to_tray = False
         self._hotkey_registered = False
+        self.fast_command_mode = True
+        self.hotkey_manager = GlobalHotkeyManager()
         self.tray_icon: QSystemTrayIcon | None = None
         self._active_thread: QThread | None = None
         self._active_worker: CommandWorker | None = None
@@ -131,6 +131,8 @@ class MainWindow(QMainWindow):
         self.theme_selector.currentTextChanged.connect(self._handle_theme_change)
         self.channel_selector.currentTextChanged.connect(self._handle_channel_change)
         self.minimize_tray_checkbox.toggled.connect(self._handle_minimize_tray_toggled)
+        self.hotkey_selector.currentTextChanged.connect(self._handle_hotkey_change)
+        self.fast_mode_checkbox.toggled.connect(self._handle_fast_mode_toggled)
         self._setup_shortcuts()
 
         self.setTabOrder(self.persona_selector, self.command_input)
@@ -354,6 +356,18 @@ class MainWindow(QMainWindow):
         self.minimize_tray_checkbox = QCheckBox("Minimize to tray when closing", page)
         self.minimize_tray_checkbox.setChecked(self.minimize_to_tray)
 
+        hotkey_row = QHBoxLayout()
+        hotkey_label = QLabel("Global Hotkey", page)
+        self.hotkey_selector = QComboBox(page)
+        self.hotkey_selector.addItems(["Win+Shift+O", "Ctrl+Shift+O", "Alt+Space"])
+        self.hotkey_selector.setCurrentText(self.hotkey_manager.active_hotkey)
+        hotkey_row.addWidget(hotkey_label)
+        hotkey_row.addWidget(self.hotkey_selector)
+        hotkey_row.addStretch()
+
+        self.fast_mode_checkbox = QCheckBox("Fast command surface (focus input on toggle)", page)
+        self.fast_mode_checkbox.setChecked(self.fast_command_mode)
+
         self.settings_status = QLabel("Settings siap digunakan.", page)
         self.settings_status.setObjectName("placeholderText")
 
@@ -361,6 +375,8 @@ class MainWindow(QMainWindow):
         layout.addLayout(theme_row)
         layout.addLayout(channel_row)
         layout.addWidget(self.minimize_tray_checkbox)
+        layout.addLayout(hotkey_row)
+        layout.addWidget(self.fast_mode_checkbox)
         layout.addWidget(self.settings_status)
         layout.addStretch()
         return page
@@ -425,6 +441,23 @@ class MainWindow(QMainWindow):
     def _handle_minimize_tray_toggled(self, enabled: bool) -> None:
         self.minimize_to_tray = enabled
         self.settings_status.setText(f"Minimize to tray: {'on' if enabled else 'off'}")
+
+    def _handle_hotkey_change(self, hotkey: str) -> None:
+        conflict, reason = self.hotkey_manager.is_conflicted(
+            hotkey,
+            local_shortcuts={"Ctrl+Return", "Ctrl+L", "Ctrl+K"},
+        )
+        if conflict:
+            self.settings_status.setText(reason)
+            return
+
+        self.hotkey_manager.set_hotkey(hotkey)
+        self._register_global_hotkey()
+        self.settings_status.setText(f"Global hotkey active: {self.hotkey_manager.active_hotkey}")
+
+    def _handle_fast_mode_toggled(self, enabled: bool) -> None:
+        self.fast_command_mode = enabled
+        self.settings_status.setText(f"Fast command surface: {'on' if enabled else 'off'}")
 
     def _handle_command_text_changed(self, text: str) -> None:
         self._refresh_command_assist(text)
@@ -548,6 +581,9 @@ class MainWindow(QMainWindow):
         self.shortcut_clear = QShortcut(QKeySequence("Ctrl+L"), self)
         self.shortcut_clear.activated.connect(self.output_panel.clear)
 
+        self.shortcut_fast_surface = QShortcut(QKeySequence("Ctrl+K"), self)
+        self.shortcut_fast_surface.activated.connect(self._activate_fast_command_surface)
+
     def _with_status_badge(self, message: str) -> str:
         lowered = message.lower()
         if "warning" in lowered or "konfirmasi manual" in lowered:
@@ -588,8 +624,18 @@ class MainWindow(QMainWindow):
     def _register_global_hotkey(self) -> None:
         if not hasattr(ctypes, "windll"):
             return
+
         user32 = ctypes.windll.user32
-        registered = user32.RegisterHotKey(None, HOTKEY_ID, MOD_WIN | MOD_SHIFT, KEY_O)
+        if self._hotkey_registered:
+            user32.UnregisterHotKey(None, HOTKEY_ID)
+
+        binding = self.hotkey_manager.to_windows_binding(self.hotkey_manager.active_hotkey)
+        if binding is None:
+            self._hotkey_registered = False
+            return
+
+        modifiers, key_code = binding
+        registered = user32.RegisterHotKey(None, HOTKEY_ID, modifiers, key_code)
         self._hotkey_registered = bool(registered)
 
     def _toggle_visibility(self) -> None:
@@ -599,6 +645,17 @@ class MainWindow(QMainWindow):
         self.showNormal()
         self.activateWindow()
         self.raise_()
+        if self.fast_command_mode:
+            self._activate_fast_command_surface()
+
+    def _activate_fast_command_surface(self) -> None:
+        self.tab_widget.setCurrentIndex(0)
+        if not self.isVisible():
+            self.showNormal()
+            self.activateWindow()
+            self.raise_()
+        self.command_input.setFocus()
+        self.command_input.selectAll()
 
     def _show_from_tray(self) -> None:
         self.showNormal()

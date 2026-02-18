@@ -79,7 +79,7 @@ Tanpa:
 - PHASE 27 — Storage Engine Migration (JSON to SQLite) ✅
 - PHASE 28 — Trigger-Action Automation Engine (Watcher + Scheduler) ✅
 - PHASE 29 — Utility & Developer Modules Expansion ✅
-- PHASE 30 — Global Hotkey UX + Fast Command Surface
+- PHASE 30 — Global Hotkey UX + Fast Command Surface ✅
 - PHASE 31 — Reliability, Profiling, and Release Hardening
 
 ## 🚀 ROADMAP v5 (Completed / v1.5)
@@ -145,7 +145,7 @@ Tanpa:
 - PHASE 27: **Done** — Storage Engine Migration (JSON to SQLite)
 - PHASE 28: **Done** — Trigger-Action Automation Engine (Watcher + Scheduler)
 - PHASE 29: **Done** — Utility & Developer Modules Expansion
-- PHASE 30: **Planned** — Global Hotkey UX + Fast Command Surface
+- PHASE 30: **Done** — Global Hotkey UX + Fast Command Surface
 - PHASE 31: **Planned** — Reliability, Profiling, and Release Hardening
 
 ### Catatan Perubahan Arah
