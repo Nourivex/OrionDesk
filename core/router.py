@@ -19,6 +19,7 @@ from core.memory_engine import MemoryEngine
 from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManager, StructuredLogger
 from core.plugin_registry import PluginRegistry
 from core.performance_profiler import PerformanceProfiler
+from core.reasoning_engine import ComplexReasoningEngine
 from core.release_hardening import ReleaseHardeningPlan
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -97,6 +98,7 @@ class CommandRouter:
     release_hardening_plan: ReleaseHardeningPlan | None = None
     embedding_provider: EmbeddingProvider | None = None
     intent_graph_planner: IntentGraphPlanner | None = None
+    reasoning_engine: ComplexReasoningEngine | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -133,6 +135,7 @@ class CommandRouter:
             config=self._build_embedding_config_from_env()
         )
         self.intent_graph_planner = self.intent_graph_planner or IntentGraphPlanner()
+        self.reasoning_engine = self.reasoning_engine or ComplexReasoningEngine()
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -484,6 +487,18 @@ class CommandRouter:
             resolve_intent=lambda text: self.intent_engine.resolve(text, allowed_keywords=allowed),
         )
         return graph.to_dict()
+
+    def reason_plan(self, raw_input: str) -> dict:
+        graph_payload = self.intent_graph(raw_input)
+        plan = self.reasoning_engine.build_plan(
+            graph_payload=graph_payload,
+            embed_text=self.embed_text,
+            risk_level=self.execution_profile_policy.risk_level,
+        )
+        return {
+            "graph": graph_payload,
+            "reasoning": plan.to_dict(),
+        }
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

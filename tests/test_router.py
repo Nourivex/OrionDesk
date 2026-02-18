@@ -312,6 +312,17 @@ def test_router_intent_graph_contains_reason_trace() -> None:
     assert all("confidence=" in reason for reason in reasons)
 
 
+def test_router_reason_plan_contains_graph_and_decisions() -> None:
+    router = build_router()
+
+    payload = router.reason_plan("open vscode lalu sys info")
+
+    assert "graph" in payload
+    assert "reasoning" in payload
+    assert len(payload["graph"]["steps"]) == 2
+    assert len(payload["reasoning"]["decisions"]) == 2
+
+
 def test_router_semantic_intent_open() -> None:
     router = build_router()
     result = router.execute("tolong bukakan notepad")
