@@ -85,7 +85,7 @@ Tanpa:
 
 ## 🚀 ROADMAP v7 (Planned / v1.7)
 
-- PHASE 32 — v6 Interface Closure Pack + UX Debt Audit
+- PHASE 32 — Command Workspace Refresh (Persona Rail + Chat Command Surface)
 - PHASE 33 — Pro Ops Console Visual System Revamp
 - PHASE 34 — Full Tab Layout Redesign + Runtime Status Rail
 - PHASE 35 — UI Stabilization, Snapshot Governance, and Release Checklist
@@ -158,7 +158,7 @@ Tanpa:
 
 ### Roadmap v7 (Rencana / v1.7)
 
-- PHASE 32: **Planned** — v6 Interface Closure Pack + UX Debt Audit
+- PHASE 32: **Planned** — Command Workspace Refresh (Persona Rail + Chat Command Surface)
 - PHASE 33: **Planned** — Pro Ops Console Visual System Revamp
 - PHASE 34: **Planned** — Full Tab Layout Redesign + Runtime Status Rail
 - PHASE 35: **Planned** — UI Stabilization, Snapshot Governance, and Release Checklist
@@ -628,6 +628,28 @@ Cakupan:
 Output fase:
 
 - OrionDesk v1.6 siap rilis dengan standar engineering yang terukur.
+
+---
+
+## 🧩 Spesifikasi v7 (PHASE 32-35)
+
+## 🔹 PHASE 32 — Command Workspace Refresh (Persona Rail + Chat Command Surface)
+
+Tujuan: Memperbarui halaman `Command` agar tampil sebagai workspace chat modern dengan sidebar persona/quick actions sesuai wireframe v7.
+
+Cakupan:
+
+- Layout 2 area utama: sidebar kiri (`Persona`, `Quick Actions`, `Stats`) dan chat area kanan (`Chat Container`, `Input Area`, `Suggestions`).
+- Persona card berisi selector gaya AI: `calm`, `professional`, `hacker`, `friendly`, `minimal`.
+- Quick actions siap klik untuk command umum: `open vscode`, `open notepad`, `mode focus on`, `system status`, `clear chat`.
+- Stats card menampilkan metrik ringkas `Messages` dan `Commands` secara real-time.
+- Chat container menampilkan welcome message, histori interaksi command, dan styling bubble yang konsisten dengan design token.
+- Input bar mendukung aksi `Send` dan `Clear Chat` plus suggestion chips command cepat.
+- Arsitektur tetap headless-compatible: business logic tetap di `core/`, GUI hanya sebagai presentasi dan event dispatcher.
+
+Output fase:
+
+- Halaman `Command` memiliki UX baru yang lebih padat, modern, dan cepat dipakai untuk workflow harian.
 
 ## 📚 Arsip Spesifikasi v1 (PHASE 0-5)
 
