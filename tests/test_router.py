@@ -323,6 +323,26 @@ def test_router_reason_plan_contains_graph_and_decisions() -> None:
     assert len(payload["reasoning"]["decisions"]) == 2
 
 
+def test_router_multi_command_bundle_has_arguments_and_modes() -> None:
+    router = build_router()
+
+    payload = router.multi_command_bundle("open vscode lalu sys info")
+
+    assert len(payload["commands"]) == 2
+    assert len(payload["arguments"]) == 2
+    assert payload["commands"][0]["execution_mode"] in {"chain", "parallel-eligible", "guarded"}
+
+
+def test_router_execute_multi_returns_reports() -> None:
+    router = build_router()
+
+    payload = router.execute_multi("open vscode lalu sys info", dry_run=True)
+
+    assert payload["dry_run"] is True
+    assert len(payload["reports"]) == 2
+    assert all("status" in item for item in payload["reports"])
+
+
 def test_router_semantic_intent_open() -> None:
     router = build_router()
     result = router.execute("tolong bukakan notepad")

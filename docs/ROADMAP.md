@@ -38,7 +38,8 @@ Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 - ✅ PHASE 36 selesai: Ollama embedding foundation (`nomic-embed-text:latest`, health + config surface)
 - ✅ PHASE 37 selesai: multi-step intent graph (decomposition, step typing, dependency chain, reason trace)
 - ✅ PHASE 38 selesai: complex reasoning plan (confidence scoring, fallback branch, risk pruning)
-- 🚧 PHASE 39-40: planned
+- ✅ PHASE 39 selesai: argument extraction detail + multi-command executor report
+- 🚧 PHASE 40: planned
 
 ---
 
@@ -119,7 +120,7 @@ Output:
 
 ---
 
-### PHASE 39 — Argument Extraction + Multi-command Executor
+### PHASE 39 — Argument Extraction + Multi-command Executor ✅
 
 Tujuan:
 

@@ -10,12 +10,14 @@ from uuid import uuid4
 from core.capability_guardrail import CapabilityGuardrail
 from core.capability_layer import SystemCapabilityLayer
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
+from core.argument_extractor import ArgumentExtractor
 from core.embedding_provider import EmbeddingConfig, EmbeddingProvider, OllamaEmbeddingProvider
 from core.execution_profile import ExecutionProfilePolicy
 from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.intent_engine import LocalIntentEngine
 from core.intent_graph import IntentGraphPlanner
 from core.memory_engine import MemoryEngine
+from core.multi_command_executor import MultiCommandExecutor
 from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManager, StructuredLogger
 from core.plugin_registry import PluginRegistry
 from core.performance_profiler import PerformanceProfiler
@@ -99,6 +101,8 @@ class CommandRouter:
     embedding_provider: EmbeddingProvider | None = None
     intent_graph_planner: IntentGraphPlanner | None = None
     reasoning_engine: ComplexReasoningEngine | None = None
+    argument_extractor: ArgumentExtractor | None = None
+    multi_command_executor: MultiCommandExecutor | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -136,6 +140,8 @@ class CommandRouter:
         )
         self.intent_graph_planner = self.intent_graph_planner or IntentGraphPlanner()
         self.reasoning_engine = self.reasoning_engine or ComplexReasoningEngine()
+        self.argument_extractor = self.argument_extractor or ArgumentExtractor()
+        self.multi_command_executor = self.multi_command_executor or MultiCommandExecutor()
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -498,6 +504,31 @@ class CommandRouter:
         return {
             "graph": graph_payload,
             "reasoning": plan.to_dict(),
+        }
+
+    def multi_command_bundle(self, raw_input: str) -> dict:
+        graph_payload = self.intent_graph(raw_input)
+        commands = [step["resolved_command"] for step in graph_payload.get("steps", [])]
+        return {
+            "commands": self.multi_command_executor.bundle(commands, self.execution_profile_policy.risk_level),
+            "arguments": self.argument_extractor.extract_many(commands),
+        }
+
+    def execute_multi(self, raw_input: str, dry_run: bool = True) -> dict:
+        payload = self.multi_command_bundle(raw_input)
+        bundles = payload["commands"]
+
+        def _run(command: str) -> tuple[str, str]:
+            envelope = self.execute_enveloped(command, dry_run=dry_run)
+            status = "guarded_pending" if envelope.requires_confirmation else envelope.status
+            return status, envelope.message
+
+        reports = self.multi_command_executor.execute(bundles, _run)
+        return {
+            "dry_run": dry_run,
+            "commands": bundles,
+            "arguments": payload["arguments"],
+            "reports": reports,
         }
 
     def _register_plugins(self) -> None:
