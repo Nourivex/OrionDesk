@@ -37,12 +37,62 @@ class DummySystemActions:
         return f"File dihapus: {target}"
 
 
+class DummyProjectManager:
+    def open_project(self, name: str) -> str:
+        return f"project:{name}"
+
+
+class DummyClipboardManager:
+    def __init__(self) -> None:
+        self.items: list[str] = []
+
+    def push(self, text: str) -> None:
+        self.items.insert(0, text)
+
+    def recent(self, limit: int = 5) -> list[str]:
+        return self.items[:limit]
+
+    def clear(self) -> None:
+        self.items.clear()
+
+
+class DummyFocusModeManager:
+    def __init__(self) -> None:
+        self.current = "off"
+
+    def enable(self, mode: str) -> str:
+        self.current = mode
+        return f"mode:{mode}:on"
+
+    def disable(self) -> str:
+        self.current = "off"
+        return "mode:off"
+
+    def status(self) -> str:
+        return f"mode:{self.current}"
+
+
+class DummyNetworkDiagnostics:
+    def ping_profile(self, host: str, count: int = 2) -> str:
+        return f"ping:{host}:{count}"
+
+    def dns_lookup(self, host: str) -> str:
+        return f"dns:{host}"
+
+    def public_ip(self) -> str:
+        return "ip:127.0.0.1"
+
+
 def build_router() -> CommandRouter:
     return CommandRouter(
         launcher=DummyLauncher(),
         file_manager=DummyFileManager(),
         system_tools=DummySystemTools(),
         system_actions=DummySystemActions(),
+        project_manager=DummyProjectManager(),
+        clipboard_manager=DummyClipboardManager(),
+        focus_mode_manager=DummyFocusModeManager(),
+        network_diagnostics=DummyNetworkDiagnostics(),
     )
 
 
@@ -305,3 +355,30 @@ def test_router_explain_intent_for_semantic_input() -> None:
 
     assert "Did you mean" in explanation
     assert "open vscode" in explanation
+
+
+def test_route_proj_open_command() -> None:
+    router = build_router()
+    result = router.route("proj open atlas")
+    assert result == "project:atlas"
+
+
+def test_route_clipboard_history_flow() -> None:
+    router = build_router()
+    assert "diperbarui" in router.route("clip add alpha")
+    assert "alpha" in router.route("clip show")
+    assert "dibersihkan" in router.route("clip clear")
+
+
+def test_route_mode_command_flow() -> None:
+    router = build_router()
+    assert router.route("mode") == "mode:off"
+    assert router.route("mode focus on") == "mode:focus:on"
+    assert router.route("mode off") == "mode:off"
+
+
+def test_route_net_command_flow() -> None:
+    router = build_router()
+    assert router.route("net ping localhost") == "ping:localhost:2"
+    assert router.route("net dns localhost") == "dns:localhost"
+    assert router.route("net ip") == "ip:127.0.0.1"

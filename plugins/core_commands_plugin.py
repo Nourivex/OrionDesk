@@ -45,4 +45,32 @@ COMMAND_DEFINITIONS = [
         "handler_name": "_handle_profile",
         "dangerous": False,
     },
+    {
+        "keyword": "proj",
+        "usage": "proj open <name>",
+        "min_args": 2,
+        "handler_name": "_handle_proj",
+        "dangerous": False,
+    },
+    {
+        "keyword": "clip",
+        "usage": "clip <add|show|clear> [text]",
+        "min_args": 1,
+        "handler_name": "_handle_clip",
+        "dangerous": False,
+    },
+    {
+        "keyword": "mode",
+        "usage": "mode <focus|game> on | mode off",
+        "min_args": 0,
+        "handler_name": "_handle_mode",
+        "dangerous": False,
+    },
+    {
+        "keyword": "net",
+        "usage": "net <ping|dns|ip> [host]",
+        "min_args": 1,
+        "handler_name": "_handle_net",
+        "dangerous": False,
+    },
 ]

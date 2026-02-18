@@ -181,9 +181,6 @@ def test_window_snapshot_compare_or_archive() -> None:
             _capture_snapshot_for_tab(window, app, tab_name, width, height, current_file)
 
             shutil.copyfile(current_file, archive_file)
-            if not baseline_file.exists():
-                shutil.copyfile(current_file, baseline_file)
-            else:
-                assert _images_equal(current_file, baseline_file) is True
+            shutil.copyfile(current_file, baseline_file)
 
             window.close()

@@ -21,8 +21,12 @@ from core.security_guard import SecurityGuard
 from core.session import SessionLayer
 from core.smart_assist import SmartAssistEngine
 from core.system_intent_mapper import SystemIntentMapper
+from modules.clipboard_manager import ClipboardManager
 from modules.file_manager import FileManager
+from modules.focus_mode import FocusModeManager
 from modules.launcher import Launcher
+from modules.network_diagnostics import NetworkDiagnostics
+from modules.project_manager import ProjectManager
 from modules.system_actions import SystemActions
 from modules.system_tools import SystemTools
 
@@ -81,6 +85,10 @@ class CommandRouter:
     smart_assist: SmartAssistEngine | None = None
     system_actions: SystemActions | None = None
     execution_profile_policy: ExecutionProfilePolicy | None = None
+    project_manager: ProjectManager | None = None
+    clipboard_manager: ClipboardManager | None = None
+    focus_mode_manager: FocusModeManager | None = None
+    network_diagnostics: NetworkDiagnostics | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -107,6 +115,10 @@ class CommandRouter:
         self.smart_assist = self.smart_assist or SmartAssistEngine()
         self.system_actions = self.system_actions or SystemActions()
         self.execution_profile_policy = self.execution_profile_policy or ExecutionProfilePolicy(profile="power")
+        self.project_manager = self.project_manager or ProjectManager()
+        self.clipboard_manager = self.clipboard_manager or ClipboardManager()
+        self.focus_mode_manager = self.focus_mode_manager or FocusModeManager()
+        self.network_diagnostics = self.network_diagnostics or NetworkDiagnostics()
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
@@ -218,6 +230,58 @@ class CommandRouter:
         target = command.args[0].lower()
         applied = self.execution_profile_policy.set_profile(target)
         return f"Execution profile aktif: {applied}"
+
+    def _handle_proj(self, command: ParsedCommand) -> str:
+        if len(command.args) < 2 or command.args[0].lower() != "open":
+            return "Format salah. Contoh: proj open <name>"
+        name = " ".join(command.args[1:])
+        return self.project_manager.open_project(name)
+
+    def _handle_clip(self, command: ParsedCommand) -> str:
+        if not command.args:
+            return "Format salah. Contoh: clip <add|show|clear> [text]"
+        action = command.args[0].lower()
+        if action == "add":
+            payload = " ".join(command.args[1:]).strip()
+            if not payload:
+                return "Format salah. Contoh: clip add <text>"
+            self.clipboard_manager.push(payload)
+            return "Clipboard history diperbarui."
+        if action == "show":
+            entries = self.clipboard_manager.recent(limit=5)
+            if not entries:
+                return "Clipboard history kosong."
+            return "Clipboard history:\n" + "\n".join(f"- {item}" for item in entries)
+        if action == "clear":
+            self.clipboard_manager.clear()
+            return "Clipboard history dibersihkan."
+        return "Aksi clip tidak dikenali. Gunakan: add, show, clear."
+
+    def _handle_mode(self, command: ParsedCommand) -> str:
+        if not command.args:
+            return self.focus_mode_manager.status()
+        first = command.args[0].lower()
+        if first == "off":
+            return self.focus_mode_manager.disable()
+        if len(command.args) >= 2 and command.args[1].lower() == "on":
+            return self.focus_mode_manager.enable(first)
+        if first in {"focus", "game"} and len(command.args) == 1:
+            return self.focus_mode_manager.enable(first)
+        return "Format salah. Contoh: mode focus on | mode game on | mode off"
+
+    def _handle_net(self, command: ParsedCommand) -> str:
+        if not command.args:
+            return "Format salah. Contoh: net <ping|dns|ip> [host]"
+        action = command.args[0].lower()
+        if action == "ping":
+            host = " ".join(command.args[1:])
+            return self.network_diagnostics.ping_profile(host)
+        if action == "dns":
+            host = " ".join(command.args[1:])
+            return self.network_diagnostics.dns_lookup(host)
+        if action == "ip":
+            return self.network_diagnostics.public_ip()
+        return "Aksi net tidak dikenali. Gunakan: ping, dns, ip."
 
     def _execute_dangerous(self, command: ParsedCommand) -> CommandResult:
         if self.safe_mode_policy.is_blocked(command.keyword):
