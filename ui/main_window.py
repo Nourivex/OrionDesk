@@ -178,13 +178,16 @@ class MainWindow(QMainWindow):
         self.memory_info.setText(payload["top_command_lines"])
     def _refresh_diagnostics_panel(self) -> None:
         release_summary = self.router.release_hardening_summary()
-        self.diagnostics_page.health_state_label.setText("Online")
+        embed_health = self.router.embedding_health()
+        runtime_state = "Online" if embed_health["ok"] else "Degraded"
+        self.diagnostics_page.health_state_label.setText(runtime_state)
         self.diagnostics_page.release_checklist_label.setText(
             f"{release_summary['completed']}/{release_summary['total']}"
         )
         self.diagnostics_page.profile_state_label.setText(self.router.execution_profile_policy.profile)
         lines = [
             "Diagnostics panel siap.",
+            f"Embedding: {embed_health['message']}",
             "Klik 'Generate Report' untuk membuat diagnostic JSON.",
             "Klik 'Save Recovery Snapshot' untuk simpan session snapshot.",
         ]

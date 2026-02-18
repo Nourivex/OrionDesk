@@ -19,7 +19,7 @@ Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 
 ## 🚀 Active Track — Application V2.1
 
-### Roadmap v8 (Planned / v2.1)
+### Roadmap v8 (In Progress / v2.1)
 
 **North Star**
 
@@ -32,6 +32,11 @@ Roadmap ini sekarang dibagi menjadi dua jalur agar jelas:
 - Complex reasoning pipeline
 - Detail argument extraction
 - Multi-command execution (`2+` perintah dalam satu input) dengan safety guard
+
+### Progress v8 Saat Ini
+
+- ✅ PHASE 36 selesai: Ollama embedding foundation (`nomic-embed-text:latest`, health + config surface)
+- 🚧 PHASE 37-40: planned
 
 ---
 
@@ -55,7 +60,7 @@ Tidak termasuk (pada cycle awal v8):
 
 ## 🧩 PHASE Plan — Roadmap v8 / v2.1
 
-### PHASE 36 — Ollama Embedding Foundation
+### PHASE 36 — Ollama Embedding Foundation ✅
 
 Tujuan:
 

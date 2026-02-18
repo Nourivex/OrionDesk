@@ -10,6 +10,7 @@ from uuid import uuid4
 from core.capability_guardrail import CapabilityGuardrail
 from core.capability_layer import SystemCapabilityLayer
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
+from core.embedding_provider import EmbeddingConfig, EmbeddingProvider, OllamaEmbeddingProvider
 from core.execution_profile import ExecutionProfilePolicy
 from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.intent_engine import LocalIntentEngine
@@ -93,6 +94,7 @@ class CommandRouter:
     network_diagnostics: NetworkDiagnostics | None = None
     performance_profiler: PerformanceProfiler | None = None
     release_hardening_plan: ReleaseHardeningPlan | None = None
+    embedding_provider: EmbeddingProvider | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -125,9 +127,22 @@ class CommandRouter:
         self.network_diagnostics = self.network_diagnostics or NetworkDiagnostics()
         self.performance_profiler = self.performance_profiler or PerformanceProfiler()
         self.release_hardening_plan = self.release_hardening_plan or ReleaseHardeningPlan()
+        self.embedding_provider = self.embedding_provider or OllamaEmbeddingProvider(
+            config=self._build_embedding_config_from_env()
+        )
         self.session_id = self.session_id or uuid4().hex
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
+
+    def _build_embedding_config_from_env(self) -> EmbeddingConfig:
+        host = os.getenv("ORIONDESK_OLLAMA_HOST", "http://localhost:11434")
+        model = os.getenv("ORIONDESK_EMBED_MODEL", "nomic-embed-text:latest")
+        timeout_text = os.getenv("ORIONDESK_OLLAMA_TIMEOUT", "3.0")
+        try:
+            timeout_seconds = float(timeout_text)
+        except ValueError:
+            timeout_seconds = 3.0
+        return EmbeddingConfig(host=host, model=model, timeout_seconds=timeout_seconds)
 
     def route(self, command: str) -> str:
         return self.execute(command).message
@@ -443,6 +458,21 @@ class CommandRouter:
 
     def set_release_channel(self, channel: str) -> str:
         return self.release_channel_manager.set_channel(channel)
+
+    def embedding_config(self) -> dict:
+        config = self.embedding_provider.config()
+        return {
+            "host": config.host,
+            "model": config.model,
+            "timeout_seconds": config.timeout_seconds,
+        }
+
+    def embedding_health(self) -> dict:
+        health = self.embedding_provider.health()
+        return {"ok": health.ok, "message": health.message}
+
+    def embed_text(self, text: str) -> list[float]:
+        return self.embedding_provider.embed(text)
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

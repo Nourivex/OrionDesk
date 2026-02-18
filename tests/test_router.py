@@ -1,6 +1,7 @@
 from core.router import CommandRouter
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
+from core.embedding_provider import EmbeddingConfig, EmbeddingHealth, EmbeddingProvider
 
 
 class DummyLauncher:
@@ -83,6 +84,17 @@ class DummyNetworkDiagnostics:
         return "ip:127.0.0.1"
 
 
+class DummyEmbeddingProvider(EmbeddingProvider):
+    def config(self) -> EmbeddingConfig:
+        return EmbeddingConfig(host="http://localhost:11434", model="nomic-embed-text:latest", timeout_seconds=2.5)
+
+    def health(self) -> EmbeddingHealth:
+        return EmbeddingHealth(ok=True, message="Ollama ready (nomic-embed-text:latest)")
+
+    def embed(self, text: str) -> list[float]:
+        return [float(len(text))]
+
+
 def build_router() -> CommandRouter:
     return CommandRouter(
         launcher=DummyLauncher(),
@@ -93,6 +105,7 @@ def build_router() -> CommandRouter:
         clipboard_manager=DummyClipboardManager(),
         focus_mode_manager=DummyFocusModeManager(),
         network_diagnostics=DummyNetworkDiagnostics(),
+        embedding_provider=DummyEmbeddingProvider(),
     )
 
 
@@ -257,6 +270,25 @@ def test_router_auto_registers_plugin_commands() -> None:
 
     assert {"open", "search", "sys", "delete", "kill", "shutdown"}.issubset(registered)
     assert {"delete", "kill", "shutdown"}.issubset(router.dangerous_keywords)
+
+
+def test_router_exposes_embedding_config_and_health() -> None:
+    router = build_router()
+
+    config = router.embedding_config()
+    health = router.embedding_health()
+
+    assert config["model"] == "nomic-embed-text:latest"
+    assert config["timeout_seconds"] == 2.5
+    assert health["ok"] is True
+    assert "ready" in health["message"].lower()
+
+
+def test_router_embed_text_uses_provider() -> None:
+    router = build_router()
+
+    vector = router.embed_text("hello")
+    assert vector == [5.0]
 
 
 def test_router_semantic_intent_open() -> None:
