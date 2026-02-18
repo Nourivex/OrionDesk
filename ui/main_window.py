@@ -68,6 +68,8 @@ class MainWindow(QMainWindow):
         self.tray_icon: QSystemTrayIcon | None = None
         self._active_thread: QThread | None = None
         self._active_worker: CommandWorker | None = None
+        self.message_count = 0
+        self.command_count = 0
 
         self.setWindowTitle("OrionDesk")
         self.resize(800, 480)
@@ -142,76 +144,189 @@ class MainWindow(QMainWindow):
 
     def _build_command_tab(self) -> QWidget:
         page = QWidget(self)
-        page_layout = QVBoxLayout(page)
+        page_layout = QHBoxLayout(page)
         page_layout.setContentsMargins(0, 0, 0, 0)
         page_layout.setSpacing(self.theme.spacing_sm + 2)
 
-        top_card = QFrame(page)
-        top_card.setObjectName("topCard")
-        top_layout = QVBoxLayout(top_card)
-        top_layout.setContentsMargins(
+        page_layout.addWidget(self._build_command_sidebar(page))
+        page_layout.addWidget(self._build_command_chat_area(page), 1)
+        self._update_command_stats()
+        return page
+
+    def _build_command_sidebar(self, parent: QWidget) -> QWidget:
+        sidebar = QFrame(parent)
+        sidebar.setObjectName("commandSidebar")
+        sidebar.setFixedWidth(240)
+
+        layout = QVBoxLayout(sidebar)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(self.theme.spacing_sm + 2)
+
+        persona_card = QFrame(sidebar)
+        persona_card.setObjectName("personaCard")
+        persona_layout = QVBoxLayout(persona_card)
+        persona_layout.setContentsMargins(
             self.theme.spacing_md,
-            self.theme.spacing_sm + 2,
             self.theme.spacing_md,
-            self.theme.spacing_sm + 2,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
         )
-        top_layout.setSpacing(self.theme.spacing_sm + 2)
-
-        persona_layout = QHBoxLayout()
-        command_layout = QHBoxLayout()
-
-        self.persona_label = QLabel("Persona:", page)
-        self.persona_selector = QComboBox(page)
-        self.persona_selector.addItems(["calm", "hacker"])
-        self.persona_selector.setCurrentText(self.persona_engine.persona_name)
-
-        persona_layout.addWidget(self.persona_label)
+        persona_layout.setSpacing(self.theme.spacing_sm)
+        persona_title = QLabel("Persona", persona_card)
+        persona_title.setObjectName("sectionTitle")
+        self.persona_selector = QComboBox(persona_card)
+        self.persona_selector.addItems(["calm", "professional", "hacker", "friendly", "minimal"])
+        selected_persona = self.persona_engine.persona_name
+        if selected_persona not in {"calm", "professional", "hacker", "friendly", "minimal"}:
+            selected_persona = "calm"
+        self.persona_selector.setCurrentText(selected_persona)
+        persona_hint = QLabel("Choose AI personality style", persona_card)
+        persona_hint.setObjectName("sectionHint")
+        persona_hint.setWordWrap(True)
+        persona_layout.addWidget(persona_title)
         persona_layout.addWidget(self.persona_selector)
-        persona_layout.addStretch()
+        persona_layout.addWidget(persona_hint)
 
-        self.command_input = QLineEdit(page)
-        self.command_input.setPlaceholderText("Masukkan command, contoh: open vscode")
+        quick_card = QFrame(sidebar)
+        quick_card.setObjectName("quickActionsCard")
+        quick_layout = QVBoxLayout(quick_card)
+        quick_layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
+        quick_layout.setSpacing(self.theme.spacing_sm)
+        quick_title = QLabel("Quick Actions", quick_card)
+        quick_title.setObjectName("sectionTitle")
+        quick_layout.addWidget(quick_title)
+        quick_actions = [
+            ("Open VSCode", "open vscode"),
+            ("Open Notepad", "open notepad"),
+            ("Focus Mode", "mode focus on"),
+            ("System Status", "system status"),
+            ("Clear Chat", "clear chat"),
+        ]
+        self.quick_action_buttons = []
+        for label, command in quick_actions:
+            button = QPushButton(label, quick_card)
+            button.setObjectName("quickActionButton")
+            button.clicked.connect(lambda _checked=False, cmd=command: self._handle_quick_action(cmd))
+            quick_layout.addWidget(button)
+            self.quick_action_buttons.append(button)
+        quick_layout.addStretch()
 
-        self.execute_button = QPushButton("Execute", page)
-        self.execute_button.setMinimumWidth(120)
-        self.execute_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay))
-        self.output_panel = QTextEdit(page)
+        stats_card = QFrame(sidebar)
+        stats_card.setObjectName("commandStatsCard")
+        stats_layout = QHBoxLayout(stats_card)
+        stats_layout.setContentsMargins(
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+            self.theme.spacing_md,
+        )
+        stats_layout.setSpacing(self.theme.spacing_md)
+
+        message_tile = QVBoxLayout()
+        self.message_count_label = QLabel("0", stats_card)
+        self.message_count_label.setObjectName("statsValue")
+        message_text = QLabel("Messages", stats_card)
+        message_text.setObjectName("statsLabel")
+        message_tile.addWidget(self.message_count_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        message_tile.addWidget(message_text, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        command_tile = QVBoxLayout()
+        self.command_count_label = QLabel("0", stats_card)
+        self.command_count_label.setObjectName("statsValue")
+        command_text = QLabel("Commands", stats_card)
+        command_text.setObjectName("statsLabel")
+        command_tile.addWidget(self.command_count_label, alignment=Qt.AlignmentFlag.AlignCenter)
+        command_tile.addWidget(command_text, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        stats_layout.addLayout(message_tile)
+        stats_layout.addLayout(command_tile)
+
+        layout.addWidget(persona_card)
+        layout.addWidget(quick_card)
+        layout.addWidget(stats_card)
+        return sidebar
+
+    def _build_command_chat_area(self, parent: QWidget) -> QWidget:
+        area = QWidget(parent)
+        layout = QVBoxLayout(area)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(self.theme.spacing_sm + 2)
+
+        self.output_panel = QTextEdit(area)
         self.output_panel.setReadOnly(True)
         self.output_panel.setObjectName("outputPanel")
         self.highlighter = OutputHighlighter(self.output_panel.document())
+        self._append_welcome_message()
+
+        input_card = QFrame(area)
+        input_card.setObjectName("inputShellCard")
+        input_layout = QHBoxLayout(input_card)
+        input_layout.setContentsMargins(
+            self.theme.spacing_sm,
+            self.theme.spacing_sm,
+            self.theme.spacing_sm,
+            self.theme.spacing_sm,
+        )
+        input_layout.setSpacing(self.theme.spacing_sm)
+
+        self.command_input = QLineEdit(area)
+        self.command_input.setPlaceholderText("Ketik command Anda di sini...")
+        self.clear_chat_button = QPushButton("Clear", area)
+        self.clear_chat_button.setObjectName("clearChatButton")
+        self.clear_chat_button.clicked.connect(self._handle_clear_chat)
+        self.execute_button = QPushButton("Send", area)
+        self.execute_button.setObjectName("sendButton")
+        self.execute_button.setMinimumWidth(110)
+        self.execute_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_ArrowForward))
+
+        input_layout.addWidget(self.command_input, 1)
+        input_layout.addWidget(self.clear_chat_button)
+        input_layout.addWidget(self.execute_button)
+
+        suggestion_row = QHBoxLayout()
+        suggestion_row.setSpacing(self.theme.spacing_sm)
+        suggestion_title = QLabel("Suggestions:", area)
+        suggestion_title.setObjectName("sectionHint")
+        suggestion_row.addWidget(suggestion_title)
+        for command in ["capability system info", "clip show", "mode game on"]:
+            chip = QPushButton(command, area)
+            chip.setObjectName("suggestionChip")
+            chip.clicked.connect(lambda _checked=False, cmd=command: self._handle_suggestion_chip(cmd))
+            suggestion_row.addWidget(chip)
+        suggestion_row.addStretch()
+
+        self.command_suggestions = QLabel(area)
+        self.command_suggestions.setObjectName("commandSuggestions")
+        self.command_suggestions.setWordWrap(True)
+        self.command_hint_label = QLabel(area)
+        self.command_hint_label.setObjectName("commandHint")
+        self.command_hint_label.setWordWrap(True)
+        self.intent_hint_label = QLabel(area)
+        self.intent_hint_label.setObjectName("intentHint")
+        self.intent_hint_label.setWordWrap(True)
+        self.loading_label = QLabel("", area)
+        self.loading_label.setObjectName("loadingHint")
+        self.loading_label.setWordWrap(True)
 
         self.command_input.setAccessibleName("command-input")
         self.persona_selector.setAccessibleName("persona-selector")
         self.execute_button.setAccessibleName("execute-button")
         self.output_panel.setAccessibleName("output-panel")
 
-        top_layout.addLayout(persona_layout)
-        command_layout.addWidget(self.command_input)
-        command_layout.addWidget(self.execute_button)
-        top_layout.addLayout(command_layout)
-
-        self.command_suggestions = QLabel(page)
-        self.command_suggestions.setObjectName("commandSuggestions")
-        self.command_suggestions.setWordWrap(True)
-        self.command_hint_label = QLabel(page)
-        self.command_hint_label.setObjectName("commandHint")
-        self.command_hint_label.setWordWrap(True)
-        self.intent_hint_label = QLabel(page)
-        self.intent_hint_label.setObjectName("intentHint")
-        self.intent_hint_label.setWordWrap(True)
-        self.loading_label = QLabel("", page)
-        self.loading_label.setObjectName("loadingHint")
-        self.loading_label.setWordWrap(True)
-
-        top_layout.addWidget(self.command_suggestions)
-        top_layout.addWidget(self.command_hint_label)
-        top_layout.addWidget(self.intent_hint_label)
-        top_layout.addWidget(self.loading_label)
+        layout.addWidget(self.output_panel, 1)
+        layout.addWidget(input_card)
+        layout.addLayout(suggestion_row)
+        layout.addWidget(self.command_suggestions)
+        layout.addWidget(self.command_hint_label)
+        layout.addWidget(self.intent_hint_label)
+        layout.addWidget(self.loading_label)
         self._refresh_command_assist("")
-
-        page_layout.addWidget(top_card)
-        page_layout.addWidget(self.output_panel)
-        return page
+        return area
 
     def _build_placeholder_tab(self, title: str, text: str) -> QWidget:
         page = QWidget(self)
@@ -506,6 +621,38 @@ class MainWindow(QMainWindow):
         else:
             self.intent_hint_label.setText(f"Intent: {intent_explanation}")
 
+    def _append_welcome_message(self) -> None:
+        self.output_panel.append(
+            "Halo! Saya OrionDesk AI Assistant. Saya siap membantu Anda mengelola sistem."
+        )
+        self.output_panel.append("Ketik command atau pilih quick action di samping.")
+        self.output_panel.append("Contoh: open vscode | mode focus on")
+        self.output_panel.append("")
+
+    def _handle_quick_action(self, command: str) -> None:
+        if command == "clear chat":
+            self._handle_clear_chat()
+            return
+        self.command_input.setText(command)
+        self._handle_execute()
+
+    def _handle_suggestion_chip(self, command: str) -> None:
+        self.command_input.setText(command)
+        self.command_input.setFocus()
+
+    def _handle_clear_chat(self) -> None:
+        self.output_panel.clear()
+        self.message_count = 0
+        self.command_count = 0
+        self._update_command_stats()
+        self._append_welcome_message()
+        self.command_input.clear()
+        self._refresh_command_assist("")
+
+    def _update_command_stats(self) -> None:
+        self.message_count_label.setText(str(self.message_count))
+        self.command_count_label.setText(str(self.command_count))
+
     def _handle_execute(self) -> None:
         command = self.command_input.text()
         if self._should_run_async(command):
@@ -553,7 +700,9 @@ class MainWindow(QMainWindow):
     def _render_execution_result(self, command: str, result) -> None:
 
         if command.strip():
-            self.output_panel.append(f"> {command}")
+            self.output_panel.append(f"You > {command}")
+            self.message_count += 1
+            self.command_count += 1
 
         if result.requires_confirmation:
             warning = self.persona_engine.format_warning(
@@ -561,15 +710,19 @@ class MainWindow(QMainWindow):
                 detail=f"Command: {result.pending_command}",
             )
             self.output_panel.append(self._with_status_badge(warning))
+            self.message_count += 1
             approved = self._show_confirmation(result.pending_command or command)
             response = self.router.confirm_pending(approved)
             styled_response = self.persona_engine.format_output(response.message)
             self.output_panel.append(self._with_status_badge(styled_response))
+            self.message_count += 1
         else:
             styled_response = self.persona_engine.format_output(result.message)
             self.output_panel.append(self._with_status_badge(styled_response))
+            self.message_count += 1
 
         self.output_panel.append("")
+        self._update_command_stats()
         self.command_input.clear()
         self._refresh_command_assist("")
 
@@ -578,6 +731,8 @@ class MainWindow(QMainWindow):
         self.persona_engine.set_persona(persona_name)
         self.output_panel.append(self.persona_engine.format_output(f"Persona aktif: {persona_name}"))
         self.output_panel.append("")
+        self.message_count += 1
+        self._update_command_stats()
 
     def _apply_windows11_style(self) -> None:
         self.setFont(QFont("Segoe UI Variable Text", 10))
@@ -599,7 +754,7 @@ class MainWindow(QMainWindow):
         self.shortcut_execute.activated.connect(self._handle_execute)
 
         self.shortcut_clear = QShortcut(QKeySequence("Ctrl+L"), self)
-        self.shortcut_clear.activated.connect(self.output_panel.clear)
+        self.shortcut_clear.activated.connect(self._handle_clear_chat)
 
         self.shortcut_fast_surface = QShortcut(QKeySequence("Ctrl+K"), self)
         self.shortcut_fast_surface.activated.connect(self._activate_fast_command_surface)

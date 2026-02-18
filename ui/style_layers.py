@@ -12,11 +12,19 @@ def build_main_window_stylesheet(tokens: ThemeTokens, focus_color: str) -> str:
         QLabel#activeTabLabel {{ font-size: 10px; color: {tokens.hint_text}; font-weight: 600; }}
         QLabel#placeholderTitle {{ font-size: 15px; color: {tokens.text_title}; font-weight: 700; }}
         QLabel#placeholderText {{ font-size: 11px; color: {tokens.text_muted}; }}
+        QLabel#sectionTitle {{ font-size: 13px; color: {tokens.text_title}; font-weight: 700; }}
+        QLabel#sectionHint {{ font-size: 10px; color: {tokens.text_secondary}; font-weight: 500; }}
         QLabel#commandSuggestions {{ font-size: 10px; color: {tokens.suggestion_text}; }}
         QLabel#commandHint {{ font-size: 10px; color: {tokens.hint_text}; }}
         QLabel#intentHint {{ font-size: 10px; color: {tokens.intent_text}; }}
         QLabel#loadingHint {{ font-size: 10px; color: {tokens.hint_text}; font-weight: 600; }}
-        QFrame#topCard {{
+        QLabel#statsValue {{ font-size: 22px; color: {tokens.hint_text}; font-weight: 700; }}
+        QLabel#statsLabel {{ font-size: 10px; color: {tokens.text_secondary}; font-weight: 600; }}
+        QFrame#commandSidebar,
+        QFrame#personaCard,
+        QFrame#quickActionsCard,
+        QFrame#commandStatsCard,
+        QFrame#inputShellCard {{
             background-color: {tokens.card_bg};
             border: 1px solid {tokens.panel_border};
             border-radius: {tokens.radius_md}px;
@@ -44,6 +52,25 @@ def build_main_window_stylesheet(tokens: ThemeTokens, focus_color: str) -> str:
             border: 1px solid {tokens.input_border};
             border-radius: {tokens.radius_sm}px;
             padding: {tokens.spacing_sm}px;
+        }}
+        QPushButton#quickActionButton,
+        QPushButton#clearChatButton,
+        QPushButton#suggestionChip {{
+            background-color: {tokens.tab_bg};
+            color: {tokens.tab_text};
+            border: 1px solid {tokens.panel_border};
+            border-radius: {tokens.radius_sm + 3}px;
+            padding: {tokens.spacing_sm}px {tokens.spacing_md}px;
+            font-weight: 600;
+            text-align: left;
+        }}
+        QPushButton#sendButton {{
+            background-color: {tokens.button_bg};
+            color: {tokens.button_text};
+            border: none;
+            border-radius: {tokens.radius_md}px;
+            padding: {tokens.spacing_sm}px {tokens.spacing_lg}px;
+            font-weight: 700;
         }}
         QLineEdit#commandInput {{ border: 1px solid {focus_color}; }}
         QPushButton {{

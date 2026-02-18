@@ -149,3 +149,46 @@ def test_phase30_fast_surface_focuses_command_input() -> None:
     assert window.tab_widget.currentIndex() == 0
 
     window.close()
+
+
+def test_phase32_command_workspace_components() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    personas = [window.persona_selector.itemText(index) for index in range(window.persona_selector.count())]
+    assert personas == ["calm", "professional", "hacker", "friendly", "minimal"]
+
+    quick_labels = [button.text() for button in window.quick_action_buttons]
+    assert quick_labels == ["Open VSCode", "Open Notepad", "Focus Mode", "System Status", "Clear Chat"]
+
+    assert window.execute_button.text() == "Send"
+    assert window.clear_chat_button.text() == "Clear"
+    assert window.message_count_label.text() == "0"
+    assert window.command_count_label.text() == "0"
+    assert "OrionDesk AI Assistant" in window.output_panel.toPlainText()
+
+    window.close()
+
+
+def test_phase32_command_workspace_stats_and_clear_chat() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.command_input.setText("sys info")
+    window._handle_execute()
+    app.processEvents()
+
+    assert window.command_count == 1
+    assert window.message_count >= 2
+    assert window.command_count_label.text() == "1"
+
+    window._handle_quick_action("clear chat")
+    app.processEvents()
+
+    assert window.command_count == 0
+    assert window.message_count == 0
+    assert "Ketik command atau pilih quick action" in window.output_panel.toPlainText()
+
+    window.close()
