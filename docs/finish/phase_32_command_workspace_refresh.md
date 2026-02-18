@@ -12,6 +12,7 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
 - Menambahkan kartu statistik `Messages` dan `Commands` yang update setelah eksekusi command.
 - Menambahkan suggestion chips (`capability system info`, `clip show`, `mode game on`) untuk input cepat.
 - Menambahkan alur clear chat yang mereset panel output, statistik, dan mengembalikan welcome message.
+- Menyesuaikan tampilan chat ke format bubble user/assistant agar lebih dekat ke wireframe target.
 
 ## Perubahan Dokumen
 
@@ -25,6 +26,7 @@ PHASE 32 menyelesaikan pembaruan halaman `Command` ke format workspace chat mode
   - Refactor command tab ke model sidebar + chat area.
   - Penambahan quick action handlers, clear chat handler, stats counters, suggestion chip handlers.
   - Integrasi counters dengan lifecycle eksekusi command dan perubahan persona.
+  - Rendering output berbasis rich bubble chat untuk pesan user dan assistant.
 - `ui/style_layers.py`
   - Penambahan style token-driven untuk komponen command workspace baru.
 - `tests/test_tab_shell.py`

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import ctypes
 import ctypes.wintypes
+import html
 
 from PySide6.QtCore import QEasingCurve, QEvent, QObject, QThread, Qt, Signal, QVariantAnimation
 from PySide6.QtGui import QAction, QColor, QFont, QKeySequence, QShortcut
@@ -622,12 +623,46 @@ class MainWindow(QMainWindow):
             self.intent_hint_label.setText(f"Intent: {intent_explanation}")
 
     def _append_welcome_message(self) -> None:
-        self.output_panel.append(
-            "Halo! Saya OrionDesk AI Assistant. Saya siap membantu Anda mengelola sistem."
+        self._append_assistant_bubble(
+            "Halo! Saya OrionDesk AI Assistant. Saya siap membantu Anda mengelola sistem. Ketik command atau pilih quick action di samping.",
+            "Contoh: open vscode, mode focus on",
         )
-        self.output_panel.append("Ketik command atau pilih quick action di samping.")
-        self.output_panel.append("Contoh: open vscode | mode focus on")
-        self.output_panel.append("")
+
+    def _append_user_bubble(self, message: str) -> None:
+        self._append_chat_bubble(message, align_right=True, subtitle="Command")
+
+    def _append_assistant_bubble(self, message: str, subtitle: str | None = None) -> None:
+        self._append_chat_bubble(message, align_right=False, subtitle=subtitle)
+
+    def _append_chat_bubble(
+        self,
+        message: str,
+        align_right: bool,
+        subtitle: str | None = None,
+    ) -> None:
+        alignment = "right" if align_right else "left"
+        bubble_bg = self.theme.tab_active_bg if align_right else self.theme.card_bg
+        border = self.theme.panel_border
+        text_color = self.theme.text_primary
+        subtitle_color = self.theme.text_secondary
+        safe_message = html.escape(message)
+        subtitle_html = ""
+        if subtitle:
+            safe_subtitle = html.escape(subtitle)
+            subtitle_html = (
+                f"<div style='margin-top:6px;font-size:11px;color:{subtitle_color};'>{safe_subtitle}</div>"
+            )
+
+        bubble_html = (
+            f"<div style='margin:8px 0;text-align:{alignment};'>"
+            f"<div style='display:inline-block;max-width:82%;"
+            f"background-color:{bubble_bg};border:1px solid {border};"
+            f"color:{text_color};border-radius:{self.theme.radius_md + 6}px;"
+            f"padding:10px 12px;line-height:1.45;'>"
+            f"<div style='font-size:13px;'>{safe_message}</div>"
+            f"{subtitle_html}</div></div>"
+        )
+        self.output_panel.append(bubble_html)
 
     def _handle_quick_action(self, command: str) -> None:
         if command == "clear chat":
@@ -700,7 +735,7 @@ class MainWindow(QMainWindow):
     def _render_execution_result(self, command: str, result) -> None:
 
         if command.strip():
-            self.output_panel.append(f"You > {command}")
+            self._append_user_bubble(command)
             self.message_count += 1
             self.command_count += 1
 
@@ -709,19 +744,18 @@ class MainWindow(QMainWindow):
                 result.message,
                 detail=f"Command: {result.pending_command}",
             )
-            self.output_panel.append(self._with_status_badge(warning))
+            self._append_assistant_bubble(self._with_status_badge(warning), "Safe mode confirmation")
             self.message_count += 1
             approved = self._show_confirmation(result.pending_command or command)
             response = self.router.confirm_pending(approved)
             styled_response = self.persona_engine.format_output(response.message)
-            self.output_panel.append(self._with_status_badge(styled_response))
+            self._append_assistant_bubble(self._with_status_badge(styled_response))
             self.message_count += 1
         else:
             styled_response = self.persona_engine.format_output(result.message)
-            self.output_panel.append(self._with_status_badge(styled_response))
+            self._append_assistant_bubble(self._with_status_badge(styled_response))
             self.message_count += 1
 
-        self.output_panel.append("")
         self._update_command_stats()
         self.command_input.clear()
         self._refresh_command_assist("")
@@ -729,8 +763,8 @@ class MainWindow(QMainWindow):
     def _handle_persona_change(self, persona_name: str) -> None:
         self._animate_output_fade()
         self.persona_engine.set_persona(persona_name)
-        self.output_panel.append(self.persona_engine.format_output(f"Persona aktif: {persona_name}"))
-        self.output_panel.append("")
+        persona_message = self.persona_engine.format_output(f"Persona aktif: {persona_name}")
+        self._append_assistant_bubble(persona_message)
         self.message_count += 1
         self._update_command_stats()
 
