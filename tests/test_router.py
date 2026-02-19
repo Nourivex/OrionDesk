@@ -343,6 +343,25 @@ def test_router_execute_multi_returns_reports() -> None:
     assert all("status" in item for item in payload["reports"])
 
 
+def test_execute_multi_step_natural_input_runs_two_tasks() -> None:
+    router = build_router()
+
+    result = router.execute("tolong buka vscode lalu cek sys info")
+
+    assert "[Multi-step Execution]" in result.message
+    assert "open:vscode" in result.message
+    assert "sys:ok" in result.message
+
+
+def test_execute_multi_step_ambiguity_shows_reasoned_status() -> None:
+    router = build_router()
+
+    result = router.execute("tolong cek sesuatu lalu mungkin hapus file temp")
+
+    assert "[Multi-step Execution]" in result.message
+    assert any(marker in result.message for marker in ["FALLBACK", "PRUNED", "GUARDED", "INVALID"])
+
+
 def test_router_semantic_intent_open() -> None:
     router = build_router()
     result = router.execute("tolong bukakan notepad")

@@ -222,3 +222,21 @@ def test_phase32_command_workspace_stats_and_clear_chat() -> None:
 def test_phase32_main_window_file_size_target() -> None:
     content = Path("ui/main_window.py").read_text(encoding="utf-8")
     assert len(content.splitlines()) <= 500
+
+
+def test_command_surface_typing_indicator_lifecycle() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    window.show()
+    app.processEvents()
+
+    window.output_panel.show_typing_indicator()
+    app.processEvents()
+    assert window.output_panel.typing_indicator.isHidden() is False
+
+    window.command_input.setText("sys info")
+    window._handle_execute()
+    app.processEvents()
+    assert window.output_panel.typing_indicator.isVisible() is False
+
+    window.close()

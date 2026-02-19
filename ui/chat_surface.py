@@ -125,6 +125,10 @@ class ChatSurface(QScrollArea):
         self._history: list[tuple[str, bool, str | None]] = []
         self._animations: list[QPropertyAnimation] = []
         self._enable_animations = False
+        self._typing_dots = 0
+        self._typing_timer = QTimer(self)
+        self._typing_timer.setInterval(260)
+        self._typing_timer.timeout.connect(self._tick_typing)
 
         self.setWidgetResizable(True)
         self.setObjectName("outputPanel")
@@ -132,6 +136,10 @@ class ChatSurface(QScrollArea):
         self.messages_layout = QVBoxLayout(self.container)
         self.messages_layout.setContentsMargins(12, 16, 12, 16)
         self.messages_layout.setSpacing(12)
+        self.typing_indicator = QLabel("AI is thinking", self.container)
+        self.typing_indicator.setObjectName("typingIndicator")
+        self.typing_indicator.setVisible(False)
+        self.messages_layout.addWidget(self.typing_indicator)
         self.messages_layout.addStretch()
         self.setWidget(self.container)
         self._apply_frame_theme()
@@ -154,12 +162,14 @@ class ChatSurface(QScrollArea):
 
     def clear(self) -> None:
         self._history = []
+        self.hide_typing_indicator()
         for index in reversed(range(self.messages_layout.count() - 1)):
             item = self.messages_layout.itemAt(index)
             widget = item.widget()
             if widget is not None:
                 self.messages_layout.removeWidget(widget)
                 widget.deleteLater()
+        self.messages_layout.insertWidget(self.messages_layout.count() - 1, self.typing_indicator)
 
     def toPlainText(self) -> str:
         lines = []
@@ -181,6 +191,23 @@ class ChatSurface(QScrollArea):
         self._scroll_to_bottom()
         QTimer.singleShot(0, self._scroll_to_bottom)
         QTimer.singleShot(40, self._scroll_to_bottom)
+
+    def show_typing_indicator(self) -> None:
+        self._typing_dots = 0
+        self.typing_indicator.setVisible(True)
+        self.typing_indicator.setText("AI is thinking")
+        if not self._typing_timer.isActive():
+            self._typing_timer.start()
+        self.scroll_to_latest()
+
+    def hide_typing_indicator(self) -> None:
+        self._typing_timer.stop()
+        self.typing_indicator.setVisible(False)
+
+    def _tick_typing(self) -> None:
+        self._typing_dots = (self._typing_dots + 1) % 4
+        dots = "." * self._typing_dots
+        self.typing_indicator.setText(f"AI is thinking{dots}")
 
     def _apply_frame_theme(self) -> None:
         self.setStyleSheet(

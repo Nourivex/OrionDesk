@@ -299,6 +299,7 @@ class MainWindow(QMainWindow):
         self.command_count_label.setText(str(self.command_count))
     def _handle_execute(self) -> None:
         command = self.command_input.text()
+        if command.strip(): self.output_panel.show_typing_indicator()
         if self._should_run_async(command):
             self._run_async_command(command)
             return
@@ -334,6 +335,7 @@ class MainWindow(QMainWindow):
         self.command_input.setEnabled(True)
         self.loading_label.setText("")
     def _render_execution_result(self, command: str, result) -> None:
+        self.output_panel.hide_typing_indicator()
         if command.strip():
             self._append_chat_bubble(command, align_right=True, subtitle="Command")
             self.message_count += 1

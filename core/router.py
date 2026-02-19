@@ -160,6 +160,9 @@ class CommandRouter:
         return self.execute(command).message
 
     def execute(self, command: str, dry_run: bool = False, allow_autocorrect: bool = True) -> CommandResult:
+        if self._contains_multi_step(command):
+            return self._execute_multi_step(command, dry_run=dry_run)
+
         if command.strip().lower().startswith("explain "):
             explain_target = command.strip()[8:]
             message = self.smart_assist.explain(explain_target)
@@ -187,6 +190,39 @@ class CommandRouter:
         envelope = self.executor.run(self, normalized, context)
         self._record_session(normalized or command, envelope.message, envelope.status, envelope.context)
         return self._to_command_result(envelope)
+
+    def _contains_multi_step(self, raw_command: str) -> bool:
+        lowered = raw_command.lower()
+        return any(marker in lowered for marker in [" lalu ", " kemudian ", ";", " and then "])
+
+    def _execute_multi_step(self, raw_command: str, dry_run: bool = False) -> CommandResult:
+        payload = self.reason_plan(raw_command)
+        decisions = payload["reasoning"]["decisions"]
+        lines = ["[Multi-step Execution]"]
+
+        for decision in decisions:
+            command = decision["command"].strip()
+            mode = decision["mode"]
+            step_id = decision["step_id"]
+
+            if mode == "pruned":
+                lines.append(f"{step_id} PRUNED: {decision['reason']}")
+                continue
+
+            if mode == "fallback" and command.startswith("explain "):
+                explain_target = command[8:].strip()
+                message = self.smart_assist.explain(explain_target)
+                lines.append(f"{step_id} FALLBACK: {message}")
+                continue
+
+            envelope = self.execute_enveloped(command, dry_run=dry_run)
+            status = "guarded_pending" if envelope.requires_confirmation else envelope.status
+            lines.append(f"{step_id} {status.upper()}: {command} -> {envelope.message}")
+
+        final_message = "\n".join(lines)
+        context = self._build_execution_context(raw_command, dry_run=dry_run)
+        self._record_session(raw_command, final_message, "success", context)
+        return CommandResult(final_message)
 
     def confirm_pending(self, approved: bool) -> CommandResult:
         if self.pending_autocorrect is not None:

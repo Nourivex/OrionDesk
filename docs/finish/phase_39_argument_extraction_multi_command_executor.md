@@ -22,6 +22,8 @@ PHASE 39 menambahkan fondasi parsing argumen detail dan eksekusi multi-command d
   - `duration_ms`
   - `message`
   - `risk_level`
+- Multi-step natural input execution langsung via `execute(...)` dengan laporan step-by-step.
+- Reasoned status untuk kasus ambigu/high-risk (`FALLBACK`, `PRUNED`, `GUARDED`) agar tidak mentok whitelist tanpa konteks.
 - Router API:
   - `multi_command_bundle(raw_input)`
   - `execute_multi(raw_input, dry_run=True)`

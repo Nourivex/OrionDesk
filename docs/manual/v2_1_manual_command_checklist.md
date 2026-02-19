@@ -27,7 +27,7 @@ Ekspektasi:
 
 Gunakan skenario natural input:
 
-- `tolong buka vscode lalu cek sys info`
+- `tolong buka notepad lalu cek sys info` ⚠️ (Belum berfungsi untuk 2 task)
 - `open notepad kemudian search file notes`
 
 Ekspektasi:
@@ -39,7 +39,7 @@ Ekspektasi:
 
 Uji input ambigu:
 
-- `tolong cek sesuatu lalu mungkin hapus file temp`
+- `tolong cek sesuatu lalu mungkin hapus file temp` ⚠️ (Kena whitelist policy tanpa pemberitahuan)
 
 Ekspektasi:
 

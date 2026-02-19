@@ -7,6 +7,7 @@ PHASE 40 menutup roadmap v8 dengan stabilisasi, release gate validation, dan dok
 ## Scope yang Diselesaikan
 
 - Konsolidasi fitur v8 (PHASE 36-39) ke release-ready baseline.
+- Menambahkan typing indicator (`AI is thinking...`) pada command surface saat proses berjalan.
 - Regression verification untuk core intelligence stack:
   - embedding provider
   - intent graph
