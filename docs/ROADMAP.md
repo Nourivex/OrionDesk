@@ -158,6 +158,48 @@ Output:
 
 ---
 
+## 🚀 Next Track — Application V2.2
+
+### Roadmap v9 (Planned / v2.2)
+
+**Primary Focus**
+
+- Response quality uplift via local model `gemma3:4b`
+- Runtime smoothness: soft interaction, low-latency flow, no obvious UI lag
+- Better intelligence behavior for complex command reasoning
+
+### PHASE 41 — Gemma Runtime Adapter
+
+- Model adapter untuk `gemma3:4b`
+- Health + fallback strategy antara embedding/reasoning model
+- Config surface model, timeout, token budget
+
+### PHASE 42 — Latency Budget & Non-blocking Runtime
+
+- End-to-end latency budget per command stage
+- Async execution path untuk reasoning-heavy flows
+- UI responsiveness guard (main-thread blocking detection)
+
+### PHASE 43 — Response Quality Upgrade
+
+- Better answer composition (clear, contextual, actionable)
+- Structured reasoning output style
+- Error message rewrite agar lebih human-friendly
+
+### PHASE 44 — Memory + Retrieval Optimization
+
+- Retrieval caching dan query optimization
+- Session context ranking tuning
+- Reduksi redundant processing pada repeated command patterns
+
+### PHASE 45 — Stabilization + Release Gate v2.2
+
+- Reliability + soak test for long-running sessions
+- Performance baseline compare (`v2.1` vs `v2.2`)
+- Final release checklist + rollback notes
+
+---
+
 ## 🛡 Guardrail Contract (V2.1)
 
 Semua fase v8 tetap wajib:
@@ -204,6 +246,6 @@ Detail implementasi legacy tersedia di:
 
 ## 📍 Current Operating Mode
 
-**Active development:** `Roadmap v8 / Application v2.1`
+**Active development:** `Roadmap v9 / Application v2.2 (Planning)`
 
 **Legacy maintenance only:** `Roadmap v1-v7 / Application v1.x`

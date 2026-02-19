@@ -240,3 +240,17 @@ def test_command_surface_typing_indicator_lifecycle() -> None:
     assert window.output_panel.typing_indicator.isVisible() is False
 
     window.close()
+
+
+def test_chat_surface_prunes_old_messages_for_performance() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    for index in range(210):
+        window.output_panel.add_message(text=f"message-{index}", is_user=False)
+    app.processEvents()
+
+    assert len(window.output_panel._history) <= 200
+
+    window.close()

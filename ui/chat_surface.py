@@ -125,6 +125,7 @@ class ChatSurface(QScrollArea):
         self._history: list[tuple[str, bool, str | None]] = []
         self._animations: list[QPropertyAnimation] = []
         self._enable_animations = False
+        self._max_messages = 200
         self._typing_dots = 0
         self._typing_timer = QTimer(self)
         self._typing_timer.setInterval(260)
@@ -152,6 +153,7 @@ class ChatSurface(QScrollArea):
         bubble = ChatBubbleWidget(text=text, is_user=is_user, theme=self._theme, subtitle=subtitle, parent=self.container)
         self.messages_layout.insertWidget(self.messages_layout.count() - 1, bubble)
         self._history.append((text, is_user, subtitle))
+        self._prune_old_messages()
         if not should_follow_tail:
             return
         if self._enable_animations and self.isVisible():
@@ -208,6 +210,17 @@ class ChatSurface(QScrollArea):
         self._typing_dots = (self._typing_dots + 1) % 4
         dots = "." * self._typing_dots
         self.typing_indicator.setText(f"AI is thinking{dots}")
+
+    def _prune_old_messages(self) -> None:
+        while len(self._history) > self._max_messages:
+            self._history.pop(0)
+            for index in range(self.messages_layout.count()):
+                item = self.messages_layout.itemAt(index)
+                widget = item.widget()
+                if widget is not None and widget.objectName() == "chatBubbleRow":
+                    self.messages_layout.removeWidget(widget)
+                    widget.deleteLater()
+                    break
 
     def _apply_frame_theme(self) -> None:
         self.setStyleSheet(
