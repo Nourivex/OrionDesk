@@ -188,11 +188,16 @@ Output:
 
 - Telemetry latency stage-level dan guard responsivitas tersedia untuk kontrol performa v2.2.
 
-### PHASE 43 — Response Quality Upgrade
+### PHASE 43 — Response Quality Upgrade ✅
 
 - Better answer composition (clear, contextual, actionable)
 - Structured reasoning output style
 - Error message rewrite agar lebih human-friendly
+
+Output:
+
+- Model chat dan quality profile kini dapat diatur dari tab Settings untuk tuning kualitas respons lokal.
+- Catalog model di-load dari Ollama saat startup + refresh manual, dengan badge rekomendasi GPU berbasis `parameter_size`.
 
 ### PHASE 44 — Memory + Retrieval Optimization
 

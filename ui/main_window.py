@@ -68,7 +68,8 @@ class MainWindow(QMainWindow):
         self.tab_widget.setDocumentMode(True)
         self.command_page = CommandPage(self.theme, self.persona_engine.persona_name, self)
         self.memory_page = MemoryPage(self.theme, self)
-        self.settings_page = SettingsPage(theme=self.theme, release_channel=self.router.get_release_channel(), active_hotkey=self.hotkey_manager.active_hotkey, minimize_to_tray=self.minimize_to_tray, fast_mode=self.fast_command_mode, safe_mode=self.router.safe_mode, execution_profile=self.router.execution_profile_policy.profile, parent=self)
+        generation_config = self.router.generation_config()
+        self.settings_page = SettingsPage(theme=self.theme, release_channel=self.router.get_release_channel(), active_hotkey=self.hotkey_manager.active_hotkey, minimize_to_tray=self.minimize_to_tray, fast_mode=self.fast_command_mode, safe_mode=self.router.safe_mode, execution_profile=self.router.execution_profile_policy.profile, generation_model=generation_config["model"], generation_timeout=float(generation_config["timeout_seconds"]), generation_token_budget=int(generation_config["token_budget"]), generation_temperature=float(generation_config["temperature"]), response_quality=self.router.response_quality, parent=self)
         self.diagnostics_page = DiagnosticsPage(self.theme, self)
         self.about_page = AboutPage(self.theme, self)
         self.tab_widget.addTab(self.command_page, "Command")
@@ -82,6 +83,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.tab_widget)
         self._expose_page_widgets()
         self._wire_signals()
+        self._refresh_model_catalog(force_reload=False)
         self._refresh_about_panel()
         self._refresh_memory_panel()
         self._refresh_diagnostics_panel()
@@ -92,28 +94,21 @@ class MainWindow(QMainWindow):
         self.setTabOrder(self.command_input, self.execute_button)
         self.setTabOrder(self.execute_button, self.output_panel)
     def _expose_page_widgets(self) -> None:
-        self.persona_selector = self.command_page.persona_selector
-        self.command_input = self.command_page.command_input
-        self.execute_button = self.command_page.execute_button
-        self.clear_chat_button = self.command_page.clear_chat_button
-        self.output_panel = self.command_page.output_panel
-        self.command_suggestions = self.command_page.command_suggestions
-        self.command_hint_label = self.command_page.command_hint_label
-        self.intent_hint_label = self.command_page.intent_hint_label
-        self.loading_label = self.command_page.loading_label
-        self.message_count_label = self.command_page.message_count_label
-        self.command_count_label = self.command_page.command_count_label
-        self.quick_action_buttons = self.command_page.quick_action_buttons
-        self.memory_info = self.memory_page.memory_info
-        self.about_info = self.about_page.about_info
-        self.diagnostics_info = self.diagnostics_page.diagnostics_info
-        self.theme_selector = self.settings_page.theme_selector
-        self.channel_selector = self.settings_page.channel_selector
-        self.minimize_tray_checkbox = self.settings_page.minimize_tray_checkbox
-        self.hotkey_selector = self.settings_page.hotkey_selector
-        self.fast_mode_checkbox = self.settings_page.fast_mode_checkbox
-        self.profile_selector = self.settings_page.profile_selector
-        self.safe_mode_checkbox = self.settings_page.safe_mode_checkbox
+        self.persona_selector, self.command_input = self.command_page.persona_selector, self.command_page.command_input
+        self.execute_button, self.clear_chat_button = self.command_page.execute_button, self.command_page.clear_chat_button
+        self.output_panel, self.command_suggestions = self.command_page.output_panel, self.command_page.command_suggestions
+        self.command_hint_label, self.intent_hint_label = self.command_page.command_hint_label, self.command_page.intent_hint_label
+        self.loading_label, self.message_count_label = self.command_page.loading_label, self.command_page.message_count_label
+        self.command_count_label, self.quick_action_buttons = self.command_page.command_count_label, self.command_page.quick_action_buttons
+        self.memory_info, self.about_info = self.memory_page.memory_info, self.about_page.about_info
+        self.diagnostics_info, self.theme_selector = self.diagnostics_page.diagnostics_info, self.settings_page.theme_selector
+        self.channel_selector, self.minimize_tray_checkbox = self.settings_page.channel_selector, self.settings_page.minimize_tray_checkbox
+        self.hotkey_selector, self.fast_mode_checkbox = self.settings_page.hotkey_selector, self.settings_page.fast_mode_checkbox
+        self.profile_selector, self.safe_mode_checkbox = self.settings_page.profile_selector, self.settings_page.safe_mode_checkbox
+        self.model_selector, self.quality_selector = self.settings_page.model_selector, self.settings_page.quality_selector
+        self.token_budget_selector, self.timeout_selector = self.settings_page.token_budget_selector, self.settings_page.timeout_selector
+        self.temperature_selector = self.settings_page.temperature_selector
+        self.refresh_models_button = self.settings_page.refresh_models_button
         self.settings_status = self.settings_page.settings_status
     def _wire_signals(self) -> None:
         self.execute_button.clicked.connect(self._handle_execute)
@@ -125,6 +120,12 @@ class MainWindow(QMainWindow):
         self.minimize_tray_checkbox.toggled.connect(self._handle_minimize_tray_toggled)
         self.hotkey_selector.currentTextChanged.connect(self._handle_hotkey_change)
         self.fast_mode_checkbox.toggled.connect(self._handle_fast_mode_toggled)
+        self.model_selector.currentTextChanged.connect(lambda _value: self._apply_generation_runtime_settings())
+        self.token_budget_selector.currentTextChanged.connect(lambda _value: self._apply_generation_runtime_settings())
+        self.timeout_selector.currentTextChanged.connect(lambda _value: self._apply_generation_runtime_settings())
+        self.temperature_selector.currentTextChanged.connect(lambda _value: self._apply_generation_runtime_settings())
+        self.quality_selector.currentTextChanged.connect(self._handle_quality_change)
+        self.refresh_models_button.clicked.connect(lambda: self._refresh_model_catalog(force_reload=True))
         self.profile_selector.currentTextChanged.connect(lambda profile: self.settings_status.setText(f"Execution profile active: {self.router.execution_profile_policy.set_profile(profile)}"))
         self.safe_mode_checkbox.toggled.connect(lambda enabled: (setattr(self.router, "safe_mode", enabled), self.settings_status.setText(f"Safe mode: {'on' if enabled else 'off'}")))
         self.command_page.quickActionRequested.connect(self._handle_quick_action)
@@ -179,11 +180,8 @@ class MainWindow(QMainWindow):
     def _refresh_diagnostics_panel(self) -> None:
         release_summary = self.router.release_hardening_summary()
         embed_health = self.router.embedding_health()
-        runtime_state = "Online" if embed_health["ok"] else "Degraded"
-        self.diagnostics_page.health_state_label.setText(runtime_state)
-        self.diagnostics_page.release_checklist_label.setText(
-            f"{release_summary['completed']}/{release_summary['total']}"
-        )
+        self.diagnostics_page.health_state_label.setText("Online" if embed_health["ok"] else "Degraded")
+        self.diagnostics_page.release_checklist_label.setText(f"{release_summary['completed']}/{release_summary['total']}")
         self.diagnostics_page.profile_state_label.setText(self.router.execution_profile_policy.profile)
         lines = [
             "Diagnostics panel siap.",
@@ -219,10 +217,7 @@ class MainWindow(QMainWindow):
         ]
         self.diagnostics_info.append("\n" + "\n".join(lines))
     def _handle_theme_change(self, theme_name: str) -> None:
-        if theme_name == "light":
-            self.theme = default_light_tokens()
-        else:
-            self.theme = default_dark_tokens()
+        self.theme = default_light_tokens() if theme_name == "light" else default_dark_tokens()
         self._input_focus_color = self.theme.input_focus
         self.setStyleSheet(self._build_stylesheet(self._input_focus_color))
         self.output_panel.set_theme(self.theme)
@@ -235,26 +230,26 @@ class MainWindow(QMainWindow):
         self.minimize_to_tray = enabled
         self.settings_status.setText(f"Minimize to tray: {'on' if enabled else 'off'}")
     def _handle_hotkey_change(self, hotkey: str) -> None:
-        conflict, reason = self.hotkey_manager.is_conflicted(
-            hotkey,
-            local_shortcuts={"Ctrl+Return", "Ctrl+L", "Ctrl+K"},
-        )
-        if conflict:
-            self.settings_status.setText(reason)
-            return
+        conflict, reason = self.hotkey_manager.is_conflicted(hotkey, local_shortcuts={"Ctrl+Return", "Ctrl+L", "Ctrl+K"})
+        if conflict: self.settings_status.setText(reason); return
         self.hotkey_manager.set_hotkey(hotkey)
         self._register_global_hotkey()
         self.settings_status.setText(f"Global hotkey active: {self.hotkey_manager.active_hotkey}")
     def _handle_fast_mode_toggled(self, enabled: bool) -> None:
         self.fast_command_mode = enabled
         self.settings_status.setText(f"Fast command surface: {'on' if enabled else 'off'}")
+    def _apply_generation_runtime_settings(self) -> None:
+        config = self.router.set_generation_runtime(model=self.settings_page.selected_model_name(), timeout_seconds=float(self.timeout_selector.currentText()), token_budget=int(self.token_budget_selector.currentText()), temperature=float(self.temperature_selector.currentText()))
+        self.settings_status.setText(f"Chat runtime updated: {config['model']} | token={config['token_budget']} | timeout={config['timeout_seconds']}")
+    def _refresh_model_catalog(self, force_reload: bool) -> None:
+        models = self.router.available_generation_models(force_reload=force_reload)
+        selected = self.settings_page.selected_model_name()
+        if models: self.settings_page.set_model_options(models, selected)
+    def _handle_quality_change(self, quality: str) -> None:
+        self.settings_status.setText(f"Response quality active: {self.router.set_response_quality(quality)}")
     def _refresh_command_assist(self, text: str) -> None:
         suggestions = self.router.suggest_commands(text)
-        if suggestions:
-            suggestion_text = " | ".join(suggestions)
-            self.command_suggestions.setText(f"Suggestions: {suggestion_text}")
-        else:
-            self.command_suggestions.setText("Suggestions: -")
+        self.command_suggestions.setText(f"Suggestions: {' | '.join(suggestions)}" if suggestions else "Suggestions: -")
         usage_hint = self.router.usage_hint(text)
         argument_hint = self.router.argument_hint(text)
         if usage_hint is None:
@@ -265,10 +260,7 @@ class MainWindow(QMainWindow):
             else:
                 self.command_hint_label.setText(f"Usage: {usage_hint}")
         intent_explanation = self.router.explain_intent(text)
-        if not intent_explanation:
-            self.intent_hint_label.setText("Intent: -")
-        else:
-            self.intent_hint_label.setText(f"Intent: {intent_explanation}")
+        self.intent_hint_label.setText("Intent: -" if not intent_explanation else f"Intent: {intent_explanation}")
     def _append_welcome_message(self) -> None:
         self._append_chat_bubble(
             "Halo! Saya OrionDesk AI Assistant. Saya siap membantu Anda mengelola sistem. Ketik command atau pilih quick action di samping.",
@@ -278,9 +270,7 @@ class MainWindow(QMainWindow):
     def _append_chat_bubble(self, message: str, align_right: bool, subtitle: str | None = None) -> None:
         self.output_panel.add_message(text=message, is_user=align_right, subtitle=subtitle)
     def _handle_quick_action(self, command: str) -> None:
-        if command == "clear chat":
-            self._handle_clear_chat()
-            return
+        if command == "clear chat": self._handle_clear_chat(); return
         self.command_input.setText(command)
         self._handle_execute()
     def _handle_suggestion_chip(self, command: str) -> None:
@@ -288,8 +278,7 @@ class MainWindow(QMainWindow):
         self.command_input.setFocus()
     def _handle_clear_chat(self) -> None:
         self.output_panel.clear()
-        self.message_count = 0
-        self.command_count = 0
+        self.message_count = 0; self.command_count = 0
         self._update_command_stats()
         self._append_welcome_message()
         self.command_input.clear()
@@ -300,9 +289,7 @@ class MainWindow(QMainWindow):
     def _handle_execute(self) -> None:
         command = self.command_input.text()
         if command.strip(): self.output_panel.show_typing_indicator()
-        if self._should_run_async(command):
-            self._run_async_command(command)
-            return
+        if self._should_run_async(command): self._run_async_command(command); return
         result = self.router.execute(command)
         self._render_execution_result(command, result)
     def _should_run_async(self, command: str) -> bool:
@@ -329,8 +316,7 @@ class MainWindow(QMainWindow):
     def _handle_async_result(self, command: str, result) -> None:
         self._render_execution_result(command, result)
     def _clear_async_state(self) -> None:
-        self._active_thread = None
-        self._active_worker = None
+        self._active_thread = None; self._active_worker = None
         self.execute_button.setEnabled(True)
         self.command_input.setEnabled(True)
         self.loading_label.setText("")

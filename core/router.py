@@ -103,6 +103,7 @@ class CommandRouter:
     release_hardening_plan: ReleaseHardeningPlan | None = None
     embedding_provider: EmbeddingProvider | None = None
     generation_provider: GenerationProvider | None = None
+    response_quality: str = "balanced"
     intent_graph_planner: IntentGraphPlanner | None = None
     reasoning_engine: ComplexReasoningEngine | None = None
     argument_extractor: ArgumentExtractor | None = None
@@ -152,6 +153,7 @@ class CommandRouter:
         self.session_id = self.session_id or uuid4().hex
         self._runtime_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="oriondesk-runtime")
         self._main_thread_guard = MainThreadResponsivenessGuard()
+        self._model_catalog_cache: list[dict] = []
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
 
@@ -573,6 +575,50 @@ class CommandRouter:
         health = self.generation_provider.health()
         return {"ok": health.ok, "message": health.message}
 
+    def available_generation_models(self, force_reload: bool = False) -> list[dict]:
+        if self._model_catalog_cache and not force_reload:
+            return list(self._model_catalog_cache)
+        try:
+            models = self.generation_provider.list_models()
+        except (OSError, ValueError):
+            return list(self._model_catalog_cache)
+        self._model_catalog_cache = [
+            {
+                "name": item.name,
+                "parameter_size": item.parameter_size,
+                "role": item.role,
+                "gpu_badge": item.gpu_badge,
+            }
+            for item in models
+        ]
+        return list(self._model_catalog_cache)
+
+    def set_generation_runtime(
+        self,
+        model: str,
+        timeout_seconds: float,
+        token_budget: int,
+        temperature: float,
+    ) -> dict:
+        current = self.generation_provider.config()
+        config = GenerationConfig(
+            host=current.host,
+            model=model.strip() or current.model,
+            timeout_seconds=max(1.0, float(timeout_seconds)),
+            token_budget=max(32, int(token_budget)),
+            temperature=max(0.0, min(1.0, float(temperature))),
+        )
+        self.generation_provider = OllamaGenerationProvider(config=config)
+        return self.generation_config()
+
+    def set_response_quality(self, quality: str) -> str:
+        allowed = {"concise", "balanced", "deep"}
+        selected = quality.strip().lower()
+        if selected not in allowed:
+            selected = "balanced"
+        self.response_quality = selected
+        return self.response_quality
+
     def generate_reasoned_answer(self, raw_input: str) -> dict:
         plan = self.reason_plan(raw_input)
         health = self.generation_provider.health()
@@ -653,12 +699,18 @@ class CommandRouter:
 
     def _build_reasoning_prompt(self, raw_input: str, plan: dict) -> str:
         decisions = plan["reasoning"].get("decisions", [])
-        lines = [f"User input: {raw_input}", "Reasoning decisions:"]
+        quality_instruction = {
+            "concise": "Keep answer very short and direct.",
+            "balanced": "Keep answer clear and actionable with moderate detail.",
+            "deep": "Provide detailed reasoning and practical steps.",
+        }.get(self.response_quality, "Keep answer clear and actionable with moderate detail.")
+        lines = [f"User input: {raw_input}", f"Response quality: {self.response_quality}", "Reasoning decisions:"]
         for item in decisions:
             lines.append(
                 f"- {item['step_id']} mode={item['mode']} confidence={item['confidence']}: {item['command']}"
             )
-        lines.append("Compose one concise final answer in Indonesian.")
+        lines.append(quality_instruction)
+        lines.append("Compose one final answer in Indonesian.")
         return "\n".join(lines)
 
     def _reasoning_fallback_message(self, plan: dict) -> str:

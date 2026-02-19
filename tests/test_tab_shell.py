@@ -155,6 +155,35 @@ def test_phase30_settings_hotkey_and_fast_surface_controls() -> None:
     window.close()
 
 
+def test_phase43_settings_chat_model_and_quality_controls() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.tab_widget.setCurrentIndex(2)
+    app.processEvents()
+
+    assert window.refresh_models_button.icon().isNull() is False
+    assert "[" in window.model_selector.currentText() and "•" in window.model_selector.currentText()
+
+    if window.model_selector.count() > 1:
+        window.model_selector.setCurrentIndex(1)
+    model_target = window.settings_page.selected_model_name()
+    window.token_budget_selector.setCurrentText("384")
+    window.timeout_selector.setCurrentText("12.0")
+    window.temperature_selector.setCurrentText("0.3")
+    window.quality_selector.setCurrentText("deep")
+    app.processEvents()
+
+    config = window.router.generation_config()
+    assert config["model"] == model_target
+    assert config["token_budget"] == 384
+    assert window.router.response_quality == "deep"
+    assert "Response quality active" in window.settings_status.text()
+
+    window.close()
+
+
 def test_phase30_fast_surface_focuses_command_input() -> None:
     app = _app()
     window = MainWindow(router=CommandRouter())

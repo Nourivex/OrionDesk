@@ -2,7 +2,7 @@ from core.router import CommandRouter
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
 from core.embedding_provider import EmbeddingConfig, EmbeddingHealth, EmbeddingProvider
-from core.generation_provider import GenerationConfig, GenerationHealth, GenerationProvider
+from core.generation_provider import GenerationConfig, GenerationHealth, GenerationModelInfo, GenerationProvider
 
 
 class DummyLauncher:
@@ -119,6 +119,22 @@ class DummyGenerationProvider(GenerationProvider):
         if not self.healthy:
             return ""
         return self.response
+
+    def list_models(self) -> list[GenerationModelInfo]:
+        return [
+            GenerationModelInfo(name="gemma3:4b", parameter_size="4B", role="chat", gpu_badge="Aman"),
+            GenerationModelInfo(name="nomic-embed-text:latest", parameter_size="-", role="embed", gpu_badge="Lowest/Embed"),
+        ]
+
+
+class CapturingGenerationProvider(DummyGenerationProvider):
+    def __init__(self) -> None:
+        super().__init__(healthy=True, response="ok")
+        self.last_prompt = ""
+
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        self.last_prompt = prompt
+        return super().generate(prompt, system_prompt)
 
 
 def build_router() -> CommandRouter:
@@ -327,6 +343,43 @@ def test_router_exposes_generation_config_and_health() -> None:
     assert config["model"] == "gemma3:4b"
     assert config["token_budget"] == 180
     assert health["ok"] is True
+
+
+def test_router_set_generation_runtime_updates_config() -> None:
+    router = build_router()
+
+    updated = router.set_generation_runtime(
+        model="llama3.2:3b",
+        timeout_seconds=5.0,
+        token_budget=320,
+        temperature=0.3,
+    )
+
+    assert updated["model"] == "llama3.2:3b"
+    assert updated["timeout_seconds"] == 5.0
+    assert updated["token_budget"] == 320
+    assert updated["temperature"] == 0.3
+
+
+def test_router_response_quality_applies_to_reasoning_prompt() -> None:
+    router = build_router()
+    provider = CapturingGenerationProvider()
+    router.generation_provider = provider
+
+    router.set_response_quality("deep")
+    router.generate_reasoned_answer("open vscode lalu sys info")
+
+    assert "Response quality: deep" in provider.last_prompt
+
+
+def test_router_available_generation_models_contains_badges() -> None:
+    router = build_router()
+
+    models = router.available_generation_models(force_reload=True)
+
+    assert len(models) >= 1
+    assert models[0]["name"] == "gemma3:4b"
+    assert models[0]["gpu_badge"] == "Aman"
 
 
 def test_router_generate_reasoned_answer_uses_gemma_provider() -> None:

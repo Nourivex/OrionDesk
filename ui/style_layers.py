@@ -29,6 +29,14 @@ def build_main_window_stylesheet(tokens: ThemeTokens, focus_color: str) -> str:
         QLabel#typingIndicator {{ font-size: 11px; color: {tokens.text_secondary}; font-weight: 600; }}
         QLabel#statsValue {{ font-size: 22px; color: {tokens.hint_text}; font-weight: 700; }}
         QLabel#statsLabel {{ font-size: 10px; color: {tokens.text_secondary}; font-weight: 600; }}
+        QPushButton#modelRefreshButton {{
+            background-color: {tokens.tab_active_bg};
+            color: {tokens.input_focus_active};
+            border: 1px solid {tokens.input_border};
+            border-radius: {tokens.radius_md + 4}px;
+            padding: 0px;
+        }}
+        QPushButton#modelRefreshButton:hover {{ background-color: {tokens.button_hover}; }}
         QCheckBox {{ color: {tokens.text_primary}; font-weight: 600; spacing: {tokens.spacing_sm}px; }}
         QCheckBox::indicator {{
             width: 14px;
