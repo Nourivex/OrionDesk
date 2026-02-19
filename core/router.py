@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import getpass
 import os
+from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable
@@ -12,6 +13,8 @@ from core.capability_layer import SystemCapabilityLayer
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
 from core.argument_extractor import ArgumentExtractor
 from core.embedding_provider import EmbeddingConfig, EmbeddingProvider, OllamaEmbeddingProvider
+from core.generation_provider import GenerationConfig, GenerationProvider, OllamaGenerationProvider
+from core.latency_budget import LatencyBudget, MainThreadResponsivenessGuard
 from core.execution_profile import ExecutionProfilePolicy
 from core.executor import ExecutionContext, UnifiedCommandExecutor, build_execution_timestamp
 from core.intent_engine import LocalIntentEngine
@@ -99,6 +102,7 @@ class CommandRouter:
     performance_profiler: PerformanceProfiler | None = None
     release_hardening_plan: ReleaseHardeningPlan | None = None
     embedding_provider: EmbeddingProvider | None = None
+    generation_provider: GenerationProvider | None = None
     intent_graph_planner: IntentGraphPlanner | None = None
     reasoning_engine: ComplexReasoningEngine | None = None
     argument_extractor: ArgumentExtractor | None = None
@@ -138,11 +142,16 @@ class CommandRouter:
         self.embedding_provider = self.embedding_provider or OllamaEmbeddingProvider(
             config=self._build_embedding_config_from_env()
         )
+        self.generation_provider = self.generation_provider or OllamaGenerationProvider(
+            config=self._build_generation_config_from_env()
+        )
         self.intent_graph_planner = self.intent_graph_planner or IntentGraphPlanner()
         self.reasoning_engine = self.reasoning_engine or ComplexReasoningEngine()
         self.argument_extractor = self.argument_extractor or ArgumentExtractor()
         self.multi_command_executor = self.multi_command_executor or MultiCommandExecutor()
         self.session_id = self.session_id or uuid4().hex
+        self._runtime_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="oriondesk-runtime")
+        self._main_thread_guard = MainThreadResponsivenessGuard()
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
 
@@ -155,6 +164,34 @@ class CommandRouter:
         except ValueError:
             timeout_seconds = 3.0
         return EmbeddingConfig(host=host, model=model, timeout_seconds=timeout_seconds)
+
+    def _build_generation_config_from_env(self) -> GenerationConfig:
+        host = os.getenv("ORIONDESK_OLLAMA_HOST", "http://localhost:11434")
+        model = os.getenv("ORIONDESK_GEN_MODEL", "gemma3:4b")
+        timeout_text = os.getenv("ORIONDESK_GEN_TIMEOUT", "8.0")
+        token_budget_text = os.getenv("ORIONDESK_GEN_TOKEN_BUDGET", "256")
+        temperature_text = os.getenv("ORIONDESK_GEN_TEMPERATURE", "0.2")
+
+        try:
+            timeout_seconds = float(timeout_text)
+        except ValueError:
+            timeout_seconds = 8.0
+        try:
+            token_budget = int(token_budget_text)
+        except ValueError:
+            token_budget = 256
+        try:
+            temperature = float(temperature_text)
+        except ValueError:
+            temperature = 0.2
+
+        return GenerationConfig(
+            host=host,
+            model=model,
+            timeout_seconds=timeout_seconds,
+            token_budget=max(32, token_budget),
+            temperature=max(0.0, min(1.0, temperature)),
+        )
 
     def route(self, command: str) -> str:
         return self.execute(command).message
@@ -522,6 +559,34 @@ class CommandRouter:
     def embed_text(self, text: str) -> list[float]:
         return self.embedding_provider.embed(text)
 
+    def generation_config(self) -> dict:
+        config = self.generation_provider.config()
+        return {
+            "host": config.host,
+            "model": config.model,
+            "timeout_seconds": config.timeout_seconds,
+            "token_budget": config.token_budget,
+            "temperature": config.temperature,
+        }
+
+    def generation_health(self) -> dict:
+        health = self.generation_provider.health()
+        return {"ok": health.ok, "message": health.message}
+
+    def generate_reasoned_answer(self, raw_input: str) -> dict:
+        plan = self.reason_plan(raw_input)
+        health = self.generation_provider.health()
+        if not health.ok:
+            fallback = self._reasoning_fallback_message(plan)
+            return {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": health.message}}
+
+        prompt = self._build_reasoning_prompt(raw_input, plan)
+        text = self.generation_provider.generate(prompt=prompt, system_prompt="You are OrionDesk local assistant.")
+        if text:
+            return {"mode": "gemma", "message": text, "health": {"ok": health.ok, "message": health.message}}
+        fallback = self._reasoning_fallback_message(plan)
+        return {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": "empty generation"}}
+
     def intent_graph(self, raw_input: str) -> dict:
         allowed = set(self.contracts.keys())
         graph = self.intent_graph_planner.build(
@@ -541,6 +606,25 @@ class CommandRouter:
             "graph": graph_payload,
             "reasoning": plan.to_dict(),
         }
+
+    def execute_with_latency_budget(self, command: str, dry_run: bool = False) -> dict:
+        latency = LatencyBudget()
+        normalized = latency.timed("intent", lambda: self._normalize_shortcuts(self._resolve_intent(command)))
+        policy_block = latency.timed("policy", lambda: self._apply_profile_policy(normalized))
+        if policy_block is not None:
+            result = policy_block
+        else:
+            result = latency.timed("execution", lambda: self.execute(normalized, dry_run=dry_run, allow_autocorrect=False))
+        summary = latency.summary()
+        responsiveness = self._main_thread_guard.evaluate(summary["stages"])
+        return {
+            "result": {"message": result.message, "requires_confirmation": result.requires_confirmation},
+            "latency": summary,
+            "responsiveness": responsiveness,
+        }
+
+    def execute_reasoning_async(self, raw_input: str) -> Future:
+        return self._runtime_pool.submit(self.generate_reasoned_answer, raw_input)
 
     def multi_command_bundle(self, raw_input: str) -> dict:
         graph_payload = self.intent_graph(raw_input)
@@ -566,6 +650,25 @@ class CommandRouter:
             "arguments": payload["arguments"],
             "reports": reports,
         }
+
+    def _build_reasoning_prompt(self, raw_input: str, plan: dict) -> str:
+        decisions = plan["reasoning"].get("decisions", [])
+        lines = [f"User input: {raw_input}", "Reasoning decisions:"]
+        for item in decisions:
+            lines.append(
+                f"- {item['step_id']} mode={item['mode']} confidence={item['confidence']}: {item['command']}"
+            )
+        lines.append("Compose one concise final answer in Indonesian.")
+        return "\n".join(lines)
+
+    def _reasoning_fallback_message(self, plan: dict) -> str:
+        decisions = plan["reasoning"].get("decisions", [])
+        if not decisions:
+            return "Tidak ada step yang dapat diproses."
+        lines = ["Ringkasan reasoning (fallback):"]
+        for item in decisions:
+            lines.append(f"{item['step_id']} {item['mode'].upper()}: {item['command']}")
+        return "\n".join(lines)
 
     def _register_plugins(self) -> None:
         registry = PluginRegistry(package_name="plugins")

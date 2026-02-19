@@ -2,6 +2,7 @@ from core.router import CommandRouter
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
 from core.embedding_provider import EmbeddingConfig, EmbeddingHealth, EmbeddingProvider
+from core.generation_provider import GenerationConfig, GenerationHealth, GenerationProvider
 
 
 class DummyLauncher:
@@ -95,6 +96,31 @@ class DummyEmbeddingProvider(EmbeddingProvider):
         return [float(len(text))]
 
 
+class DummyGenerationProvider(GenerationProvider):
+    def __init__(self, healthy: bool = True, response: str = "Jawaban dari Gemma") -> None:
+        self.healthy = healthy
+        self.response = response
+
+    def config(self) -> GenerationConfig:
+        return GenerationConfig(
+            host="http://localhost:11434",
+            model="gemma3:4b",
+            timeout_seconds=6.0,
+            token_budget=180,
+            temperature=0.1,
+        )
+
+    def health(self) -> GenerationHealth:
+        if self.healthy:
+            return GenerationHealth(ok=True, message="Generation model ready (gemma3:4b)")
+        return GenerationHealth(ok=False, message="Generation model offline")
+
+    def generate(self, prompt: str, system_prompt: str | None = None) -> str:
+        if not self.healthy:
+            return ""
+        return self.response
+
+
 def build_router() -> CommandRouter:
     return CommandRouter(
         launcher=DummyLauncher(),
@@ -106,6 +132,7 @@ def build_router() -> CommandRouter:
         focus_mode_manager=DummyFocusModeManager(),
         network_diagnostics=DummyNetworkDiagnostics(),
         embedding_provider=DummyEmbeddingProvider(),
+        generation_provider=DummyGenerationProvider(),
     )
 
 
@@ -289,6 +316,56 @@ def test_router_embed_text_uses_provider() -> None:
 
     vector = router.embed_text("hello")
     assert vector == [5.0]
+
+
+def test_router_exposes_generation_config_and_health() -> None:
+    router = build_router()
+
+    config = router.generation_config()
+    health = router.generation_health()
+
+    assert config["model"] == "gemma3:4b"
+    assert config["token_budget"] == 180
+    assert health["ok"] is True
+
+
+def test_router_generate_reasoned_answer_uses_gemma_provider() -> None:
+    router = build_router()
+
+    payload = router.generate_reasoned_answer("open vscode lalu sys info")
+
+    assert payload["mode"] == "gemma"
+    assert "Gemma" in payload["message"]
+
+
+def test_router_generate_reasoned_answer_fallback_when_model_offline() -> None:
+    router = build_router()
+    router.generation_provider = DummyGenerationProvider(healthy=False)
+
+    payload = router.generate_reasoned_answer("open vscode lalu sys info")
+
+    assert payload["mode"] == "fallback"
+    assert "Ringkasan reasoning" in payload["message"]
+
+
+def test_router_execute_with_latency_budget_returns_stage_metrics() -> None:
+    router = build_router()
+
+    payload = router.execute_with_latency_budget("sys info")
+
+    assert "latency" in payload
+    assert "stages" in payload["latency"]
+    assert any(item["stage"] == "execution" for item in payload["latency"]["stages"])
+
+
+def test_router_execute_reasoning_async_returns_future_payload() -> None:
+    router = build_router()
+
+    future = router.execute_reasoning_async("open vscode lalu sys info")
+    payload = future.result(timeout=2)
+
+    assert payload["mode"] in {"gemma", "fallback"}
+    assert "message" in payload
 
 
 def test_router_intent_graph_decomposes_steps() -> None:
