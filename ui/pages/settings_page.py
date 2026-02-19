@@ -23,6 +23,7 @@ class SettingsPage(QWidget):
         generation_timeout: float,
         generation_token_budget: int,
         generation_temperature: float,
+        chat_model_enabled: bool,
         response_quality: str,
         parent: QWidget | None = None,
     ) -> None:
@@ -120,6 +121,9 @@ class SettingsPage(QWidget):
         quality_row.addWidget(quality_label)
         quality_row.addWidget(self.quality_selector)
 
+        self.chat_model_checkbox = QCheckBox("Enable chat model (LLM responses)", runtime_card)
+        self.chat_model_checkbox.setChecked(chat_model_enabled)
+
         token_row = QHBoxLayout()
         token_label = QLabel("Token Budget", runtime_card)
         token_label.setMinimumWidth(140)
@@ -151,6 +155,7 @@ class SettingsPage(QWidget):
         runtime_layout.addLayout(hotkey_row)
         runtime_layout.addLayout(model_row)
         runtime_layout.addLayout(quality_row)
+        runtime_layout.addWidget(self.chat_model_checkbox)
         runtime_layout.addLayout(token_row)
         runtime_layout.addLayout(timeout_row)
         runtime_layout.addLayout(temperature_row)

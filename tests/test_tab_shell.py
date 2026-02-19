@@ -170,6 +170,7 @@ def test_phase43_settings_chat_model_and_quality_controls() -> None:
     if window.model_selector.count() > 1:
         window.model_selector.setCurrentIndex(1)
     model_target = window.settings_page.selected_model_name()
+    window.chat_model_checkbox.setChecked(True)
     window.token_budget_selector.setCurrentText("384")
     window.timeout_selector.setCurrentText("12.0")
     window.temperature_selector.setCurrentText("0.3")
@@ -179,6 +180,7 @@ def test_phase43_settings_chat_model_and_quality_controls() -> None:
     config = window.router.generation_config()
     assert config["model"] == model_target
     assert config["token_budget"] == 384
+    assert window.router.chat_model_enabled is True
     assert window.router.response_quality == "deep"
     assert "Response quality active" in window.settings_status.text()
 
@@ -269,6 +271,11 @@ def test_command_surface_typing_indicator_lifecycle() -> None:
     window._handle_execute()
     app.processEvents()
     assert window.output_panel.typing_indicator.isVisible() is False
+    assert all(
+        window.output_panel.messages_layout.itemAt(index).widget().objectName() != "chatTypingRow"
+        for index in range(window.output_panel.messages_layout.count())
+        if window.output_panel.messages_layout.itemAt(index).widget() is not None
+    )
 
     window.close()
 
@@ -283,5 +290,20 @@ def test_chat_surface_prunes_old_messages_for_performance() -> None:
     app.processEvents()
 
     assert len(window.output_panel._history) <= 200
+
+    window.close()
+
+
+def test_chat_surface_typing_tick_safe_when_indicator_deleted() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.output_panel.show_typing_indicator()
+    window.output_panel.typing_indicator.deleteLater()
+    app.processEvents()
+
+    window.output_panel._tick_typing()
+    app.processEvents()
 
     window.close()

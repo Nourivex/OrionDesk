@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import getpass
 import os
+import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -104,6 +105,7 @@ class CommandRouter:
     release_hardening_plan: ReleaseHardeningPlan | None = None
     embedding_provider: EmbeddingProvider | None = None
     generation_provider: GenerationProvider | None = None
+    chat_model_enabled: bool = True
     response_quality: str = "balanced"
     intent_graph_planner: IntentGraphPlanner | None = None
     reasoning_engine: ComplexReasoningEngine | None = None
@@ -148,6 +150,11 @@ class CommandRouter:
         self.generation_provider = self.generation_provider or OllamaGenerationProvider(
             config=self._build_generation_config_from_env()
         )
+        env_chat_model = os.getenv("ORIONDESK_CHAT_MODEL_ENABLED")
+        if env_chat_model is not None:
+            self.chat_model_enabled = env_chat_model.strip() not in {"0", "false", "False"}
+        elif os.getenv("PYTEST_CURRENT_TEST"):
+            self.chat_model_enabled = False
         self.intent_graph_planner = self.intent_graph_planner or IntentGraphPlanner()
         self.reasoning_engine = self.reasoning_engine or ComplexReasoningEngine()
         self.argument_extractor = self.argument_extractor or ArgumentExtractor()
@@ -157,6 +164,8 @@ class CommandRouter:
         self._runtime_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="oriondesk-runtime")
         self._main_thread_guard = MainThreadResponsivenessGuard()
         self._model_catalog_cache: list[dict] = []
+        self._health_cache: dict[str, tuple[float, dict]] = {}
+        self._health_cache_ttl_seconds = 20.0
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
 
@@ -575,8 +584,14 @@ class CommandRouter:
         }
 
     def embedding_health(self) -> dict:
+        cached = self._health_cache.get("embedding")
+        now = time.monotonic()
+        if cached is not None and now - cached[0] <= self._health_cache_ttl_seconds:
+            return dict(cached[1])
         health = self.embedding_provider.health()
-        return {"ok": health.ok, "message": health.message}
+        payload = {"ok": health.ok, "message": health.message}
+        self._health_cache["embedding"] = (now, payload)
+        return payload
 
     def embed_text(self, text: str) -> list[float]:
         return self.embedding_provider.embed(text)
@@ -592,8 +607,14 @@ class CommandRouter:
         }
 
     def generation_health(self) -> dict:
+        cached = self._health_cache.get("generation")
+        now = time.monotonic()
+        if cached is not None and now - cached[0] <= self._health_cache_ttl_seconds:
+            return dict(cached[1])
         health = self.generation_provider.health()
-        return {"ok": health.ok, "message": health.message}
+        payload = {"ok": health.ok, "message": health.message}
+        self._health_cache["generation"] = (now, payload)
+        return payload
 
     def available_generation_models(self, force_reload: bool = False) -> list[dict]:
         if self._model_catalog_cache and not force_reload:
@@ -639,6 +660,10 @@ class CommandRouter:
         self.response_quality = selected
         return self.response_quality
 
+    def set_chat_model_enabled(self, enabled: bool) -> bool:
+        self.chat_model_enabled = bool(enabled)
+        return self.chat_model_enabled
+
     def generate_reasoned_answer(self, raw_input: str) -> dict:
         optimized_query = self.retrieval_optimizer.optimize_query(raw_input)
         cache_key = f"reasoned:{self.response_quality}:{optimized_query}"
@@ -647,6 +672,14 @@ class CommandRouter:
             return {**cached, "mode": "cache"}
 
         plan = self.reason_plan(optimized_query)
+        if not self.chat_model_enabled:
+            payload = {
+                "mode": "disabled",
+                "message": self._reasoning_fallback_message(plan),
+                "health": {"ok": False, "message": "chat model disabled"},
+            }
+            self.retrieval_optimizer.set_cache(cache_key, payload)
+            return payload
         health = self.generation_provider.health()
         if not health.ok:
             fallback = self._reasoning_fallback_message(plan)

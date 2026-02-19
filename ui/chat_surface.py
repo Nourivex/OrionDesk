@@ -127,6 +127,7 @@ class ChatSurface(QScrollArea):
         self._enable_animations = False
         self._max_messages = 200
         self._typing_dots = 0
+        self._typing_bubble: ChatBubbleWidget | None = None
         self._typing_timer = QTimer(self)
         self._typing_timer.setInterval(260)
         self._typing_timer.timeout.connect(self._tick_typing)
@@ -171,7 +172,10 @@ class ChatSurface(QScrollArea):
             if widget is not None:
                 self.messages_layout.removeWidget(widget)
                 widget.deleteLater()
-        self.messages_layout.insertWidget(self.messages_layout.count() - 1, self.typing_indicator)
+        try:
+            self.messages_layout.insertWidget(self.messages_layout.count() - 1, self.typing_indicator)
+        except RuntimeError:
+            self._typing_timer.stop()
 
     def toPlainText(self) -> str:
         lines = []
@@ -196,20 +200,46 @@ class ChatSurface(QScrollArea):
 
     def show_typing_indicator(self) -> None:
         self._typing_dots = 0
-        self.typing_indicator.setVisible(True)
-        self.typing_indicator.setText("AI is thinking")
+        try:
+            self.typing_indicator.setVisible(True)
+            self.typing_indicator.setText("AI is thinking")
+            if self._typing_bubble is None:
+                self._typing_bubble = ChatBubbleWidget(
+                    text="AI is thinking",
+                    is_user=False,
+                    theme=self._theme,
+                    subtitle="typing",
+                    parent=self.container,
+                )
+                self._typing_bubble.setObjectName("chatTypingRow")
+                self.messages_layout.insertWidget(self.messages_layout.count() - 1, self._typing_bubble)
+        except RuntimeError:
+            self._typing_timer.stop()
+            return
         if not self._typing_timer.isActive():
             self._typing_timer.start()
         self.scroll_to_latest()
 
     def hide_typing_indicator(self) -> None:
         self._typing_timer.stop()
-        self.typing_indicator.setVisible(False)
+        try:
+            self.typing_indicator.setVisible(False)
+        except RuntimeError:
+            pass
+        if self._typing_bubble is not None:
+            self.messages_layout.removeWidget(self._typing_bubble)
+            self._typing_bubble.deleteLater()
+            self._typing_bubble = None
 
     def _tick_typing(self) -> None:
         self._typing_dots = (self._typing_dots + 1) % 4
         dots = "." * self._typing_dots
-        self.typing_indicator.setText(f"AI is thinking{dots}")
+        try:
+            self.typing_indicator.setText(f"AI is thinking{dots}")
+            if self._typing_bubble is not None:
+                self._typing_bubble.message_label.setText(f"AI is thinking{dots}")
+        except RuntimeError:
+            self._typing_timer.stop()
 
     def _prune_old_messages(self) -> None:
         while len(self._history) > self._max_messages:

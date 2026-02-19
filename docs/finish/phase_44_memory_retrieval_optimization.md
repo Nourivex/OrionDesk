@@ -22,6 +22,11 @@ PHASE 44 menambahkan optimisasi retrieval berbasis cache dan ranking konteks ses
 - UX command chat:
   - welcome message tampil di chat baru
   - welcome message otomatis hilang setelah input pertama
+- Diagnostics performance:
+  - health probe embedding/generation diberi cache TTL untuk mengurangi frame drop saat membuka tab Diagnostics
+- Typing UX stabilization:
+  - typing placeholder kini tampil sebagai bubble AI sementara
+  - placeholder otomatis hilang saat output final muncul (tanpa bubble duplikat)
 
 ## Perubahan Teknis
 

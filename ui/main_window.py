@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
         self.command_page = CommandPage(self.theme, self.persona_engine.persona_name, self)
         self.memory_page = MemoryPage(self.theme, self)
         generation_config = self.router.generation_config()
-        self.settings_page = SettingsPage(theme=self.theme, release_channel=self.router.get_release_channel(), active_hotkey=self.hotkey_manager.active_hotkey, minimize_to_tray=self.minimize_to_tray, fast_mode=self.fast_command_mode, safe_mode=self.router.safe_mode, execution_profile=self.router.execution_profile_policy.profile, generation_model=generation_config["model"], generation_timeout=float(generation_config["timeout_seconds"]), generation_token_budget=int(generation_config["token_budget"]), generation_temperature=float(generation_config["temperature"]), response_quality=self.router.response_quality, parent=self)
+        self.settings_page = SettingsPage(theme=self.theme, release_channel=self.router.get_release_channel(), active_hotkey=self.hotkey_manager.active_hotkey, minimize_to_tray=self.minimize_to_tray, fast_mode=self.fast_command_mode, safe_mode=self.router.safe_mode, execution_profile=self.router.execution_profile_policy.profile, generation_model=generation_config["model"], generation_timeout=float(generation_config["timeout_seconds"]), generation_token_budget=int(generation_config["token_budget"]), generation_temperature=float(generation_config["temperature"]), chat_model_enabled=self.router.chat_model_enabled, response_quality=self.router.response_quality, parent=self)
         self.diagnostics_page = DiagnosticsPage(self.theme, self)
         self.about_page = AboutPage(self.theme, self)
         self.tab_widget.addTab(self.command_page, "Command")
@@ -106,6 +106,7 @@ class MainWindow(QMainWindow):
         self.hotkey_selector, self.fast_mode_checkbox = self.settings_page.hotkey_selector, self.settings_page.fast_mode_checkbox
         self.profile_selector, self.safe_mode_checkbox = self.settings_page.profile_selector, self.settings_page.safe_mode_checkbox
         self.model_selector, self.quality_selector = self.settings_page.model_selector, self.settings_page.quality_selector
+        self.chat_model_checkbox = self.settings_page.chat_model_checkbox
         self.token_budget_selector, self.timeout_selector = self.settings_page.token_budget_selector, self.settings_page.timeout_selector
         self.temperature_selector = self.settings_page.temperature_selector
         self.refresh_models_button = self.settings_page.refresh_models_button
@@ -125,6 +126,7 @@ class MainWindow(QMainWindow):
         self.timeout_selector.currentTextChanged.connect(lambda _value: self._apply_generation_runtime_settings())
         self.temperature_selector.currentTextChanged.connect(lambda _value: self._apply_generation_runtime_settings())
         self.quality_selector.currentTextChanged.connect(self._handle_quality_change)
+        self.chat_model_checkbox.toggled.connect(self._handle_chat_model_toggle)
         self.refresh_models_button.clicked.connect(lambda: self._refresh_model_catalog(force_reload=True))
         self.profile_selector.currentTextChanged.connect(lambda profile: self.settings_status.setText(f"Execution profile active: {self.router.execution_profile_policy.set_profile(profile)}"))
         self.safe_mode_checkbox.toggled.connect(lambda enabled: (setattr(self.router, "safe_mode", enabled), self.settings_status.setText(f"Safe mode: {'on' if enabled else 'off'}")))
@@ -247,6 +249,9 @@ class MainWindow(QMainWindow):
         if models: self.settings_page.set_model_options(models, selected)
     def _handle_quality_change(self, quality: str) -> None:
         self.settings_status.setText(f"Response quality active: {self.router.set_response_quality(quality)}")
+    def _handle_chat_model_toggle(self, enabled: bool) -> None:
+        state = self.router.set_chat_model_enabled(enabled)
+        self.settings_status.setText(f"Chat model: {'on' if state else 'off'}")
     def _refresh_command_assist(self, text: str) -> None:
         suggestions = self.router.suggest_commands(text)
         self.command_suggestions.setText(f"Suggestions: {' | '.join(suggestions)}" if suggestions else "Suggestions: -")
@@ -290,7 +295,13 @@ class MainWindow(QMainWindow):
         command = self.command_input.text()
         if command.strip() and self.command_count == 0 and "OrionDesk AI Assistant" in self.output_panel.toPlainText():
             self.output_panel.clear()
-        if command.strip(): self.output_panel.show_typing_indicator()
+        if command.strip():
+            self._append_chat_bubble(command, align_right=True, subtitle="Command")
+            self.message_count += 1; self.command_count += 1
+            self._update_command_stats()
+            self.output_panel.show_typing_indicator()
+            self.command_input.clear(); self._refresh_command_assist("")
+            self.output_panel.scroll_to_latest()
         if self._should_run_async(command): self._run_async_command(command); return
         result = self.router.execute_with_enhanced_response(command)
         self._render_execution_result(command, result)
@@ -305,8 +316,10 @@ class MainWindow(QMainWindow):
     def _run_async_command(self, command: str) -> None:
         if self._active_thread is not None:
             self.loading_label.setText("Search sedang berjalan. Tunggu proses selesai.")
+            self.output_panel.show_typing_indicator()
             return
         self.loading_label.setText("Loading search...")
+        self.output_panel.show_typing_indicator()
         self.execute_button.setEnabled(False)
         self.command_input.setEnabled(False)
         worker = CommandWorker(self.router, command)
@@ -330,10 +343,6 @@ class MainWindow(QMainWindow):
         self.loading_label.setText("")
     def _render_execution_result(self, command: str, result) -> None:
         self.output_panel.hide_typing_indicator()
-        if command.strip():
-            self._append_chat_bubble(command, align_right=True, subtitle="Command")
-            self.message_count += 1
-            self.command_count += 1
         if result.requires_confirmation:
             warning = f"{result.message}\nCommand: {result.pending_command}"
             self._append_chat_bubble(warning, align_right=False, subtitle="Safe mode confirmation")
@@ -346,8 +355,6 @@ class MainWindow(QMainWindow):
             self._append_chat_bubble(result.message, align_right=False)
             self.message_count += 1
         self._update_command_stats()
-        self.command_input.clear()
-        self._refresh_command_assist("")
         self.output_panel.scroll_to_latest()
         self.output_panel.setFocus()
     def _handle_persona_change(self, persona_name: str) -> None:

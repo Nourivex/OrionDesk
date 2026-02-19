@@ -198,6 +198,7 @@ Output:
 
 - Model chat dan quality profile kini dapat diatur dari tab Settings untuk tuning kualitas respons lokal.
 - Catalog model di-load dari Ollama saat startup + refresh manual, dengan badge rekomendasi GPU berbasis `parameter_size`.
+- Chat model bisa diaktif/nonaktifkan via checkbox Settings untuk kontrol mode operasi (termasuk mode test tanpa LLM).
 
 ### PHASE 44 — Memory + Retrieval Optimization ✅
 

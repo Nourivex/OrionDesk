@@ -96,6 +96,15 @@ class DummyEmbeddingProvider(EmbeddingProvider):
         return [float(len(text))]
 
 
+class CountingEmbeddingProvider(DummyEmbeddingProvider):
+    def __init__(self) -> None:
+        self.health_calls = 0
+
+    def health(self) -> EmbeddingHealth:
+        self.health_calls += 1
+        return super().health()
+
+
 class DummyGenerationProvider(GenerationProvider):
     def __init__(self, healthy: bool = True, response: str = "Jawaban dari Gemma") -> None:
         self.healthy = healthy
@@ -327,6 +336,27 @@ def test_router_exposes_embedding_config_and_health() -> None:
     assert "ready" in health["message"].lower()
 
 
+def test_router_embedding_health_uses_cache() -> None:
+    provider = CountingEmbeddingProvider()
+    router = CommandRouter(
+        launcher=DummyLauncher(),
+        file_manager=DummyFileManager(),
+        system_tools=DummySystemTools(),
+        system_actions=DummySystemActions(),
+        project_manager=DummyProjectManager(),
+        clipboard_manager=DummyClipboardManager(),
+        focus_mode_manager=DummyFocusModeManager(),
+        network_diagnostics=DummyNetworkDiagnostics(),
+        embedding_provider=provider,
+        generation_provider=DummyGenerationProvider(),
+    )
+
+    router.embedding_health()
+    router.embedding_health()
+
+    assert provider.health_calls == 1
+
+
 def test_router_embed_text_uses_provider() -> None:
     router = build_router()
 
@@ -363,6 +393,7 @@ def test_router_set_generation_runtime_updates_config() -> None:
 
 def test_router_response_quality_applies_to_reasoning_prompt() -> None:
     router = build_router()
+    router.set_chat_model_enabled(True)
     provider = CapturingGenerationProvider()
     router.generation_provider = provider
 
@@ -384,6 +415,7 @@ def test_router_available_generation_models_contains_badges() -> None:
 
 def test_router_generate_reasoned_answer_uses_gemma_provider() -> None:
     router = build_router()
+    router.set_chat_model_enabled(True)
 
     payload = router.generate_reasoned_answer("open vscode lalu sys info")
 
@@ -393,6 +425,7 @@ def test_router_generate_reasoned_answer_uses_gemma_provider() -> None:
 
 def test_router_generate_reasoned_answer_reuses_cache_on_repeated_query() -> None:
     router = build_router()
+    router.set_chat_model_enabled(True)
 
     first = router.generate_reasoned_answer("open vscode lalu sys info")
     second = router.generate_reasoned_answer("open vscode lalu sys info")
@@ -403,6 +436,7 @@ def test_router_generate_reasoned_answer_reuses_cache_on_repeated_query() -> Non
 
 def test_router_generate_reasoned_answer_fallback_when_model_offline() -> None:
     router = build_router()
+    router.set_chat_model_enabled(True)
     router.generation_provider = DummyGenerationProvider(healthy=False)
 
     payload = router.generate_reasoned_answer("open vscode lalu sys info")
@@ -423,6 +457,7 @@ def test_router_execute_with_latency_budget_returns_stage_metrics() -> None:
 
 def test_router_execute_reasoning_async_returns_future_payload() -> None:
     router = build_router()
+    router.set_chat_model_enabled(True)
 
     future = router.execute_reasoning_async("open vscode lalu sys info")
     payload = future.result(timeout=2)
@@ -520,12 +555,23 @@ def test_router_semantic_intent_open() -> None:
 
 def test_router_execute_with_enhanced_response_for_natural_language() -> None:
     router = build_router()
+    router.set_chat_model_enabled(True)
 
     result = router.execute_with_enhanced_response("tolong bukakan notepad")
 
     assert "Jawaban dari Gemma" in result.message
     assert "Action Result" in result.message
     assert "open:notepad" in result.message
+
+
+def test_router_chat_model_disabled_mode_uses_reasoning_fallback() -> None:
+    router = build_router()
+    router.set_chat_model_enabled(False)
+
+    payload = router.generate_reasoned_answer("open vscode lalu sys info")
+
+    assert payload["mode"] == "disabled"
+    assert "fallback" in payload["message"].lower()
 
 
 def test_router_semantic_intent_search() -> None:

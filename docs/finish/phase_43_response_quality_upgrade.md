@@ -22,6 +22,9 @@ PHASE 43 menyelesaikan upgrade kualitas respons dengan kontrol model chat langsu
   - `token_budget`
   - `generation_timeout`
   - `temperature`
+- Chat model toggle di Settings:
+  - checkbox `Enable chat model (LLM responses)`
+  - default test-mode (`pytest`) = nonaktif untuk mempercepat dan menstabilkan pengujian
 - Quality profile di Settings:
   - `concise`
   - `balanced`
