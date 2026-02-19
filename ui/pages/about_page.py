@@ -24,9 +24,9 @@ class AboutPage(QWidget):
         hero_layout.setContentsMargins(theme.spacing_md, theme.spacing_md, theme.spacing_md, theme.spacing_md)
         hero_layout.setSpacing(theme.spacing_sm)
 
-        self.about_headline = QLabel("Local-First OS Intelligence Layer", hero_card)
+        self.about_headline = QLabel("Local-First OS Intelligence Layer • v2.2 RC", hero_card)
         self.about_headline.setObjectName("sectionTitle")
-        self.about_subtitle = QLabel("Policy-driven • Modular • Fast command orchestration", hero_card)
+        self.about_subtitle = QLabel("Policy-driven • Modular • Intent-aware reasoning • Release-gated runtime", hero_card)
         self.about_subtitle.setObjectName("sectionHint")
         self.about_subtitle.setWordWrap(True)
         hero_layout.addWidget(self.about_headline)

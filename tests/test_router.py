@@ -707,3 +707,14 @@ def test_router_release_hardening_summary() -> None:
 
     assert summary["completed"] >= 1
     assert summary["total"] >= summary["completed"]
+
+
+def test_router_run_release_gate_v22_returns_full_report() -> None:
+    router = build_router()
+
+    payload = router.run_release_gate_v22()
+
+    assert "reliability" in payload
+    assert "comparison" in payload
+    assert "checklist" in payload
+    assert payload["reliability"]["total"] >= 1

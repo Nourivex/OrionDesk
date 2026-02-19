@@ -27,6 +27,7 @@ from core.plugin_registry import PluginRegistry
 from core.performance_profiler import PerformanceProfiler
 from core.reasoning_engine import ComplexReasoningEngine
 from core.retrieval_optimizer import RetrievalOptimizer
+from core.release_gate_v22 import GateScenario, ReleaseGateV22
 from core.release_hardening import ReleaseHardeningPlan
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -112,6 +113,7 @@ class CommandRouter:
     argument_extractor: ArgumentExtractor | None = None
     multi_command_executor: MultiCommandExecutor | None = None
     retrieval_optimizer: RetrievalOptimizer | None = None
+    release_gate_v22: ReleaseGateV22 | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -160,6 +162,7 @@ class CommandRouter:
         self.argument_extractor = self.argument_extractor or ArgumentExtractor()
         self.multi_command_executor = self.multi_command_executor or MultiCommandExecutor()
         self.retrieval_optimizer = self.retrieval_optimizer or RetrievalOptimizer()
+        self.release_gate_v22 = self.release_gate_v22 or ReleaseGateV22()
         self.session_id = self.session_id or uuid4().hex
         self._runtime_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="oriondesk-runtime")
         self._main_thread_guard = MainThreadResponsivenessGuard()
@@ -568,6 +571,36 @@ class CommandRouter:
 
     def release_hardening_summary(self) -> dict:
         return self.release_hardening_plan.summary()
+
+    def run_release_gate_v22(self) -> dict:
+        scenarios = [
+            GateScenario(name="sys_info", command="sys info"),
+            GateScenario(name="open_app", command="open notepad"),
+            GateScenario(name="search_file", command="search file report.pdf"),
+            GateScenario(name="safe_mode_check", command="shutdown"),
+        ]
+
+        def _execute(raw: str) -> dict:
+            result = self.execute(raw, dry_run=True)
+            blocked = any(marker in result.message.lower() for marker in ["format salah", "blocked", "whitelist"])
+            return {"ok": not blocked, "message": result.message}
+
+        reliability = self.release_gate_v22.run_reliability_matrix(_execute, scenarios)
+        v22 = self.build_performance_baseline()
+        v21 = {
+            "startup_ms": float(os.getenv("ORIONDESK_V21_STARTUP_MS", "250")),
+            "command_latency_ms": float(os.getenv("ORIONDESK_V21_COMMAND_MS", "140")),
+            "storage_io_ms": float(os.getenv("ORIONDESK_V21_STORAGE_MS", "18")),
+        }
+        comparison = self.release_gate_v22.compare_baseline(v21=v21, v22=v22)
+        checklist = self.release_gate_v22.release_checklist(reliability=reliability, comparison=comparison)
+        return {
+            "reliability": reliability,
+            "baseline_v21": v21,
+            "baseline_v22": v22,
+            "comparison": comparison,
+            "checklist": checklist,
+        }
 
     def get_release_channel(self) -> str:
         return self.release_channel_manager.get_channel()

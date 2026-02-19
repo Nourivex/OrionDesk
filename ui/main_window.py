@@ -159,9 +159,13 @@ class MainWindow(QMainWindow):
             self.tab_widget.setTabIcon(index, self.style().standardIcon(pixmap))
     def _refresh_about_panel(self) -> None:
         channel = self.router.get_release_channel()
+        gate_state = "On" if self.router.chat_model_enabled else "Off"
         lines = [
             f"{APP_NAME} {APP_VERSION}",
+            "Roadmap: v9 / Application v2.2 (Release Candidate)",
             f"Release Channel: {channel}",
+            f"Chat Model: {self.router.generation_config()['model']} ({gate_state})",
+            f"Response Quality: {self.router.response_quality}",
             f"Mode: {APP_MODE}",
             f"Build Focus: {APP_BUILD_FOCUS}",
         ]
