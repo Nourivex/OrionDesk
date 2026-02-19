@@ -18,7 +18,7 @@ class CommandWorker(QObject):
         self.command = command
 
     def run(self) -> None:
-        result = self.router.execute(self.command)
+        result = self.router.execute_with_enhanced_response(self.command)
         self.finished.emit(self.command, result)
 
 

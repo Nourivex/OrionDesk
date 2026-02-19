@@ -391,6 +391,16 @@ def test_router_generate_reasoned_answer_uses_gemma_provider() -> None:
     assert "Gemma" in payload["message"]
 
 
+def test_router_generate_reasoned_answer_reuses_cache_on_repeated_query() -> None:
+    router = build_router()
+
+    first = router.generate_reasoned_answer("open vscode lalu sys info")
+    second = router.generate_reasoned_answer("open vscode lalu sys info")
+
+    assert first["message"] == second["message"]
+    assert second["mode"] == "cache"
+
+
 def test_router_generate_reasoned_answer_fallback_when_model_offline() -> None:
     router = build_router()
     router.generation_provider = DummyGenerationProvider(healthy=False)
@@ -463,6 +473,15 @@ def test_router_multi_command_bundle_has_arguments_and_modes() -> None:
     assert payload["commands"][0]["execution_mode"] in {"chain", "parallel-eligible", "guarded"}
 
 
+def test_router_multi_command_bundle_reduces_repeated_patterns() -> None:
+    router = build_router()
+
+    payload = router.multi_command_bundle("open vscode lalu open vscode lalu sys info")
+
+    commands = [item["command"] for item in payload["commands"]]
+    assert commands.count("open vscode") == 1
+
+
 def test_router_execute_multi_returns_reports() -> None:
     router = build_router()
 
@@ -497,6 +516,16 @@ def test_router_semantic_intent_open() -> None:
     result = router.execute("tolong bukakan notepad")
 
     assert result.message == "open:notepad"
+
+
+def test_router_execute_with_enhanced_response_for_natural_language() -> None:
+    router = build_router()
+
+    result = router.execute_with_enhanced_response("tolong bukakan notepad")
+
+    assert "Jawaban dari Gemma" in result.message
+    assert "Action Result" in result.message
+    assert "open:notepad" in result.message
 
 
 def test_router_semantic_intent_search() -> None:

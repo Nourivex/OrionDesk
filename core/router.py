@@ -25,6 +25,7 @@ from core.observability import DiagnosticReporter, HealthMonitor, RecoveryManage
 from core.plugin_registry import PluginRegistry
 from core.performance_profiler import PerformanceProfiler
 from core.reasoning_engine import ComplexReasoningEngine
+from core.retrieval_optimizer import RetrievalOptimizer
 from core.release_hardening import ReleaseHardeningPlan
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -108,6 +109,7 @@ class CommandRouter:
     reasoning_engine: ComplexReasoningEngine | None = None
     argument_extractor: ArgumentExtractor | None = None
     multi_command_executor: MultiCommandExecutor | None = None
+    retrieval_optimizer: RetrievalOptimizer | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -150,6 +152,7 @@ class CommandRouter:
         self.reasoning_engine = self.reasoning_engine or ComplexReasoningEngine()
         self.argument_extractor = self.argument_extractor or ArgumentExtractor()
         self.multi_command_executor = self.multi_command_executor or MultiCommandExecutor()
+        self.retrieval_optimizer = self.retrieval_optimizer or RetrievalOptimizer()
         self.session_id = self.session_id or uuid4().hex
         self._runtime_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="oriondesk-runtime")
         self._main_thread_guard = MainThreadResponsivenessGuard()
@@ -229,6 +232,23 @@ class CommandRouter:
         envelope = self.executor.run(self, normalized, context)
         self._record_session(normalized or command, envelope.message, envelope.status, envelope.context)
         return self._to_command_result(envelope)
+
+    def execute_with_enhanced_response(self, command: str, dry_run: bool = False) -> CommandResult:
+        parsed = self.parse(command)
+        if parsed is not None and parsed.keyword in self.contracts:
+            return self.execute(command, dry_run=dry_run)
+        clean = command.strip()
+        if not clean:
+            return self.execute(command, dry_run=dry_run)
+
+        response = self.generate_reasoned_answer(clean)
+        result = self.execute(command, dry_run=dry_run)
+        if result.requires_confirmation:
+            return CommandResult(response.get("message", result.message), True, result.pending_command)
+        final_message = response.get("message", "")
+        if result.message and result.message not in final_message:
+            final_message = f"{final_message}\n\nAction Result:\n{result.message}"
+        return CommandResult(final_message or result.message)
 
     def _contains_multi_step(self, raw_command: str) -> bool:
         lowered = raw_command.lower()
@@ -620,18 +640,30 @@ class CommandRouter:
         return self.response_quality
 
     def generate_reasoned_answer(self, raw_input: str) -> dict:
-        plan = self.reason_plan(raw_input)
+        optimized_query = self.retrieval_optimizer.optimize_query(raw_input)
+        cache_key = f"reasoned:{self.response_quality}:{optimized_query}"
+        cached = self.retrieval_optimizer.get_cache(cache_key)
+        if isinstance(cached, dict):
+            return {**cached, "mode": "cache"}
+
+        plan = self.reason_plan(optimized_query)
         health = self.generation_provider.health()
         if not health.ok:
             fallback = self._reasoning_fallback_message(plan)
-            return {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": health.message}}
+            payload = {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": health.message}}
+            self.retrieval_optimizer.set_cache(cache_key, payload)
+            return payload
 
-        prompt = self._build_reasoning_prompt(raw_input, plan)
+        prompt = self._build_reasoning_prompt(optimized_query, plan)
         text = self.generation_provider.generate(prompt=prompt, system_prompt="You are OrionDesk local assistant.")
         if text:
-            return {"mode": "gemma", "message": text, "health": {"ok": health.ok, "message": health.message}}
+            payload = {"mode": "gemma", "message": text, "health": {"ok": health.ok, "message": health.message}}
+            self.retrieval_optimizer.set_cache(cache_key, payload)
+            return payload
         fallback = self._reasoning_fallback_message(plan)
-        return {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": "empty generation"}}
+        payload = {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": "empty generation"}}
+        self.retrieval_optimizer.set_cache(cache_key, payload)
+        return payload
 
     def intent_graph(self, raw_input: str) -> dict:
         allowed = set(self.contracts.keys())
@@ -642,16 +674,24 @@ class CommandRouter:
         return graph.to_dict()
 
     def reason_plan(self, raw_input: str) -> dict:
-        graph_payload = self.intent_graph(raw_input)
+        optimized_query = self.retrieval_optimizer.optimize_query(raw_input)
+        cache_key = f"reason-plan:{optimized_query}"
+        cached = self.retrieval_optimizer.get_cache(cache_key)
+        if isinstance(cached, dict):
+            return cached
+
+        graph_payload = self.intent_graph(optimized_query)
         plan = self.reasoning_engine.build_plan(
             graph_payload=graph_payload,
             embed_text=self.embed_text,
             risk_level=self.execution_profile_policy.risk_level,
         )
-        return {
+        payload = {
             "graph": graph_payload,
             "reasoning": plan.to_dict(),
         }
+        self.retrieval_optimizer.set_cache(cache_key, payload)
+        return payload
 
     def execute_with_latency_budget(self, command: str, dry_run: bool = False) -> dict:
         latency = LatencyBudget()
@@ -675,6 +715,7 @@ class CommandRouter:
     def multi_command_bundle(self, raw_input: str) -> dict:
         graph_payload = self.intent_graph(raw_input)
         commands = [step["resolved_command"] for step in graph_payload.get("steps", [])]
+        commands = self.retrieval_optimizer.reduce_redundant_patterns(commands)
         return {
             "commands": self.multi_command_executor.bundle(commands, self.execution_profile_policy.risk_level),
             "arguments": self.argument_extractor.extract_many(commands),
@@ -699,16 +740,27 @@ class CommandRouter:
 
     def _build_reasoning_prompt(self, raw_input: str, plan: dict) -> str:
         decisions = plan["reasoning"].get("decisions", [])
+        intent = self.intent_engine.resolve(raw_input, allowed_keywords=set(self.contracts.keys()))
+        context_rows = self.retrieval_optimizer.rank_session_context(self.session_layer.recent(limit=12), raw_input, limit=4)
+        context_lines = [f"- {item.command} -> {item.status}" for item in context_rows]
         quality_instruction = {
             "concise": "Keep answer very short and direct.",
             "balanced": "Keep answer clear and actionable with moderate detail.",
             "deep": "Provide detailed reasoning and practical steps.",
         }.get(self.response_quality, "Keep answer clear and actionable with moderate detail.")
-        lines = [f"User input: {raw_input}", f"Response quality: {self.response_quality}", "Reasoning decisions:"]
+        lines = [
+            f"User input: {raw_input}",
+            f"Intent resolved: {intent.resolved} ({intent.reason}, confidence={intent.confidence:.2f})",
+            f"Response quality: {self.response_quality}",
+            "Reasoning decisions:",
+        ]
         for item in decisions:
             lines.append(
                 f"- {item['step_id']} mode={item['mode']} confidence={item['confidence']}: {item['command']}"
             )
+        if context_lines:
+            lines.append("Relevant session context:")
+            lines.extend(context_lines)
         lines.append(quality_instruction)
         lines.append("Compose one final answer in Indonesian.")
         return "\n".join(lines)

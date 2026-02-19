@@ -113,6 +113,7 @@ def test_search_command_runs_in_async_mode() -> None:
     app.processEvents()
 
     assert window._should_run_async("search report.pdf") is True
+    assert window._should_run_async("tolong bukakan notepad") is True
     assert window._should_run_async("open notepad") is False
 
     window.close()
@@ -237,6 +238,7 @@ def test_phase32_command_workspace_stats_and_clear_chat() -> None:
     assert window.command_count == 1
     assert window.message_count >= 2
     assert window.command_count_label.text() == "1"
+    assert "OrionDesk AI Assistant" not in window.output_panel.toPlainText()
 
     window._handle_quick_action("clear chat")
     app.processEvents()

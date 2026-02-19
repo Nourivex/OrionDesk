@@ -13,7 +13,7 @@ from persona.persona_engine import PersonaEngine
 from ui.pages import AboutPage, CommandPage, DiagnosticsPage, MemoryPage, SettingsPage
 from ui.style_layers import build_main_window_stylesheet
 from ui.theme_tokens import default_dark_tokens, default_light_tokens
-from ui.window_helpers import CommandWorker, memory_insight_payload, show_confirmation_dialog, with_status_badge
+from ui.window_helpers import CommandWorker, memory_insight_payload, show_confirmation_dialog
 from ui.win11_effects import apply_mica_or_acrylic
 WM_HOTKEY, HOTKEY_ID = 0x0312, 1
 class MainWindow(QMainWindow):
@@ -288,12 +288,20 @@ class MainWindow(QMainWindow):
         self.command_count_label.setText(str(self.command_count))
     def _handle_execute(self) -> None:
         command = self.command_input.text()
+        if command.strip() and self.command_count == 0 and "OrionDesk AI Assistant" in self.output_panel.toPlainText():
+            self.output_panel.clear()
         if command.strip(): self.output_panel.show_typing_indicator()
         if self._should_run_async(command): self._run_async_command(command); return
-        result = self.router.execute(command)
+        result = self.router.execute_with_enhanced_response(command)
         self._render_execution_result(command, result)
     def _should_run_async(self, command: str) -> bool:
-        return command.strip().lower().startswith("search ")
+        clean = command.strip().lower()
+        if not clean:
+            return False
+        if clean.startswith("search ") or any(marker in clean for marker in [" lalu ", " kemudian ", ";", " and then "]):
+            return True
+        parsed = self.router.parse(clean)
+        return parsed is not None and parsed.keyword not in set(self.router.list_command_keywords())
     def _run_async_command(self, command: str) -> None:
         if self._active_thread is not None:
             self.loading_label.setText("Search sedang berjalan. Tunggu proses selesai.")
@@ -327,20 +335,15 @@ class MainWindow(QMainWindow):
             self.message_count += 1
             self.command_count += 1
         if result.requires_confirmation:
-            warning = self.persona_engine.format_warning(
-                result.message,
-                detail=f"Command: {result.pending_command}",
-            )
-            self._append_chat_bubble(with_status_badge(warning), align_right=False, subtitle="Safe mode confirmation")
+            warning = f"{result.message}\nCommand: {result.pending_command}"
+            self._append_chat_bubble(warning, align_right=False, subtitle="Safe mode confirmation")
             self.message_count += 1
             approved = show_confirmation_dialog(self, self.theme, result.pending_command or command)
             response = self.router.confirm_pending(approved)
-            styled_response = self.persona_engine.format_output(response.message)
-            self._append_chat_bubble(with_status_badge(styled_response), align_right=False)
+            self._append_chat_bubble(response.message, align_right=False)
             self.message_count += 1
         else:
-            styled_response = self.persona_engine.format_output(result.message)
-            self._append_chat_bubble(with_status_badge(styled_response), align_right=False)
+            self._append_chat_bubble(result.message, align_right=False)
             self.message_count += 1
         self._update_command_stats()
         self.command_input.clear()
