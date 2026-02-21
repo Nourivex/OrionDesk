@@ -128,8 +128,10 @@ class ChatSurface(QScrollArea):
         self._max_messages = 200
         self._typing_dots = 0
         self._typing_bubble: ChatBubbleWidget | None = None
+        self._typing_stage = "impact_assessment"
+        self._typing_expected_ms = 150.0
         self._typing_timer = QTimer(self)
-        self._typing_timer.setInterval(260)
+        self._typing_timer.setInterval(300)
         self._typing_timer.timeout.connect(self._tick_typing)
 
         self.setWidgetResizable(True)
@@ -198,14 +200,16 @@ class ChatSurface(QScrollArea):
         QTimer.singleShot(0, self._scroll_to_bottom)
         QTimer.singleShot(40, self._scroll_to_bottom)
 
-    def show_typing_indicator(self) -> None:
+    def show_typing_indicator(self, stage: str = "impact_assessment", expected_ms: float = 150.0) -> None:
         self._typing_dots = 0
+        self._typing_stage = self._normalize_stage(stage)
+        self._typing_expected_ms = max(1.0, float(expected_ms))
         try:
             self.typing_indicator.setVisible(True)
-            self.typing_indicator.setText("AI is thinking")
+            self.typing_indicator.setText(self._typing_message())
             if self._typing_bubble is None:
                 self._typing_bubble = ChatBubbleWidget(
-                    text="AI is thinking",
+                    text=self._typing_message(),
                     is_user=False,
                     theme=self._theme,
                     subtitle="typing",
@@ -216,11 +220,27 @@ class ChatSurface(QScrollArea):
         except RuntimeError:
             self._typing_timer.stop()
             return
+        self._typing_timer.setInterval(self._typing_interval_ms())
         if not self._typing_timer.isActive():
             self._typing_timer.start()
         self.scroll_to_latest()
 
-    def hide_typing_indicator(self) -> None:
+    def update_typing_stage(self, stage: str, elapsed_ms: float) -> None:
+        self._typing_stage = self._normalize_stage(stage)
+        self._typing_expected_ms = max(1.0, float(elapsed_ms))
+        if self.typing_indicator.isHidden():
+            self.show_typing_indicator(stage=self._typing_stage, expected_ms=self._typing_expected_ms)
+            return
+        self._typing_timer.setInterval(self._typing_interval_ms())
+        try:
+            text = self._typing_message()
+            self.typing_indicator.setText(text)
+            if self._typing_bubble is not None:
+                self._typing_bubble.message_label.setText(text)
+        except RuntimeError:
+            self._typing_timer.stop()
+
+    def hide_typing_indicator(self, final_state: str | None = None) -> None:
         self._typing_timer.stop()
         try:
             self.typing_indicator.setVisible(False)
@@ -233,11 +253,11 @@ class ChatSurface(QScrollArea):
 
     def _tick_typing(self) -> None:
         self._typing_dots = (self._typing_dots + 1) % 4
-        dots = "." * self._typing_dots
         try:
-            self.typing_indicator.setText(f"AI is thinking{dots}")
+            text = self._typing_message()
+            self.typing_indicator.setText(text)
             if self._typing_bubble is not None:
-                self._typing_bubble.message_label.setText(f"AI is thinking{dots}")
+                self._typing_bubble.message_label.setText(text)
         except RuntimeError:
             self._typing_timer.stop()
 
@@ -300,3 +320,29 @@ class ChatSurface(QScrollArea):
         if scrollbar.maximum() <= 0:
             return True
         return scrollbar.maximum() - scrollbar.value() <= 24
+
+    def _typing_message(self) -> str:
+        dots = "." * self._typing_dots
+        if self._typing_stage == "impact_assessment":
+            return f"AI impact assessment{dots}"
+        if self._typing_stage == "generation":
+            return f"AI ghost writing{dots}"
+        if self._typing_stage == "final_validation":
+            pulse = "|" if self._typing_dots % 2 == 0 else "/"
+            return f"AI final validation {pulse}"
+        return f"AI is thinking{dots}"
+
+    def _typing_interval_ms(self) -> int:
+        base = {
+            "impact_assessment": 360,
+            "generation": 120,
+            "final_validation": 220,
+        }.get(self._typing_stage, 260)
+        scale = max(0.7, min(1.7, self._typing_expected_ms / 150.0))
+        return int(base * scale)
+
+    def _normalize_stage(self, stage: str) -> str:
+        cleaned = stage.strip().lower()
+        if cleaned in {"impact_assessment", "generation", "final_validation"}:
+            return cleaned
+        return "impact_assessment"

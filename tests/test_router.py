@@ -1,3 +1,5 @@
+import time
+
 from core.router import CommandRouter
 from core.safe_mode_policy import SafeModePolicy
 from core.security_guard import SecurityGuard
@@ -709,6 +711,16 @@ def test_router_release_hardening_summary() -> None:
     assert summary["total"] >= summary["completed"]
 
 
+def test_router_run_safety_drill_updates_logs_and_payload() -> None:
+    router = build_router()
+
+    payload = router.run_safety_drill()
+    log = router.logger.tail(limit=1)[0]
+
+    assert payload["status"] in {"Simulation Success", "Rollback Conflict"}
+    assert log["event"] == "safety_drill"
+
+
 def test_router_run_release_gate_v22_returns_full_report() -> None:
     router = build_router()
 
@@ -718,3 +730,48 @@ def test_router_run_release_gate_v22_returns_full_report() -> None:
     assert "comparison" in payload
     assert "checklist" in payload
     assert payload["reliability"]["total"] >= 1
+
+
+def test_router_evaluate_auto_action_returns_fatigue_metadata() -> None:
+    router = build_router()
+
+    payload = router.evaluate_auto_action(
+        "sys info",
+        ui_context={"active_tab": "Command", "profile": "calm"},
+    )
+
+    assert "fatigue_penalty" in payload
+    assert "fatigue_reason" in payload
+    assert "force_confirmation" in payload
+    assert payload["risk_level"] == "low"
+
+
+def test_router_evaluate_auto_action_logs_when_fatigue_blocks() -> None:
+    router = build_router()
+    now = time.monotonic()
+    router._auto_action_timestamps = [now - 3 for _ in range(12)]
+
+    payload = router.evaluate_auto_action(
+        "sys info",
+        ui_context={"active_tab": "Command", "profile": "calm"},
+    )
+    log = router.logger.tail(limit=1)[0]
+
+    assert payload["force_confirmation"] is True
+    assert payload["can_auto_execute"] is False
+    assert log["event"] == "companion_auto_action"
+    assert log["metadata"]["force_confirmation"] is True
+
+
+def test_router_evaluate_auto_action_hacker_profile_keeps_higher_threshold() -> None:
+    router = build_router()
+    now = time.monotonic()
+    router._auto_action_timestamps = [now - 3 for _ in range(8)]
+
+    payload = router.evaluate_auto_action(
+        "sys info",
+        ui_context={"active_tab": "Memory", "profile": "hacker"},
+    )
+
+    assert payload["force_confirmation"] is False
+    assert payload["fatigue_penalty"] == 0.0

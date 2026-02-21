@@ -26,3 +26,16 @@ def test_main_thread_guard_detects_blocking_non_execution_stage() -> None:
 
     assert result["is_responsive"] is False
     assert "intent" in result["blocked_stages"]
+
+
+def test_main_thread_guard_allows_reasoning_execution_stage() -> None:
+    guard = MainThreadResponsivenessGuard(frame_budget_ms=16.0)
+    stage_report = [
+        {"stage": "impact_assessment", "elapsed_ms": 9.0, "budget_ms": 20.0, "exceeded": False},
+        {"stage": "generation", "elapsed_ms": 11.0, "budget_ms": 50.0, "exceeded": False},
+        {"stage": "execution", "elapsed_ms": 180.0, "budget_ms": 1200.0, "exceeded": False},
+    ]
+
+    result = guard.evaluate(stage_report)
+
+    assert result["is_responsive"] is True

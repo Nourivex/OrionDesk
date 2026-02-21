@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from core.capability_guardrail import CapabilityGuardrail
 from core.capability_layer import SystemCapabilityLayer
+from core.companion_policy import AutoActionDecision, CompanionPolicy, ImpactAssessment
 from core.deployment_manager import ConfigMigrationManager, ProfileBackupManager, ReleaseChannelManager
 from core.argument_extractor import ArgumentExtractor
 from core.embedding_provider import EmbeddingConfig, EmbeddingProvider, OllamaEmbeddingProvider
@@ -114,6 +115,7 @@ class CommandRouter:
     multi_command_executor: MultiCommandExecutor | None = None
     retrieval_optimizer: RetrievalOptimizer | None = None
     release_gate_v22: ReleaseGateV22 | None = None
+    companion_policy: CompanionPolicy | None = None
 
     def __post_init__(self) -> None:
         self.launcher = self.launcher or Launcher()
@@ -163,12 +165,14 @@ class CommandRouter:
         self.multi_command_executor = self.multi_command_executor or MultiCommandExecutor()
         self.retrieval_optimizer = self.retrieval_optimizer or RetrievalOptimizer()
         self.release_gate_v22 = self.release_gate_v22 or ReleaseGateV22()
+        self.companion_policy = self.companion_policy or CompanionPolicy()
         self.session_id = self.session_id or uuid4().hex
         self._runtime_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="oriondesk-runtime")
         self._main_thread_guard = MainThreadResponsivenessGuard()
         self._model_catalog_cache: list[dict] = []
         self._health_cache: dict[str, tuple[float, dict]] = {}
         self._health_cache_ttl_seconds = 20.0
+        self._auto_action_timestamps: list[float] = []
         self._register_plugins()
         self.security_guard = self.security_guard or SecurityGuard(command_whitelist=set(self.contracts.keys()))
 
@@ -245,22 +249,32 @@ class CommandRouter:
         self._record_session(normalized or command, envelope.message, envelope.status, envelope.context)
         return self._to_command_result(envelope)
 
-    def execute_with_enhanced_response(self, command: str, dry_run: bool = False) -> CommandResult:
+    def execute_with_enhanced_response_trace(
+        self,
+        command: str,
+        dry_run: bool = False,
+        stage_callback: Callable[[str, float], None] | None = None,
+    ) -> tuple[CommandResult, list[dict]]:
         parsed = self.parse(command)
         if parsed is not None and parsed.keyword in self.contracts:
-            return self.execute(command, dry_run=dry_run)
+            return self.execute(command, dry_run=dry_run), []
         clean = command.strip()
         if not clean:
-            return self.execute(command, dry_run=dry_run)
+            return self.execute(command, dry_run=dry_run), []
 
-        response = self.generate_reasoned_answer(clean)
+        response = self.generate_reasoned_answer(clean, stage_callback=stage_callback)
+        stage_trace = list(response.get("stages", [])) if isinstance(response, dict) else []
         result = self.execute(command, dry_run=dry_run)
         if result.requires_confirmation:
-            return CommandResult(response.get("message", result.message), True, result.pending_command)
+            return CommandResult(response.get("message", result.message), True, result.pending_command), stage_trace
         final_message = response.get("message", "")
         if result.message and result.message not in final_message:
             final_message = f"{final_message}\n\nAction Result:\n{result.message}"
-        return CommandResult(final_message or result.message)
+        return CommandResult(final_message or result.message), stage_trace
+
+    def execute_with_enhanced_response(self, command: str, dry_run: bool = False) -> CommandResult:
+        result, _stage_trace = self.execute_with_enhanced_response_trace(command, dry_run=dry_run)
+        return result
 
     def _contains_multi_step(self, raw_command: str) -> bool:
         lowered = raw_command.lower()
@@ -515,6 +529,122 @@ class CommandRouter:
             return f"search file {query}"
         return normalized
 
+    def evaluate_auto_action(self, raw_input: str, ui_context: dict | None = None) -> dict:
+        clean = raw_input.strip()
+        context = ui_context or {}
+        if not clean:
+            decision = AutoActionDecision(
+                normalized_command="",
+                can_auto_execute=False,
+                base_score=0.0,
+                final_score=0.0,
+                risk_level="low",
+                fatigue_penalty=0.0,
+                fatigue_reason="Perintah kosong.",
+                force_confirmation=False,
+                reason="Perintah kosong.",
+            )
+            payload = asdict(decision)
+            self.logger.log(level="info", event="companion_auto_action", message="Auto action skipped.", metadata=payload)
+            return payload
+
+        allowed = set(self.contracts.keys())
+        resolution = self.intent_engine.resolve(clean, allowed_keywords=allowed)
+        normalized = self._normalize_shortcuts(resolution.resolved)
+        parsed = self.parse(normalized)
+        if parsed is None:
+            decision = AutoActionDecision(
+                normalized_command=normalized,
+                can_auto_execute=False,
+                base_score=0.0,
+                final_score=0.0,
+                risk_level="low",
+                fatigue_penalty=0.0,
+                fatigue_reason="Tidak dapat memetakan intent.",
+                force_confirmation=False,
+                reason="Tidak dapat memetakan intent.",
+            )
+            payload = asdict(decision)
+            self.logger.log(level="info", event="companion_auto_action", message="Auto action skipped.", metadata=payload)
+            return payload
+
+        active_tab = str(context.get("active_tab", "Command"))
+        profile_name = str(context.get("profile", context.get("persona", "calm")))
+        risk_level = self.execution_profile_policy.risk_level(parsed.keyword)
+        profile_decision = self.execution_profile_policy.evaluate(parsed.keyword)
+        impact = self._assess_command_impact(parsed)
+        history_rows = [item for item in self.session_layer.recent(limit=40) if item.command == normalized]
+        success_rows = [item for item in history_rows if item.status == "success"]
+        history_boost = min(0.20, len(success_rows) * 0.04)
+        base_score = min(1.0, max(0.0, (resolution.confidence * 0.7) + (impact.confidence * 0.2) + history_boost))
+        fatigue = self.companion_policy.evaluate_fatigue(
+            timestamps=self._auto_action_timestamps,
+            profile_name=profile_name,
+            active_tab=active_tab,
+        )
+        self._auto_action_timestamps = list(fatigue.auto_action_timestamps)
+        final_score = min(1.0, max(0.0, base_score - fatigue.fatigue_penalty))
+        dangerous = parsed.keyword in self.dangerous_keywords
+        allow_low_risk = risk_level == "low" and impact.is_read_only
+        score_ok = final_score >= 0.70
+        policy_allows = profile_decision.mode == "allow" and not profile_decision.requires_confirmation
+        can_auto_execute = (
+            allow_low_risk and policy_allows and score_ok and (not dangerous) and (not fatigue.force_confirmation)
+        )
+        if can_auto_execute:
+            reason = "Auto execute allowed: low risk + confidence gate passed."
+            fatigue_reason = "Within pacing window."
+            self._auto_action_timestamps.append(time.monotonic())
+        else:
+            reasons = []
+            if dangerous:
+                reasons.append("dangerous keyword")
+            if not allow_low_risk:
+                reasons.append("impact or risk not eligible")
+            if not policy_allows:
+                reasons.append("profile policy requires guard")
+            if not score_ok:
+                reasons.append("confidence below threshold")
+            if fatigue.force_confirmation:
+                reasons.append("fatigue threshold reached")
+            reason = "Auto execute blocked: " + ", ".join(reasons)
+            fatigue_reason = (
+                f"Auto action pace reached ({fatigue.count_in_window}/{fatigue.threshold_used} in "
+                f"{self.companion_policy.pacing.window_seconds}s)."
+                if fatigue.force_confirmation
+                else "Pacing healthy."
+            )
+        decision = AutoActionDecision(
+            normalized_command=normalized,
+            can_auto_execute=can_auto_execute,
+            base_score=round(base_score, 3),
+            final_score=round(final_score, 3),
+            risk_level=risk_level,
+            fatigue_penalty=fatigue.fatigue_penalty,
+            fatigue_reason=fatigue_reason,
+            force_confirmation=fatigue.force_confirmation,
+            reason=reason,
+        )
+        payload = asdict(decision)
+        payload["intent_confidence"] = round(resolution.confidence, 3)
+        payload["impact_reason"] = impact.reason
+        payload["history_matches"] = len(history_rows)
+        payload["history_success"] = len(success_rows)
+        level = "warning" if fatigue.force_confirmation else "info"
+        self.logger.log(level=level, event="companion_auto_action", message=reason, metadata=payload)
+        return payload
+
+    def _assess_command_impact(self, parsed: ParsedCommand) -> ImpactAssessment:
+        keyword = parsed.keyword.lower()
+        read_only = {"search", "sys", "net", "diagnostics", "memory", "profile"}
+        if keyword in read_only:
+            return ImpactAssessment(True, 1.0, "Read-only command family.")
+        if keyword == "open":
+            return ImpactAssessment(False, 0.55, "Application launch can alter user focus state.")
+        if keyword in self.dangerous_keywords:
+            return ImpactAssessment(False, 0.10, "Dangerous command keyword.")
+        return ImpactAssessment(False, 0.40, "Unknown side effect profile.")
+
     def memory_summary(self) -> dict:
         return {
             "top_commands": self.memory_engine.top_commands(limit=5),
@@ -571,6 +701,15 @@ class CommandRouter:
 
     def release_hardening_summary(self) -> dict:
         return self.release_hardening_plan.summary()
+
+    def run_safety_drill(self, panic_at_step: int = 2, rollback_window_seconds: int = 30) -> dict:
+        payload = self.release_hardening_plan.run_simulation_mode(
+            panic_at_step=panic_at_step,
+            rollback_window_seconds=rollback_window_seconds,
+        )
+        level = "info" if payload.get("status") == "Simulation Success" else "warning"
+        self.logger.log(level=level, event="safety_drill", message=payload.get("status", "unknown"), metadata=payload)
+        return payload
 
     def run_release_gate_v22(self) -> dict:
         scenarios = [
@@ -697,37 +836,79 @@ class CommandRouter:
         self.chat_model_enabled = bool(enabled)
         return self.chat_model_enabled
 
-    def generate_reasoned_answer(self, raw_input: str) -> dict:
+    def generate_reasoned_answer(
+        self,
+        raw_input: str,
+        stage_callback: Callable[[str, float], None] | None = None,
+    ) -> dict:
+        stage_trace: list[dict] = []
+
+        def _emit_stage(stage: str, elapsed_ms: float) -> None:
+            rounded = round(float(elapsed_ms), 2)
+            stage_trace.append({"stage": stage, "elapsed_ms": rounded})
+            if stage_callback is not None:
+                stage_callback(stage, rounded)
+
         optimized_query = self.retrieval_optimizer.optimize_query(raw_input)
         cache_key = f"reasoned:{self.response_quality}:{optimized_query}"
         cached = self.retrieval_optimizer.get_cache(cache_key)
         if isinstance(cached, dict):
-            return {**cached, "mode": "cache"}
+            if not cached.get("stages"):
+                _emit_stage("final_validation", 0.0)
+            payload = {**cached, "mode": "cache", "stages": list(cached.get("stages", stage_trace))}
+            return payload
 
+        impact_started = time.perf_counter()
         plan = self.reason_plan(optimized_query)
+        _emit_stage("impact_assessment", (time.perf_counter() - impact_started) * 1000)
         if not self.chat_model_enabled:
+            final_started = time.perf_counter()
             payload = {
                 "mode": "disabled",
                 "message": self._reasoning_fallback_message(plan),
                 "health": {"ok": False, "message": "chat model disabled"},
+                "stages": stage_trace,
             }
+            _emit_stage("final_validation", (time.perf_counter() - final_started) * 1000)
             self.retrieval_optimizer.set_cache(cache_key, payload)
             return payload
         health = self.generation_provider.health()
         if not health.ok:
+            final_started = time.perf_counter()
             fallback = self._reasoning_fallback_message(plan)
-            payload = {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": health.message}}
+            payload = {
+                "mode": "fallback",
+                "message": fallback,
+                "health": {"ok": health.ok, "message": health.message},
+                "stages": stage_trace,
+            }
+            _emit_stage("final_validation", (time.perf_counter() - final_started) * 1000)
             self.retrieval_optimizer.set_cache(cache_key, payload)
             return payload
 
         prompt = self._build_reasoning_prompt(optimized_query, plan)
+        generation_started = time.perf_counter()
         text = self.generation_provider.generate(prompt=prompt, system_prompt="You are OrionDesk local assistant.")
+        _emit_stage("generation", (time.perf_counter() - generation_started) * 1000)
+        final_started = time.perf_counter()
         if text:
-            payload = {"mode": "gemma", "message": text, "health": {"ok": health.ok, "message": health.message}}
+            payload = {
+                "mode": "gemma",
+                "message": text,
+                "health": {"ok": health.ok, "message": health.message},
+                "stages": stage_trace,
+            }
+            _emit_stage("final_validation", (time.perf_counter() - final_started) * 1000)
             self.retrieval_optimizer.set_cache(cache_key, payload)
             return payload
         fallback = self._reasoning_fallback_message(plan)
-        payload = {"mode": "fallback", "message": fallback, "health": {"ok": health.ok, "message": "empty generation"}}
+        payload = {
+            "mode": "fallback",
+            "message": fallback,
+            "health": {"ok": health.ok, "message": "empty generation"},
+            "stages": stage_trace,
+        }
+        _emit_stage("final_validation", (time.perf_counter() - final_started) * 1000)
         self.retrieval_optimizer.set_cache(cache_key, payload)
         return payload
 

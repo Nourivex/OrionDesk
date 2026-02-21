@@ -11,6 +11,7 @@ from ui.theme_tokens import ThemeTokens
 
 class CommandWorker(QObject):
     finished = Signal(str, object)
+    stageTelemetry = Signal(str, float)
 
     def __init__(self, router: CommandRouter, command: str) -> None:
         super().__init__()
@@ -18,7 +19,13 @@ class CommandWorker(QObject):
         self.command = command
 
     def run(self) -> None:
-        result = self.router.execute_with_enhanced_response(self.command)
+        result, stage_trace = self.router.execute_with_enhanced_response_trace(
+            self.command,
+            stage_callback=lambda stage, elapsed: self.stageTelemetry.emit(stage, float(elapsed)),
+        )
+        if not stage_trace:
+            self.stageTelemetry.emit("impact_assessment", 0.0)
+            self.stageTelemetry.emit("final_validation", 0.0)
         self.finished.emit(self.command, result)
 
 

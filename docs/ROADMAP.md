@@ -221,6 +221,16 @@ Output:
 
 - Release gate v2.2 aktif dengan reliability matrix, baseline comparison, dan checklist go/no-go.
 
+### V10 Add-ons — Orion Companion Hardening ✅
+
+- Fatigue Factor (action pacing + forced confirmation)
+- Ghost Writing Indicator (stage-synced dynamic typing)
+- Safety Drill Simulation (panic/rollback dummy replay)
+
+Output:
+
+- Companion behavior lebih adaptif, aman, dan non-blocking tanpa cloud dependency.
+
 ---
 
 ## 🛡 Guardrail Contract (V2.1)

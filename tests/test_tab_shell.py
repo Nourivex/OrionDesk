@@ -307,3 +307,20 @@ def test_chat_surface_typing_tick_safe_when_indicator_deleted() -> None:
     app.processEvents()
 
     window.close()
+
+
+def test_chat_surface_typing_indicator_stage_updates_from_ui() -> None:
+    app = _app()
+    window = MainWindow(router=CommandRouter())
+    app.processEvents()
+
+    window.output_panel.show_typing_indicator(stage="impact_assessment", expected_ms=120.0)
+    window.output_panel.update_typing_stage("generation", 180.0)
+    app.processEvents()
+    assert "ghost writing" in window.output_panel.typing_indicator.text()
+
+    window.output_panel.update_typing_stage("final_validation", 40.0)
+    app.processEvents()
+    assert "final validation" in window.output_panel.typing_indicator.text()
+
+    window.close()

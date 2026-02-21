@@ -34,3 +34,21 @@ def test_release_hardening_plan_summary() -> None:
     assert summary["completed"] == 1
     assert summary["total"] >= 1
     assert isinstance(summary["rollback_steps"], list)
+
+
+def test_release_hardening_plan_simulation_marks_safety_drill() -> None:
+    plan = ReleaseHardeningPlan()
+
+    payload = plan.run_simulation_mode()
+    summary = plan.summary()
+
+    assert payload["status"] in {"Simulation Success", "Rollback Conflict"}
+    assert summary["total"] >= 5
+
+
+def test_release_hardening_plan_contains_safety_drill_check() -> None:
+    plan = ReleaseHardeningPlan()
+
+    keys = [item.key for item in plan.checklist]
+
+    assert "safety_drill" in keys

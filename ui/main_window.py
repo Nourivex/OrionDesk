@@ -303,11 +303,11 @@ class MainWindow(QMainWindow):
             self._append_chat_bubble(command, align_right=True, subtitle="Command")
             self.message_count += 1; self.command_count += 1
             self._update_command_stats()
-            self.output_panel.show_typing_indicator()
+            self.output_panel.show_typing_indicator(stage="impact_assessment", expected_ms=150.0)
             self.command_input.clear(); self._refresh_command_assist("")
             self.output_panel.scroll_to_latest()
         if self._should_run_async(command): self._run_async_command(command); return
-        result = self.router.execute_with_enhanced_response(command)
+        result, _trace = self.router.execute_with_enhanced_response_trace(command, stage_callback=self.output_panel.update_typing_stage)
         self._render_execution_result(command, result)
     def _should_run_async(self, command: str) -> bool:
         clean = command.strip().lower()
@@ -320,16 +320,17 @@ class MainWindow(QMainWindow):
     def _run_async_command(self, command: str) -> None:
         if self._active_thread is not None:
             self.loading_label.setText("Search sedang berjalan. Tunggu proses selesai.")
-            self.output_panel.show_typing_indicator()
+            self.output_panel.show_typing_indicator(stage="generation", expected_ms=150.0)
             return
         self.loading_label.setText("Loading search...")
-        self.output_panel.show_typing_indicator()
+        self.output_panel.show_typing_indicator(stage="impact_assessment", expected_ms=150.0)
         self.execute_button.setEnabled(False)
         self.command_input.setEnabled(False)
         worker = CommandWorker(self.router, command)
         thread = QThread(self)
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
+        worker.stageTelemetry.connect(self.output_panel.update_typing_stage)
         worker.finished.connect(self._handle_async_result)
         worker.finished.connect(thread.quit)
         worker.finished.connect(worker.deleteLater)
@@ -342,11 +343,10 @@ class MainWindow(QMainWindow):
         self._render_execution_result(command, result)
     def _clear_async_state(self) -> None:
         self._active_thread = None; self._active_worker = None
-        self.execute_button.setEnabled(True)
-        self.command_input.setEnabled(True)
+        self.execute_button.setEnabled(True); self.command_input.setEnabled(True)
         self.loading_label.setText("")
     def _render_execution_result(self, command: str, result) -> None:
-        self.output_panel.hide_typing_indicator()
+        self.output_panel.hide_typing_indicator(final_state="final_validation")
         if result.requires_confirmation:
             warning = f"{result.message}\nCommand: {result.pending_command}"
             self._append_chat_bubble(warning, align_right=False, subtitle="Safe mode confirmation")
